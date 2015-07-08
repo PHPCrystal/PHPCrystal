@@ -9,6 +9,13 @@ use PHPCrystal\PHPCrystal\Component\Exception as Exception;
 
 abstract class AbstractApplication extends AbstractPackage
 {
+	/**
+	 * If set to true extensions will be autoloaded from the composer packages
+	 * 
+	 * @var bool
+	 */
+	private $extensionAutoload = true;
+
 	private $bootstrapFlag = false;
 	private $actions = array();
 	private $context;
@@ -30,6 +37,22 @@ abstract class AbstractApplication extends AbstractPackage
 		$this->setPriority(999);		
 		parent::__construct();		
 	}
+	
+	/**
+	 * @return bool
+	 */
+	final public function getExtensionAutoloadFlag()
+	{
+		return $this->extensionAutoload;
+	}
+	
+	/**
+	 * @return void
+	 */
+	final public function setExtenstionAutoloadFlag($flagValue)
+	{
+		$this->extensionAutoload = $flagValue;
+	}	
 	
 	/**
 	 * @return void
@@ -136,9 +159,7 @@ abstract class AbstractApplication extends AbstractPackage
 		$extInstance = PathResolver::create($extDirPath, 'bootstrap.php')
 			->_require();
 
-		// if an extension do not allow autoloading we do not add it. this feature
-		// might be useful if we need the extension only in development environment
-		if ($extInstance->getExtensionAutoloadFlag()) {		
+		if ( ! $extInstance->getDisabledFlag()) {		
 			$this->addExtensionInstance($extInstance);
 		}
 
