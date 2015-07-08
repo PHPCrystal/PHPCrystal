@@ -1,5 +1,5 @@
 {
-	"name": "PHPCrystal",
+	"name": "phpcrystal/phpcrystal",
 	"description": "An event-driven PHP Web application framework",
 	"keywords": ["php","framework"],
 	"license": "MIT",
