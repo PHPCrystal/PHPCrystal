@@ -9,6 +9,13 @@ use PHPCrystal\PHPCrystal\Service\Event as Event;
 
 abstract class AbstractPackage extends Event\AbstractNode
 {
+	/**
+	 * If set to true extensions will be autoloaded from the composer packages
+	 * 
+	 * @var bool
+	 */
+	private $extensionAutoload = true;
+	
 	private $builder;
 	private $router;
 	private $dirname;
@@ -60,7 +67,23 @@ abstract class AbstractPackage extends Event\AbstractNode
 	/**
 	 * @return void
 	 */
-	public function init() { }		
+	public function init() { }
+	
+	/**
+	 * @return bool
+	 */
+	final public function getExtensionAutoloadFlag()
+	{
+		return $this->extensionAutoload;
+	}
+	
+	/**
+	 * @return void
+	 */
+	final public function setExtenstionAutoloadFlag($flagValue)
+	{
+		$this->extensionAutoload = $flagValue;
+	}
 	
 	/**
 	 * @return string
@@ -85,7 +108,9 @@ abstract class AbstractPackage extends Event\AbstractNode
 	 */
 	final public function getNamespace()
 	{
-		return $this->namespace;
+		$refClass = new \ReflectionClass($this);
+		
+		return $refClass->getNamespaceName();
 	}
 	
 	/**

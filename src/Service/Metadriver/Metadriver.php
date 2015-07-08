@@ -3,6 +3,7 @@ namespace PHPCrystal\PHPCrystal\Service\Metadriver;
 
 use PHPCrystal\PHPCrystal\Component\Filesystem\PathResolver;
 use PHPCrystal\PHPCrystal\Component\Service\AbstractService;
+use PHPCrystal\PHPCrystal\Component\Package\AbstractExtension;
 
 class Metadriver extends AbstractService
 {
@@ -44,7 +45,43 @@ class Metadriver extends AbstractService
 	{
 		$this->data['export'][] = $metaservice;
 	}
+
+	/**
+	 * @return void
+	 */
+	public function addExtensionsToAutoload()
+	{
+		$composerLock = PathResolver::create('@app/composer.lock');
+		
+		if ( ! $composerLock->fileExists()) {
+			return;
+		}
+		
+		$composerJson = $composerLock->readJson();
+		foreach ($composerJson['packages'] as $pkgInfo) {
+			$pkgName = $pkgInfo['name'];
+			$pkgBootstrap = PathResolver::create('@app/vendor/', $pkgName, 'bootstrap.php');
+			if ( ! $pkgBootstrap->fileExists()) {
+				continue;
+			}
+			
+			$pkgInstance = $pkgBootstrap->_require();
+			if ( ! $pkgInstance instanceof AbstractExtension) {
+				continue;
+			}
+			
+			$this->data['extensions'][] = new MetaExtension($pkgBootstrap->getDirname());
+		}
+	}
 	
+	/**
+	 * @return MetaExtension[]
+	 */
+	public function getExtensionsAll()
+	{
+		return $this->data['extensions'];
+	}
+
 	/**
 	 * @return array
 	 */
@@ -161,11 +198,12 @@ class Metadriver extends AbstractService
 	public function flush()
 	{
 		$this->data = array(
-			'export' => array(),
-			'actions' => array(),
-			'controllers' => array(),
-			'frontcontrollers' => array()
-		);		
+			'export' => [],
+			'actions' => [],
+			'controllers' => [],
+			'frontcontrollers' => [],
+			'extensions' => []
+		);
 	}
 	
 	/**

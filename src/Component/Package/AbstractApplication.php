@@ -103,6 +103,28 @@ abstract class AbstractApplication extends AbstractPackage
 		
 		return iterator_to_array($minHeap);
 	}
+
+	/**
+	 * @return void
+	 */
+	private function addExtensionInstance($extInstance)
+	{
+		// do not allow to add the same extension twice
+		foreach ($this->getExtensions() as $loadedExt) {
+			if ($loadedExt->getNamespace() == $extInstance->getNamespace()) {
+				Exception\System\LastChineseWarning::create('The extension "%s" is already loaded',
+					null, $extInstance->getComposerName())
+					->_throw();
+			}
+		}
+		
+		if ($extInstance->getPriority() === null) {
+			$extInstance->setPriority($this->getPriority() - 1);
+		}
+
+		self::$extMinHeap->insert($extInstance);		
+		$this->addChild($extInstance);		
+	}
 	
 	/**
 	 * Adds a new extension to the application package
@@ -114,12 +136,7 @@ abstract class AbstractApplication extends AbstractPackage
 		$extInstance = PathResolver::create($extDirPath, 'bootstrap.php')
 			->_require();
 		
-		if ($extInstance->getPriority() === null) {
-			$extInstance->setPriority($this->getPriority() - 1);
-		}
-
-		self::$extMinHeap->insert($extInstance);		
-		$this->addChild($extInstance);
+		$this->addExtensionInstance($extInstance);
 		
 		return $this;
 	}
@@ -242,6 +259,16 @@ abstract class AbstractApplication extends AbstractPackage
 		PathResolver::addAlias('app', $this->getDirectory(), false);
 		PathResolver::addAlias('core', __DIR__ . '/../..');
 	}
+	
+	/**
+	 * @return void
+	 */
+	private function autoloadExtensions()
+	{
+		foreach (Metadriver::getExtensionsAll() as $metaExt) {
+			$this->addExtension($metaExt->getDirectoryName());
+		}
+	}
 
 	/**
 	 * @return void
@@ -250,8 +277,16 @@ abstract class AbstractApplication extends AbstractPackage
 	{
 		if ($this->getContext()->getEnv() != 'prod') {
 			Metadriver::flush();
+			Metadriver::addExtensionsToAutoload();
+			if ($this->getExtensionAutoloadFlag()) {
+				$this->autoloadExtensions();
+			}		
 			parent::dispatch(Event\Type\System\Build::create());
-		}		
+		} else {
+			if ($this->getExtensionAutoloadFlag()) {
+				$this->autoloadExtensions();
+			}
+		}
 	}
 
 	/**

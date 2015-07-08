@@ -170,6 +170,34 @@ class PathResolver
 		}
 	}
 	
+	/**
+	 * @return string
+	 */
+	public function readJson()
+	{
+		$content = file_get_contents($this->toString());
+		
+		$jsonData = json_decode($content, true);
+		
+		return $jsonData;
+	}
+	
+	/**
+	 * @return string
+	 */
+	public function getBasename()
+	{
+		return basename($this->toString());
+	}
+	
+	public function getDirname()
+	{
+		return dirname($this->toString());
+	}
+	
+	/**
+	 * @return void
+	 */
 	public function serialize($data)
 	{
 		$filename = $this->toString();		
