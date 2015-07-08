@@ -1,0 +1,3 @@
+GET /nonexistent-page HTTP/1.1
+Host: mywebsite.com
+

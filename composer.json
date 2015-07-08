@@ -1,0 +1,22 @@
+{
+	"name": "PHPCrystal",
+	"description": "An event-driven PHP Web application framework",
+	"keywords": ["php","framework"],
+	"license": "MIT",
+	"config": {
+		"process-timeout": 3600
+	},
+	"require": {
+		"symfony/finder": "2.6.*@dev",
+		"twig/twig": "~1.0",
+		"symfony/console": "~2.7",
+		"zendframework/zend-http": "~2.5",
+		"doctrine/orm": "~2.5"
+	},
+	"autoload": {
+		"psr-4": {
+			"PHPCrystal\\PHPCrystal\\": "src/",
+			"PHPCrystal\\PHPCrystalTest\\": "tests/src/"
+		}
+	}
+}
