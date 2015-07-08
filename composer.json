@@ -15,8 +15,12 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"PHPCrystal\\PHPCrystal\\": "src/",
+			"PHPCrystal\\PHPCrystal\\": "src/"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
 			"PHPCrystal\\PHPCrystalTest\\": "tests/src/"
 		}
-	}
+	}	
 }
