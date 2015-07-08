@@ -135,9 +135,13 @@ abstract class AbstractApplication extends AbstractPackage
 	{
 		$extInstance = PathResolver::create($extDirPath, 'bootstrap.php')
 			->_require();
-		
-		$this->addExtensionInstance($extInstance);
-		
+
+		// if an extension do not allow autoloading we do not add it. this feature
+		// might be useful if we need the extension only in development environment
+		if ($extInstance->getExtensionAutoloadFlag()) {		
+			$this->addExtensionInstance($extInstance);
+		}
+
 		return $this;
 	}
 
