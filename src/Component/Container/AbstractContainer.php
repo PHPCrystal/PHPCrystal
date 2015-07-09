@@ -4,6 +4,9 @@ namespace PHPCrystal\PHPCrystal\Component\Container;
 use PHPCrystal\PHPCrystal\_Trait\CreateObject;
 use PHPCrystal\PHPCrystal\Component\Exception as Exception;
 
+const ITEM_OPERATION_ADD = 1;
+const ITEM_OPERATION_REMOVE = 2;
+
 abstract class AbstractContainer
 {
 	private $name;
@@ -102,7 +105,7 @@ abstract class AbstractContainer
 		$itemClass = static::$itemClass;
 		
 		if ( ! array_key_exists($lastKey, $arrRef)) {
-			$this->changesTracker[$itemKey] = true;
+			$this->changesTracker[$itemKey] = ITEM_OPERATION_ADD;
 		}
 
 		if (is_array($value)) {
@@ -150,6 +153,18 @@ abstract class AbstractContainer
 	final public function hasChanges()
 	{
 		return count($this->changesTracker) > 0;
+	}
+	
+	/**
+	 * @return void
+	 */
+	final public function flush()
+	{
+		$this->changesTracker = [];
+		foreach ($this->items as $key) {
+			$this->changesTracker[$key] = ITEM_OPERATION_REMOVE;
+		}
+		$this->items = [];
 	}
 
 	/**

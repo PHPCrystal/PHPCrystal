@@ -36,12 +36,12 @@ $this->serviceSection('phpcrystal.session');
 	$this->set('name', 'SID');
 	$this->set('cookie_lifetime', 0);
 	$this->set('cookie_path', '/');
-	$this->set('cookie_domain', null);
+	$this->set('cookie_domain', $this->getHostname());
 	$this->set('cookie_httponly', true);
 	$this->set('auto_start', true);
 	$this->set('gc_probability', 1);
 	$this->set('gc_divisor', 100);
-	$this->set('gc_maxlifetime', 3600);
+	$this->set('gc_maxlifetime', 1800);
 $this->closeSection();
 
 $this->openSection('phpcrystal.core.cache');

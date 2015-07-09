@@ -14,10 +14,25 @@ class Session extends AbstractContractor implements
 	private $sessionId;
 	private $container;
 	private $flashContainer;
-	private $startedFlag = false;
+	private $newSessionFlag = false;
 	
 	private $useTransSid;
 	private $sessionName;
+	
+	/**
+	 * @var integer
+	 */
+	private $expirationTime;
+	
+	/**
+	 * @var integer
+	 */
+	private $cookieLifetime;
+	
+	/**
+	 * @var integer
+	 */
+	private $gcLifetime;
 	
 	/**
 	 * Generates unique session identifier
@@ -105,6 +120,7 @@ class Session extends AbstractContractor implements
 		
 		$this->useTransSid = $this->config->get('use_trans_sid');
 		$this->sessionName = $this->config->get('name');
+		$this->cookieLifetime = $this->config->get('cookie_lifetime');
 		
 		if ($this->useTransSid && $request->getGetInput()->has($this->sessionName)) {
 			$this->sessionId = $request->getGetInput()
@@ -124,6 +140,23 @@ class Session extends AbstractContractor implements
 	}
 	
 	/**
+	 * @return integer
+	 */
+	private function getCookieLifetime()
+	{
+		if ($this->container->has('_cookie_lifetime')) {
+			return $this->container->get('_cookie_lifetime');
+		} else  {
+			$default = $this->config->get('cookie_lifetime');
+			if ($default > 0) {
+				return time() + $default;
+			} else {
+				return 0;
+			}
+		}		
+	}
+	
+	/**
 	 * @return
 	 */
 	public function finish()
@@ -135,12 +168,12 @@ class Session extends AbstractContractor implements
 		}
 		
 		// assign session id
-		if ($this->startedFlag) {
+		if ($this->newSessionFlag) {
 			if ( ! $this->useTransSid) {
 				setcookie(
 					$this->sessionName,
 					$this->sessionId,
-					$this->config->get('cookie_lifetime'),
+					$this->getCookieLifetime(),
 					$this->config->get('cookie_path'),
 					$this->config->get('cookie_domain'),
 					false,
@@ -198,18 +231,24 @@ class Session extends AbstractContractor implements
 	 * 
 	 * @return void
 	 */
-	public function start($oldSessId = null)
+	public function start($oldSessId = null, $expireTime =  null)
 	{
 		$this->sessionId = $this->generateSessionId();
-
-		if (null !== $oldSessId) {
-			$this->saveBulkData($this->sessionId);
-		} else {
+		
+		if (null === $oldSessId) {
 			$this->container = $this->createContainer([]);
 			$this->flashContainer = $this->createFlashContainer([]);
 		}
 		
-		$this->startedFlag = true;
+		if (null === $expireTime) {
+			$expireTime = time() + $this->config->get('gc_maxlifetime');
+		} else {
+			$this->container->set('_cookie_lifetime', $expireTime);
+		}
+		
+		$this->container->set('_expire', $expireTime);
+		
+		$this->newSessionFlag = true;
 	}
 	
 	/**
@@ -219,9 +258,15 @@ class Session extends AbstractContractor implements
 	 */
 	public function regenerateId()
 	{
-		$this->idRegenerationFlag = true;
-		
-		return $this->start($this->sessionId);
+		$this->start($this->sessionId);
+	}
+	
+	/**
+	 * @return void
+	 */
+	public function remember($period)
+	{
+		$this->start($this->sessionId, time() + $period);
 	}
 	
 	/**
@@ -231,7 +276,8 @@ class Session extends AbstractContractor implements
 	 */
 	public function flush()
 	{
-		$this->container = new Container();
+		$this->container->flush();
+		$this->flashContainer->flush();
 	}
 	
 	/**
