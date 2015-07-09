@@ -14,7 +14,7 @@ abstract class AbstractContractor extends AbstractService
 	/**
 	 * @return boolean
 	 */
-	public static function isSingleton()
+	final public static function isSingleton()
 	{
 		return true;
 	}
@@ -37,5 +37,21 @@ abstract class AbstractContractor extends AbstractService
 				return $interface;
 			}
 		}
+	}
+	
+	/**
+	 * @return void
+	 */
+	public function init()
+	{
+		
+	}
+	
+	/**
+	 * @return void
+	 */
+	public function finish()
+	{
+		
 	}
 }

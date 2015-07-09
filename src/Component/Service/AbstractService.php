@@ -101,4 +101,14 @@ abstract class AbstractService implements
 	{
 		$this->customInit();
 	}
+	
+	/**
+	 * @return string
+	 */
+	final public function getNamespace()
+	{
+		$refClass = new \ReflectionClass($this);
+		
+		return $refClass->getNamespaceName();
+	}
 }

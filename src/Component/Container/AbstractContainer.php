@@ -7,6 +7,7 @@ use PHPCrystal\PHPCrystal\Component\Exception as Exception;
 abstract class AbstractContainer
 {
 	private $name;
+	protected $changesTracker = [];
 	protected static $itemClass;
 	protected $items = array();
 	protected $nestedContainers = array();
@@ -99,6 +100,10 @@ abstract class AbstractContainer
 		
 		$lastKey = end($parts);
 		$itemClass = static::$itemClass;
+		
+		if ( ! array_key_exists($lastKey, $arrRef)) {
+			$this->changesTracker[$itemKey] = true;
+		}
 
 		if (is_array($value)) {
 			$arrRef[$lastKey] = array();
@@ -139,6 +144,14 @@ abstract class AbstractContainer
 		return array_key_exists($lastKey, $arrRef);
 	}
 	
+	/**
+	 * @return bool
+	 */
+	final public function hasChanges()
+	{
+		return count($this->changesTracker) > 0;
+	}
+
 	/**
 	 * @return boolean
 	 */

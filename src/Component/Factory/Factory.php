@@ -3,6 +3,7 @@ namespace PHPCrystal\PHPCrystal\Component\Factory;
 
 use PHPCrystal\PHPCrystal\Component\Service\MetaService;
 use PHPCrystal\PHPCrystal\Component\Service\AbstractService;
+use PHPCrystal\PHPCrystal\Component\Service\AbstractContractor;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
 use PHPCrystal\PHPCrystal\Facade\Metadriver;
 use PHPCrystal\PHPCrystal\Component\Facade as Facade;
@@ -44,6 +45,22 @@ final class Factory
 	public static function getApplication()
 	{
 		return Facade\AbstractFacade::getApplication();
+	}
+	
+	/**
+	 * @return PHPCrystal\PHPCrystal\Component\Service\AbstractContract[]
+	 */
+	public function getContractServices()
+	{
+		$result = [];
+		
+		foreach (static::$singletonStorage as $instance) {
+			if ($instance instanceof AbstractContractor) {
+				$result[] = $instance;
+			}
+		}
+		
+		return $result;
 	}
 	
 	private function bind($newInstance)

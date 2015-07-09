@@ -9,6 +9,7 @@ $this->set('env', 'prod');
 $this->addPathAlias('cache', '@app/cache');
 $this->addPathAlias('web', '@app/public_html');
 $this->addPathAlias('template', '@app/resources/template');
+$this->addPathAlias('tmp', '@app/tmp');
 
 $this->openSection('app');
 	$this->set('hostname', 'locahost');
@@ -23,6 +24,24 @@ $this->openSection('phpcrystal.core');
 	$this->set('twig.templates', PathResolver::create('@template'));
 	$this->set('twig.autoescape', true);
 
+$this->closeSection();
+
+// Default session settings
+$this->serviceSection('phpcrystal.session');
+	$this->set('storage', Facade\Filesystem::create());
+	// if set to true does not accept uninitialized session ID
+	$this->set('use_strict_mode', true);
+	$this->set('use_trans_sid', false);
+	$this->set('save_path', sys_get_temp_dir());
+	$this->set('name', 'SID');
+	$this->set('cookie_lifetime', 0);
+	$this->set('cookie_path', '/');
+	$this->set('cookie_domain', null);
+	$this->set('cookie_httponly', true);
+	$this->set('auto_start', true);
+	$this->set('gc_probability', 1);
+	$this->set('gc_divisor', 100);
+	$this->set('gc_maxlifetime', 3600);
 $this->closeSection();
 
 $this->openSection('phpcrystal.core.cache');

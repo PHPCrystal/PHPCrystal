@@ -10,11 +10,16 @@ abstract class AbstractController extends Event\AbstractNode implements
 {
 	private $dbAdapter;
 	private $cache;
+	private $session;
 
-	public function __construct(Contract\Cache $cache)
+	/**
+	 * @api
+	 */
+	final public function __construct(Contract\Cache $cache, Contract\Session $session)
 	{
 		parent::__construct();
 		$this->cache = $cache;
+		$this->session = $session;
 	}
 	
 	/**
@@ -35,10 +40,13 @@ abstract class AbstractController extends Event\AbstractNode implements
 		return $this->cache;
 	}
 	
-	public function init()
+	/**
+	 * @return \PHPCrystal\PHPCrystal\Service\Session\Session
+	 */
+	final public function getSession()
 	{
-		$this->addEventListener(Event\Type\Http\Request::toType(), function($event) {
-			
-		});		
+		$this->session->init();
+		
+		return $this->session;
 	}
 }

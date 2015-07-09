@@ -220,9 +220,32 @@ abstract class AbstractApplication extends AbstractPackage
 		return $this->context;
 	}
 	
+	/**
+	 * 
+	 */
 	final public function getRequestEvent()
 	{
 		return $this->requestEvent;
+	}
+	
+	/**
+	 * 
+	 */
+	final public function getRequest()
+	{
+		return $this->getCurrentEvent()->getRequest();
+	}
+	
+	/**
+	 * @return void
+	 */
+	private function finishContractServices()
+	{
+		foreach ($this->getFactory()->getContractServices() as $service) {
+			if ($service->isInitialized()) {
+				$service->finish();
+			}
+		}
 	}
 	
 	/**
@@ -441,6 +464,8 @@ abstract class AbstractApplication extends AbstractPackage
 				->setException($event->getException());
 			$event = parent::dispatch($excepEvent);
 		}
+		
+		$this->finishContractServices();
 
 		if ($event instanceof Event\Type\InternalEventInterface) {
 			$event->output();

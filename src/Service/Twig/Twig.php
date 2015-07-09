@@ -3,9 +3,9 @@ namespace PHPCrystal\PHPCrystal\Service\Twig;
 
 use PHPCrystal\PHPCrystal\Service\View\Helper;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
-use PHPCrystal\PHPCrystal\Component\Service\AbstractSubcontractor;
+use PHPCrystal\PHPCrystal\Component\Service\AbstractService;
 
-class Twig extends AbstractSubcontractor
+class Twig extends AbstractService
 {
 	private $twig;
 	private $twigLoader;

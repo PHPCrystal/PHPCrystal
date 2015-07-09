@@ -9,14 +9,23 @@ class Request extends \Zend\Http\Request
 {
 	private $serverName;
 	private $serverPort = 80;
+	private $userAgent;
+	private $remoteIpAddr;
+
+	/**
+	 * @var \PHPCrystal\PHPCrystal\Component\MVC\Controller\Input\Input
+	 */	
 	private $getInput;
+	
+	/**
+	 * @var \PHPCrystal\PHPCrystal\Component\MVC\Controller\Input\Input
+	 */
 	private $postInput;
 	
-	public function __construct()
-	{
-		$this->getInput = $this->createGetInputContainer();
-		$this->postInput = $this->createPostInputContainer();
-	}
+	/**
+	 * @var \PHPCrystal\PHPCrystal\Component\MVC\Controller\Input\Input
+	 */
+	private $cookieInput;
 	
 	/**
 	 * @return array
@@ -31,9 +40,9 @@ class Request extends \Zend\Http\Request
 	/**
 	 * @return Inut
 	 */
-	private function createGetInputContainer($itemsArray = array())
+	private function createGetInput(array $items)
 	{
-		return Input::create('GetData', $itemsArray);
+		return Input::create('GetInput', $items);
 	}
 	
 	/**
@@ -41,7 +50,15 @@ class Request extends \Zend\Http\Request
 	 */
 	private function createPostInputContainer($itemsArray = array())
 	{
-		return Input::create('postData', $itemsArray);
+		return Input::create('PostData', $itemsArray);
+	}
+	
+	/**
+	 * @return Input
+	 */
+	private function createCookieInput(array $items)
+	{
+		return Input::create('CookieInput', $items);
 	}
 	
 	/**
@@ -77,6 +94,11 @@ class Request extends \Zend\Http\Request
 		
 		return $this;
 	}
+	
+	final public function getCookieInput()
+	{
+		return $this->cookieInput;
+	}
 
 	/**
 	 * @return $this
@@ -88,18 +110,21 @@ class Request extends \Zend\Http\Request
 			$_SERVER['SERVER_PORT'] == 443) ? 'https' : 'http';		
 		$uriString = $scheme . '://' . $serverName . $_SERVER['REQUEST_URI'];
 		
-		$reqInstance = new static();
-		$reqInstance->setMethod($_SERVER['REQUEST_METHOD']);
-		$reqInstance->setUri(Uri::create($uriString));
-		$reqInstance->serverName = $serverName;
-		$reqInstance->serverPort = $_SERVER['SERVER_PORT'];
+		$request = new static();
+		$request->setMethod($_SERVER['REQUEST_METHOD']);
+		$request->setUri(Uri::create($uriString));
+		$request->serverName = $serverName;
+		$request->serverPort = $_SERVER['SERVER_PORT'];
 		
-		if ($reqInstance->isPost()) {
+		$request->getInput = $request->createGetInput($_GET);
+		$request->cookieInput = $request->createCookieInput($_COOKIE);
+		
+		if ($request->isPost()) {
 			$postInput = $this->createPostInputContainer($_POST);
 			$this->setPostInput($postInput);
 		}
 
-		return $reqInstance;
+		return $request;
 	}
 	
 	/**
@@ -110,17 +135,22 @@ class Request extends \Zend\Http\Request
 		$requestStr = PathResolver::create($filename)
 			->getFileContent();
 
-		$reqInstance =  static::createFromString($requestStr);
-		if ($reqInstance->isPost()) {
+		$request =  static::createFromString($requestStr);
+		if ($request->isPost()) {
 			$postRawData = array();
-			foreach (explode('&', rawurldecode($reqInstance->getContent())) as $dataItem) {
+			foreach (explode('&', rawurldecode($request->getContent())) as $dataItem) {
 				$keyValue = explode('=', $dataItem);
 				$postRawData[$keyValue[0]] = $keyValue[1];
 			}
-			$reqInstance->setPostInput(Input::create('postData', $postRawData));
+			$request->setPostInput(Input::create('postData', $postRawData));
 		}
 		
-		return $reqInstance;
+		$cookieHeader = $request->getHeaders()->get('Cookie');
+		$cookies = $cookieHeader instanceof \Zend\Http\Header\Cookie ?
+			$cookieHeader->getArrayCopy() : [];
+		$request->cookieInput = $request->createCookieInput($cookies);
+		
+		return $request;
 	}
 
 	/**
@@ -179,5 +209,21 @@ class Request extends \Zend\Http\Request
 		}
 
 		$this->uri = $uri;
+	}
+	
+	/**
+	 * @return string
+	 */
+	public function getRemoteIpAddr()
+	{
+		return $this->remoteIpAddr;
+	}
+	
+	/**
+	 * @return string
+	 */
+	public function getUserAgent()
+	{
+		return $this->userAgent;
 	}
 }
