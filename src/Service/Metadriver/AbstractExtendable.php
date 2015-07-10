@@ -1,10 +1,16 @@
 <?php
 namespace PHPCrystal\PHPCrystal\Service\Metadriver;
 
+use PHPCrystal\PHPCrystal\Facade as Facade;
+
 abstract class AbstractExtendable extends AbstractMetaContainer
 {
 	protected $baseClass;
 	protected $extendedClass;
+	
+	/**
+	 * @var bool
+	 */
 	protected $isExtended = false;
 
 	/**
@@ -18,6 +24,8 @@ abstract class AbstractExtendable extends AbstractMetaContainer
 		if ( ! empty($extendedClass)) {
 			$this->isExtended = true;
 		}
+		
+		$this->addAnnotations(Facade\Metadriver::getClassAnnotations($this->getBaseClass()));
 	}
 	
 	/**

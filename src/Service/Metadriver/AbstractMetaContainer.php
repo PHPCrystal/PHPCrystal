@@ -19,8 +19,8 @@ abstract class AbstractMetaContainer
 	/**
 	 * @return void
 	 */
-	public function addAnnotation($annot)
+	public function addAnnotations(array $annots)
 	{
-		$this->annotations[] = $annot;
+		$this->annotations = $annots;
 	}
 }

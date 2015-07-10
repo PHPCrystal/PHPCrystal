@@ -290,10 +290,12 @@ abstract class AbstractApplication extends AbstractPackage
 				$action = $package->getFactory()
 					->createFromMetaClass($metaClass);
 
-				$action->setAllowedHttpMethods($metaClass->getAllowedHttpMethods());
-				$action->setControllerMethod($metaClass->getControllerMethod());
-				$action->setUriMatchRegExp($metaClass->getUriMatchRegExp());
-				$action::setURIMatchPattern($metaClass->getURIMatchPattern());
+				$ruleAnnot = $metaClass->getActionAnnotation();
+				$ctrlMethodAnnot = $metaClass->getControllerMethodAnnotation();
+				$action->setAllowedHttpMethods($ruleAnnot->getAllowedHttpMethods());
+				$action->setControllerMethod($ctrlMethodAnnot->value);
+				$action->setUriMatchRegExp($ruleAnnot->getUriMatchRegExp());
+				$action::setURIMatchPattern($ruleAnnot->matchPattern);
 
 				$this->addAction($action);
 			}
