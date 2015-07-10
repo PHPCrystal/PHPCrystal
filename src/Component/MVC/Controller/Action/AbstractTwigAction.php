@@ -1,9 +1,6 @@
 <?php
 namespace PHPCrystal\PHPCrystal\Component\MVC\Controller\Action;
 
-use PHPCrystal\PHPCrystal\Component\Http\Request;
-use PHPCrystal\PHPCrystal\Service\Event as Event;
-use PHPCrystal\PHPCrystal\Facade as Facade;
 use PHPCrystal\PHPCrystal\Service\Twig\Twig;
 
 abstract class AbstractTwigAction extends AbstractAction
@@ -16,12 +13,18 @@ abstract class AbstractTwigAction extends AbstractAction
 		$this->twig = $twig;
 	}
 
+	/**
+	 * @return void
+	 */
 	public function init()
 	{
 		parent::init();
 	}
 	
-	public function render($tplName, $variables)
+	/**
+	 * @return string
+	 */
+	final public function render($tplName, $variables)
 	{
 		return $this->twig->render($tplName, $variables);
 	}

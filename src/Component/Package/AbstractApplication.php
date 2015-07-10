@@ -293,6 +293,7 @@ abstract class AbstractApplication extends AbstractPackage
 				$action->setAllowedHttpMethods($metaClass->getAllowedHttpMethods());
 				$action->setControllerMethod($metaClass->getControllerMethod());
 				$action->setUriMatchRegExp($metaClass->getUriMatchRegExp());
+				$action::setURIMatchPattern($metaClass->getURIMatchPattern());
 
 				$this->addAction($action);
 			}

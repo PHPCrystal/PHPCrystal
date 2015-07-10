@@ -16,13 +16,18 @@ class Rule
 {
 	private $allowedHttpMethods = array();
 	private $uriMatchRegExp;
+	public $matchPattern;
 	
+	/**
+	 * 
+	 */
 	public function __construct(array $values)
 	{
 		$this->setAllowedHttpMethods($values['method']);
 		if (isset($values['matchPattern'])) {
+			$this->matchPattern = $values['matchPattern'];
 			$regExp = self::convertMatchPatternToRegexp($values['matchPattern']);
-			$this->setUriMatchRegExp($regExp);
+			$this->uriMatchRegExp = $regExp;
 		}
 	}
 	
@@ -86,16 +91,8 @@ class Rule
 	/**
 	 * @return string
 	 */
-	public function getUriMatchRegExp()
+	public function getURIMatchRegExp()
 	{
 		return $this->uriMatchRegExp;
 	}
-	
-	/**
-	 * @return void
-	 */
-	public function setUriMatchRegExp($regExp)
-	{
-		$this->uriMatchRegExp = $regExp;
-	}	
 }

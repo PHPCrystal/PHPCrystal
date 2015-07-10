@@ -5,6 +5,11 @@ use PHPCrystal\PHPCrystal\Component\MVC\Controller\Input\Input;
 use PHPCrystal\PHPCrystal\Component\Filesystem\PathResolver;
 use PHPCrystal\PHPCrystal\Component\Http\Uri;
 
+const REQUEST_INPUT_GET = 1;
+const REQUEST_INPUT_POST = 2;
+const REQUEST_INPUT_COOKIE = 4;
+const REQUEST_INPUT_URI = 8;
+
 class Request extends \Zend\Http\Request
 {
 	private $serverName;
@@ -28,6 +33,11 @@ class Request extends \Zend\Http\Request
 	private $cookieInput;
 	
 	/**
+	 * @var \PHPCrystal\PHPCrystal\Component\MVC\Controller\Input\Input
+	 */
+	private $uriInput;	
+
+	/**
 	 * @return array
 	 */
 	public static function getKnownHttpMethods()
@@ -35,6 +45,14 @@ class Request extends \Zend\Http\Request
 		return array(self::METHOD_CONNECT, self::METHOD_DELETE, self::METHOD_GET,
 			self::METHOD_HEAD, self::METHOD_OPTIONS, self::METHOD_PATCH, self::METHOD_POST,
 			self::METHOD_PROPFIND, self::METHOD_PUT, self::METHOD_TRACE);
+	}
+	
+	/**
+	 * @api
+	 */
+	public function __construct()
+	{
+		$this->uriInput = $this->createURIInput([]);
 	}
 	
 	/**
@@ -48,9 +66,9 @@ class Request extends \Zend\Http\Request
 	/**
 	 * @return Input
 	 */
-	private function createPostInputContainer($itemsArray = array())
+	private function createPostInputContainer(array $items)
 	{
-		return Input::create('PostData', $itemsArray);
+		return Input::create('PostInput', $items);
 	}
 	
 	/**
@@ -59,6 +77,14 @@ class Request extends \Zend\Http\Request
 	private function createCookieInput(array $items)
 	{
 		return Input::create('CookieInput', $items);
+	}
+	
+	/**
+	 * @return Input
+	 */
+	private function createURIInput(array $items)
+	{
+		return Input::create('UriInput', $items);
 	}
 	
 	/**
@@ -78,15 +104,15 @@ class Request extends \Zend\Http\Request
 	}
 
 	/**
-	 * @return void
+	 * @return \PHPCrystal\PHPCrystal\Component\MVC\Controller\Input\Input
 	 */
 	final public function getPostInput()
 	{
 		return $this->postInput;
 	}
-	
+
 	/**
-	 * @return
+	 * @return $this
 	 */
 	final public function setPostInput(Input $input)
 	{
@@ -94,10 +120,21 @@ class Request extends \Zend\Http\Request
 		
 		return $this;
 	}
-	
+
+	/**
+	 * @return \PHPCrystal\PHPCrystal\Component\MVC\Controller\Input\Input
+	 */
 	final public function getCookieInput()
 	{
 		return $this->cookieInput;
+	}
+	
+	/**
+	 * @return \PHPCrystal\PHPCrystal\Component\MVC\Controller\Input\Input
+	 */
+	final public function getURIInput()
+	{
+		return $this->uriInput;
 	}
 
 	/**

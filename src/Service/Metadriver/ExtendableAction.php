@@ -8,15 +8,20 @@ class ExtendableAction extends AbstractExtendable
 	private $controllerMethod;
 	private $allowedHttpMethods = array();
 	private $uriMatchRegExp;
+	private $uriMatchPattern;
 	
 	/**
 	 * @return array
 	 */
 	public function __sleep()
 	{
-		return array_merge(parent::__sleep(), ['controllerMethod', 'allowedHttpMethods', 'uriMatchRegExp']);
+		return array_merge(parent::__sleep(), ['controllerMethod', 'allowedHttpMethods',
+			'uriMatchRegExp', 'uriMatchPattern']);
 	}
 
+	/**
+	 * 
+	 */
 	public function __construct($baseClass, $extendedClass)
 	{
 		parent::__construct($baseClass, $extendedClass, 'PHPCrystal\PHPCrystal\Annotation\Action');
@@ -30,6 +35,7 @@ class ExtendableAction extends AbstractExtendable
 			} else if ($annot instanceof Action\Rule) {
 				$this->setAllowedHttpMethods($annot->getAllowedHttpMethods());
 				$this->setUriMatchRegExp($annot->getUriMatchRegExp());
+				$this->setURIMatchPattern($annot->matchPattern);
 			}
 		}
 	}
@@ -80,5 +86,21 @@ class ExtendableAction extends AbstractExtendable
 	public function setUriMatchRegExp($regExp)
 	{
 		$this->uriMatchRegExp = $regExp;
+	}
+	
+	/**
+	 * @return string
+	 */
+	public function getURIMatchPattern()
+	{
+		return $this->uriMatchPattern;
+	}
+	
+	/**
+	 * @return void
+	 */
+	public function setURIMatchPattern($pattern)
+	{
+		$this->uriMatchPattern = $pattern;
 	}
 }

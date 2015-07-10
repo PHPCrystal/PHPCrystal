@@ -20,10 +20,10 @@ abstract class AbstractContainer
 	 */
 	protected $allowOverride = true;
 
-	public function __construct($name = null, $itemsArray = array())
+	public function __construct($name = null, array $items)
 	{
 		$this->name = $name;
-		$this->items = $this->convertArray($itemsArray);
+		$this->items = $this->convertArray($items);
 	}
 	
 	/**
@@ -227,9 +227,11 @@ abstract class AbstractContainer
 	/**
 	 * @return $this
 	 */
-	public static function create($name, $itemsArray = array())
+	public static function create($name, array $items = null)
 	{
-		return new static($name, $itemsArray);
+		$items = (array)$items;
+
+		return new static($name, $items);
 	}
 	
 	/**

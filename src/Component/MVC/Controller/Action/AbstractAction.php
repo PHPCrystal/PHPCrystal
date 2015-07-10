@@ -1,6 +1,8 @@
 <?php
 namespace PHPCrystal\PHPCrystal\Component\MVC\Controller\Action;
 
+use PHPCrystal\PHPCrystal\Component\MVC\Controller\Input\Input;
+
 use PHPCrystal\PHPCrystal\Component\Http\Request;
 use PHPCrystal\PHPCrystal\Component\Http\Uri;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
@@ -10,9 +12,17 @@ abstract class AbstractAction extends Event\AbstractNode implements
 	Factory\InitiableInterface,
 	Factory\Aware\DependencyInjectionInterface
 {
+	/**
+	 * URI path pattern to match. Example /user/<d:user_id>/profile/edit/
+	 * 
+	 * @var string
+	 */
+	private static $uriMatchPattern;
+	
 	private $allowedHttpMethods = array();
 	private $controllerMethod;
 	private $uriMatchRegExp;
+	private $uriRegExpMatches;
 	
 	/**
 	 * If set to false the action didn't match the request
@@ -107,22 +117,25 @@ abstract class AbstractAction extends Event\AbstractNode implements
 				return false;
 			}
 
-			$getContainer = $request->getGetInput();
+			// Fill the URI input container with pattern matches
 			array_shift($matches);
-
+			$tmpArray = [];
 			foreach ($matches as $itemKey => $itemValue) {
 				if (is_integer($itemKey))  {
 					continue;
 				}
-				$getContainer->set($itemKey, $itemValue);
+				$tmpArray[$itemKey] = $itemValue;
 			}
-		
+			
+			$uriInput = $this->getApplication()->getRequest()->getURIInput();
+			$uriInput->merge(Input::create(null, $tmpArray));
+
 			return true;
 		} else {
 			return false;
 		}
 	}
-	
+
 	/**
 	 * @return void
 	 */
@@ -262,12 +275,31 @@ abstract class AbstractAction extends Event\AbstractNode implements
 	}
 	
 	/**
+	 * @return tring
+	 */
+	final static public function getURIMatchPattern()
+	{
+		return self::$uriMatchPattern;
+	}
+	
+	/**
+	 * @return void
+	 */
+	final static public function setURIMatchPattern($pattern)
+	{
+		self::$uriMatchPattern = $pattern;
+	}
+	
+	/**
 	 * @return string
 	 */
-	final public function getReverseUri(...$params)
+	public function getReverseURI(...$params)
 	{
-		if (method_exists($this, 'defineReverseUri')) {
-			return $this->defineReverseUri(...$params);
+		$matchPattern = static::getURIMatchPattern();
+		if ( ! empty($matchPattern)) {
+			return preg_replace_callback('|<[^>]+>|', function() use($params) {
+				return array_shift($params);
+			}, $matchPattern);
 		}
 	}
 	
