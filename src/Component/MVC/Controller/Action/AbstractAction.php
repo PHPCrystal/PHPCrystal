@@ -19,10 +19,20 @@ abstract class AbstractAction extends Event\AbstractNode implements
 	 */
 	private static $uriMatchPattern;
 	
+	/**
+	 * @var array
+	 */
 	private $allowedHttpMethods = array();
+	
+	/**
+	 * @var string
+	 */
 	private $controllerMethod;
+	
+	/**
+	 * @var string
+	 */
 	private $uriMatchRegExp;
-	private $uriRegExpMatches;
 	
 	/**
 	 * If set to false the action didn't match the request
@@ -30,12 +40,16 @@ abstract class AbstractAction extends Event\AbstractNode implements
 	 * @var boolean
 	 */
 	private $isValid = true;
-	private $status = null;
+
 	/**
 	 * @var boolean
 	 */
 	protected $startTransaction = false;
-	protected $transactionLevel = null;
+	
+	/**
+	 * @var string|null
+	 */
+	protected $transactionLevel;
 	
 	protected $ctrlInstance;
 	protected $ctrlInput;

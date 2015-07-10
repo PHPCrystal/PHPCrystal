@@ -2,6 +2,7 @@
 namespace PHPCrystal\PHPCrystal\Service\Metadriver;
 
 use PHPCrystal\PHPCrystal\Annotation\Action as Action;
+use PHPCrystal\PHPCrystal\Facade as Facade;
 
 class ExtendableAction extends AbstractExtendable
 {	
@@ -11,23 +12,13 @@ class ExtendableAction extends AbstractExtendable
 	private $uriMatchPattern;
 	
 	/**
-	 * @return array
-	 */
-	public function __sleep()
-	{
-		return array_merge(parent::__sleep(), ['controllerMethod', 'allowedHttpMethods',
-			'uriMatchRegExp', 'uriMatchPattern']);
-	}
-
-	/**
 	 * 
 	 */
 	public function __construct($baseClass, $extendedClass)
 	{
-		parent::__construct($baseClass, $extendedClass, 'PHPCrystal\PHPCrystal\Annotation\Action');
-		
-		$refClass = new \ReflectionClass($this->getBaseClass());
-		$annots = $this->annotReader->getClassAnnotations($refClass);
+		parent::__construct($baseClass, $extendedClass);
+
+		$annots = Facade\Metadriver::getClassAnnotations($this->getBaseClass());
 
 		foreach ($annots as $annot) {
 			if ($annot instanceof Action\ControllerMethod) {

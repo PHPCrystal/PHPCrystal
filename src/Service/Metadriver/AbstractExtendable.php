@@ -1,27 +1,16 @@
 <?php
 namespace PHPCrystal\PHPCrystal\Service\Metadriver;
 
-use Doctrine\Common\Annotations\SimpleAnnotationReader;
-
-abstract class AbstractExtendable
+abstract class AbstractExtendable extends AbstractMetaContainer
 {
 	protected $baseClass;
 	protected $extendedClass;
 	protected $isExtended = false;
-	protected $annotReader;
-	
-	/**
-	 * @return array
-	 */
-	public function __sleep()
-	{
-		return array('baseClass', 'extendedClass', 'isExtended');
-	}
 
 	/**
 	 * @api
 	 */
-	public function __construct($baseClass, $extendedClass, $annotNamespace = null)
+	public function __construct($baseClass, $extendedClass)
 	{
 		$this->baseClass = $baseClass;
 		$this->extendedClass = $extendedClass;
@@ -29,9 +18,6 @@ abstract class AbstractExtendable
 		if ( ! empty($extendedClass)) {
 			$this->isExtended = true;
 		}
-		
-		$this->annotReader = new SimpleAnnotationReader();
-		$this->annotReader->addNamespace($annotNamespace);
 	}
 	
 	/**

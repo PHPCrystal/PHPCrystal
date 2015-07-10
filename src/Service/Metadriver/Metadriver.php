@@ -4,12 +4,14 @@ namespace PHPCrystal\PHPCrystal\Service\Metadriver;
 use PHPCrystal\PHPCrystal\Component\Filesystem\PathResolver;
 use PHPCrystal\PHPCrystal\Component\Service\AbstractService;
 use PHPCrystal\PHPCrystal\Component\Package\AbstractExtension;
+use Doctrine\Common\Annotations\SimpleAnnotationReader;
 
 class Metadriver extends AbstractService
 {
 	private $isVoid = true;
 	private $data;
 	private $filename;
+	private $annotReader;
 
 	/**
 	 * @return boolean
@@ -28,6 +30,42 @@ class Metadriver extends AbstractService
 			'\\Extension\\' . $baseClass;
 		
 		return $extendedName;
+	}
+	
+	/**
+	 * @return null
+	 */
+	public function init()
+	{
+		parent::init();
+		
+		$this->annotReader = new SimpleAnnotationReader();
+		$this->annotReader->addNamespace('PHPCrystal\PHPCrystal\Annotation\Action');
+		
+		$this->filename = PathResolver::create('@cache', 'furball.ser');
+		$data = $this->filename->unserialize();
+
+		if ($data !== null) {
+			$this->isVoid = false;
+			$this->data = $data;
+		} else {
+			$this->flush();
+			$this->isVoid = true;
+		}
+		
+		$this->isInitialized = true;
+	}	
+	
+	/**
+	 * @return array
+	 */
+	public function getClassAnnotations($className)
+	{
+		$refClass = new \ReflectionClass($className);
+		
+		$annots = $this->annotReader->getClassAnnotations($refClass);
+		
+		return $annots;
 	}
 	
 	/**
@@ -172,27 +210,6 @@ class Metadriver extends AbstractService
 		}
 		
 		return null;
-	}
-	
-	/**
-	 * @return null
-	 */
-	public function init()
-	{
-		parent::init();
-		
-		$this->filename = PathResolver::create('@cache', 'furball.ser');
-		$data = $this->filename->unserialize();
-
-		if ($data !== null) {
-			$this->isVoid = false;
-			$this->data = $data;
-		} else {
-			$this->flush();
-			$this->isVoid = true;
-		}
-		
-		$this->isInitialized = true;
 	}
 	
 	public function flush()
