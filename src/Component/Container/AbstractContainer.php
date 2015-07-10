@@ -6,6 +6,7 @@ use PHPCrystal\PHPCrystal\Component\Exception as Exception;
 
 const ITEM_OPERATION_ADD = 1;
 const ITEM_OPERATION_REMOVE = 2;
+const ITEM_OPERATION_NEW_VALUE = 3;
 
 abstract class AbstractContainer
 {
@@ -106,6 +107,8 @@ abstract class AbstractContainer
 		
 		if ( ! array_key_exists($lastKey, $arrRef)) {
 			$this->changesTracker[$itemKey] = ITEM_OPERATION_ADD;
+		} else {
+			$this->changesTracker[$itemKey] = ITEM_OPERATION_NEW_VALUE;
 		}
 
 		if (is_array($value)) {
@@ -146,7 +149,27 @@ abstract class AbstractContainer
 		$lastKey = end($parts);
 		return array_key_exists($lastKey, $arrRef);
 	}
-	
+
+	/**
+	 * Asserts that item value is set to true
+	 * 
+	 * @return bool
+	 */
+	final public function assertTrue($itemKey)
+	{
+		return $this->get($itemKey) === true;
+	}
+
+	/**
+	 * Asserts that item value is set to false
+	 * 
+	 * @return bool
+	 */
+	final public function assertFalse($itemKey)
+	{
+		return $this->get($itemKey) === false;
+	}
+
 	/**
 	 * @return bool
 	 */

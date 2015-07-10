@@ -12,8 +12,9 @@ class Session extends AbstractContractor implements
 	private $config;
 	private $backendStorage;
 	private $sessionId;
-	private $container;
-	private $flashContainer;
+	private $dataContainer;
+	private $flashDataContainer;
+	private $metaContainer;
 	private $newSessionFlag = false;
 	
 	private $useTransSid;
@@ -63,6 +64,14 @@ class Session extends AbstractContractor implements
 	}
 	
 	/**
+	 * @return Contaier
+	 */
+	private function createMetaContainer(array $items)
+	{
+		return MetaContainer::create('SessionMetaData', $items);
+	}
+	
+	/**
 	 * @return array
 	 */
 	private function fetchBulkData($sessId)
@@ -76,8 +85,11 @@ class Session extends AbstractContractor implements
 	 */
 	private function saveBulkData($sessId)
 	{
-		$dataBulk = [$this->container->toArray(),
-			$this->flashContainer->toArray()];
+		$dataBulk = [
+			$this->dataContainer->toArray(),
+			$this->flashDataContainer->toArray(),
+			$this->metaContainer->toArray()
+		];
 	
 		$this->backendStorage->set($sessId, $dataBulk);
 	}
@@ -90,14 +102,16 @@ class Session extends AbstractContractor implements
 		$dataBulk = $this->fetchBulkData($sessId);
 
 		if (empty($dataBulk)) {
-			$data = $flashData = [];
+			$data = $flashData = $metaData = [];
 		} else {
 			$data = (array)array_shift($dataBulk);
 			$flashData = (array)array_shift($dataBulk);
+			$metaData = (array)array_shift($dataBulk);
 		}
 
-		$this->container = $this->createContainer($data);
-		$this->flashContainer = $this->createFlashContainer($flashData);
+		$this->dataContainer = $this->createContainer($data);
+		$this->flashDataContainer = $this->createFlashContainer($flashData);
+		$this->metaContainer = $this->createMetaContainer($metaData);
 	}
 
 	/**
@@ -144,8 +158,8 @@ class Session extends AbstractContractor implements
 	 */
 	private function getCookieLifetime()
 	{
-		if ($this->container->has('_cookie_lifetime')) {
-			return $this->container->get('_cookie_lifetime');
+		if ($this->metaContainer->has('cookie_lifetime')) {
+			return $this->metaContainer->get('cookie_lifetime');
 		} else  {
 			$default = $this->config->get('cookie_lifetime');
 			if ($default > 0) {
@@ -167,7 +181,7 @@ class Session extends AbstractContractor implements
 			return;
 		}
 		
-		// assign session id
+		// set session cookie value
 		if ($this->newSessionFlag) {
 			if ( ! $this->useTransSid) {
 				setcookie(
@@ -182,8 +196,11 @@ class Session extends AbstractContractor implements
 			}
 		}
 
-		// save session data
-		if ($this->container->hasChanges() || $this->flashContainer->hasChanges()) {
+		// save session data if necessary
+		if ($this->dataContainer->hasChanges() ||
+			$this->flashDataContainer->getCount() ||
+			$this->metaContainer->hasChanges())
+		{
 			$this->saveBulkData($this->sessionId);
 		}
 	}
@@ -206,6 +223,14 @@ class Session extends AbstractContractor implements
 		return $this->sessionId !== null;
 	}
 	
+	/**
+	 * @return bool
+	 */
+	public function isAuthenticated()
+	{
+		return $this->isActive() && $this->metaContainer->assertTrue('is_auth');
+	}
+
 	/**
 	 * @return bool
 	 */
@@ -236,17 +261,20 @@ class Session extends AbstractContractor implements
 		$this->sessionId = $this->generateSessionId();
 		
 		if (null === $oldSessId) {
-			$this->container = $this->createContainer([]);
-			$this->flashContainer = $this->createFlashContainer([]);
+			$this->dataContainer = $this->createContainer([]);
+			$this->flashDataContainer = $this->createFlashContainer([]);
+			$this->metaContainer = $this->createMetaContainer([]);
 		}
 		
 		if (null === $expireTime) {
 			$expireTime = time() + $this->config->get('gc_maxlifetime');
 		} else {
-			$this->container->set('_cookie_lifetime', $expireTime);
+			$this->metaContainer->set('cookie_lifetime', $expireTime);
 		}
 		
-		$this->container->set('_expire', $expireTime);
+		$this->metaContainer->set('expire', $expireTime);
+		$this->metaContainer->set('is_auth', false);
+		$this->metaContainer->set('create_time', time());
 		
 		$this->newSessionFlag = true;
 	}
@@ -276,8 +304,8 @@ class Session extends AbstractContractor implements
 	 */
 	public function flush()
 	{
-		$this->container->flush();
-		$this->flashContainer->flush();
+		$this->dataContainer->flush();
+		$this->flashDataContainer->flush();
 	}
 	
 	/**
@@ -287,7 +315,7 @@ class Session extends AbstractContractor implements
 	 */
 	public function get($key, $default = null)
 	{
-		return $this->container->get($key, $default);
+		return $this->dataContainer->get($key, $default);
 	}
 	
 	/**
@@ -295,7 +323,7 @@ class Session extends AbstractContractor implements
 	 */
 	public function set($key, $value)
 	{
-		$this->container->set($key, $value);
+		$this->dataContainer->set($key, $value);
 	}
 	
 	/**
@@ -305,14 +333,30 @@ class Session extends AbstractContractor implements
 	 */
 	public function has($key)
 	{
-		return $this->container->has($key);
+		return $this->dataContainer->has($key);
+	}
+	
+	/**
+	 * @return mixed
+	 */
+	public function getFlash($key)
+	{
+		return $this->flashDataContainer->get($key);
 	}
 	
 	/**
 	 * @return void
 	 */
-	public function flash($key, $value)
+	public function setFlash($key, $value)
 	{
-		
+		$this->flashDataContainer->set($key, $value);
+	}
+	
+	/**
+	 * @return bool
+	 */
+	public function hasFlash($key)
+	{
+		return $this->flashDataContainer->has($key);
 	}
 }

@@ -26,9 +26,26 @@ class ContainerTest extends TestCase
 	public function testHasChanges()
 	{
 		$container= Container::create(null, ['foo' => 'foo']);
+		$this->assertFalse($container->hasChanges());		
+		
 		$container->set('foo', 'bar');
-		$this->assertFalse($container->hasChanges());
+		$this->assertTrue($container->hasChanges());
+		
 		$container->set('bar', 'foo');
 		$this->assertTrue($container->hasChanges());
+	}
+	
+	public function testAssertTrue()
+	{
+		$container= Container::create(null, []);
+		
+		$container->set('foo', '1');
+		$this->assertFalse($container->assertTrue('foo'));
+		
+		$container->set('bar', 1);
+		$this->assertFalse($container->assertTrue('bar'));
+		
+		$container->set('bar', true);
+		$this->assertTrue($container->assertTrue('bar'));
 	}
 }
