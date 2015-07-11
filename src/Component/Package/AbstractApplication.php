@@ -419,10 +419,19 @@ abstract class AbstractApplication extends AbstractPackage
 
 		// form a propagation path through which the event will be passed.
 		// Package -> Front Controller -> Controller -> Action
+		
+		$fcInstance = $router->getFrontController();
+		$ctrlInstance = $router->getController();
+		$actionInstance = $router->getAction();
+
 		$package
-			->addToPropagationPath($router->getFrontController())
-			->addToPropagationPath($router->getController())
-			->addToPropagationPath($router->getAction());
+			->dispatchChainAddElement($fcInstance)
+			->dispatchChainAddElement($ctrlInstance)
+			->dispatchChainAddElement($actionInstance);
+		
+		if (null !== $fcInstance && null !== $ctrlInstance && null !== $actionInstance) {
+			$fcInstance->mergePriorEvents($ctrlInstance, $actionInstance);
+		}
 		
 		// actions are terminate nodes
 		$event->setTerminateNodeHandler(function($event) {
@@ -437,19 +446,27 @@ abstract class AbstractApplication extends AbstractPackage
 	 */
 	final public function dispatch($event)
 	{
+		static $reentered = false;
+
 		try {
 			// handle internal events
-			if ($event instanceof Event\Type\AbstractInternal) {
+			if ($event instanceof Event\Type\AbstractInternal || $reentered) {
 				return parent::dispatch($event);
 			}
+			
 			$event->setOriginalTarget($this);			
 			$this->setCurrentEvent($event);
+			
 			// bootstrap
 			$this->bootstrap($event);
+			
 			// dispatch given event to the application
 			if ($event instanceof Event\Type\Http\Request) {
-				$event = $this->getEventManager()
-					->dispatch($event, $this->getTargetPackage($event));
+				$reentered = true;				
+
+				$pkgTarget = $this->getTargetPackage($event);
+				$event = $pkgTarget->dispatch($event);
+
 				if ( ! $this->isCli()) {
 					//$this->checkOutputBuffer();
 				}
@@ -480,16 +497,4 @@ abstract class AbstractApplication extends AbstractPackage
 	//
 	// Event hooks
 	//
-	
-	protected function onApplySecurityPolicy($event)
-	{
-		$sess = Facade\Session::create();
-
-		if ($event->isAuthRequired() && ! $sess->isAuthenticated()) {
-			$event->setError(ERR_SECURITY_AUTHENTICATION_REQUIRED);
-			return false;
-		}
-		
-		return true;
-	}
 }

@@ -3,7 +3,6 @@ namespace PHPCrystal\PHPCrystal\Service\Metadriver;
 
 use PHPCrystal\PHPCrystal\Annotation\Action as Action;
 
-
 class ExtendableAction extends AbstractExtendable
 {	
 	/**
@@ -17,7 +16,7 @@ class ExtendableAction extends AbstractExtendable
 			}
 		}
 	}
-	
+
 	/**
 	 * @return 
 	 */
@@ -27,6 +26,6 @@ class ExtendableAction extends AbstractExtendable
 			if ($annot instanceof Action\ControllerMethod) {
 				return $annot;
 			}
-		}		
+		}
 	}
 }

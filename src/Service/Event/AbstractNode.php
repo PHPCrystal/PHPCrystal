@@ -12,17 +12,25 @@ abstract class AbstractNode implements
 	use AFPAware;
 	
 	/**
+	 * @var array
+	 */
+	private $priorEvents = [];
+	
+	/**
 	 * @var \PHPCrystal\PHPCrystal\Service\Event\Type\AbstractEvent
 	 */
 	private $currentEvent;
-	private $propagationPath = array();
+	private $dispatchChain = array();
 
 	protected $parentNode;
 	protected $childNodes = array();
 
+	/**
+	 * @api
+	 */
 	public function __construct()
 	{
-		$this->addToPropagationPath($this);
+		$this->dispatchChainAddElement($this);
 	}
 	
 	protected function getEventManager()
@@ -48,13 +56,13 @@ abstract class AbstractNode implements
 	}
 
 	/**
-	 * 
+	 * @return AbstractEvent
 	 */
 	public function dispatch($event)
 	{
 		return $this->getEventManager()->dispatch($event, $this);				
 	}
-	
+		
 	/**
 	 * @return $this
 	 */
@@ -69,16 +77,24 @@ abstract class AbstractNode implements
 	/**
 	 * @return array
 	 */
-	final public function getPropagationPath()
+	final public function getDispatchChain()
 	{
-		return $this->propagationPath;
+		return $this->dispatchChain;
+	}
+	
+	/**
+	 * @return array
+	 */
+	final public function getReverseDispatchChain()
+	{
+		return array_reverse($this->getDispatchChain());
 	}
 	
 	final public function getPropagationPathPrevNode($offset)
 	{
 		$prev = null;
 		
-		foreach ($this->getPropagationPath() as $node) {
+		foreach ($this->getDispatchChain() as $node) {
 			if ($node === $offset) {
 				return $prev;
 			}
@@ -89,26 +105,33 @@ abstract class AbstractNode implements
 	/**
 	 * @return array
 	 */
-	final function getPropagationSubPath($offset)
+	final function sliceDispatchChain($offset, $reverseChain = false)
 	{
 		$result = array();
+		$captureFlag  = false;
 		
-		foreach ($this->getPropagationPath() as $node) {
-			$result[] = $node;
-			if ($offset === $node) {
-				break;
+		$dispatchChain = $reverseChain ?
+			$this->getReverseDispatchChain() : $this->getDispatchChain();
+		
+		foreach ($dispatchChain as $listener) {
+			if ($offset === $listener) {
+				$captureFlag = true;
+			}
+			
+			if ($captureFlag) {
+				$result[] = $listener;
 			}
 		}
 		
 		return $result;
 	}
-	
+
 	/**
 	 * @return $this
 	 */
-	final function addToPropagationPath($node)
+	final function dispatchChainAddElement($node)
 	{
-		$this->propagationPath[] = $node;
+		$this->dispatchChain[] = $node;
 		
 		return $this;
 	}
@@ -137,7 +160,7 @@ abstract class AbstractNode implements
 	 */
 	final public function getTerminateNode()
 	{
-		$path = $this->getPropagationPath();
+		$path = $this->getDispatchChain();
 		
 		return end($path);
 	}
@@ -191,5 +214,57 @@ abstract class AbstractNode implements
 		}
 		
 		return $result;
-	}	
+	}
+	
+	/**
+	 * @return void
+	 */
+	final public function addPriorEvent($event)
+	{
+		$this->priorEvents[$event::toType()] = $event;
+	}
+	
+	/**
+	 * @return array
+	 */
+	final public function getPriorEvents()
+	{
+		return $this->priorEvents;
+	}
+	
+	/**
+	 * @return void
+	 */
+	final public function setPriorEvents(array $events)
+	{
+		foreach ($events as $event) {
+			$this->addPriorEvent($event);
+		}
+	}
+	
+	/**
+	 * @return void
+	 */
+	final public function flushPriorEvents()
+	{
+		$this->priorEvents = [];
+	}
+	
+	/**
+	 * @return array
+	 */
+	final public function mergePriorEvents(...$listeners)
+	{
+		foreach ($listeners as $listener) {
+			foreach ($listener->getPriorEvents() as $priorEvent) {
+				$type = $priorEvent::toType();
+				if (isset($this->priorEvents[$type]) && $priorEvent instanceof EventMergeable) {
+					$this->priorEvents[$type]->merge($priorEvent);
+				} else {
+					$this->priorEvents[$type] = $priorEvent;
+				}				
+				$listener->flushPriorEvents();
+			}
+		}
+	}
 }

@@ -20,6 +20,11 @@ abstract class AbstractAppListener extends AbstractNode  implements
 	private $cache;
 	
 	/**
+	 * @var array
+	 */
+	private $annots;
+	
+	/**
 	 * @return bool
 	 */
 	public static function fireEventUponInstantiation()
@@ -44,12 +49,28 @@ abstract class AbstractAppListener extends AbstractNode  implements
 	{
 		$this->addEventListener(Event\Type\System\SecurityPolicyApplication::toType(), function($event) {
 			$success = $this->onSecurityPolicyApplication($event);
-			if ( ! $success) {
+			if ( false === $success) {
 				$event->discard();
 			}
 		});
 	}
 	
+	/**
+	 * @return array
+	 */
+	final public function getAnnotations()
+	{
+		return $this->annots;
+	}
+	
+	/**
+	 * @return void
+	 */
+	final public function setAnnotations(array $annots)
+	{
+		$this->annots = $annots;
+	}
+
 	/**
 	 * @return \PHPCrystal\PHPCrystal\Contract\Cache
 	 */
@@ -77,7 +98,16 @@ abstract class AbstractAppListener extends AbstractNode  implements
 	protected function onSecurityPolicyApplication($event)
 	{
 		if ($event->isAuthRequired() && ! $this->getSession()->isAuthenticated()) {
+			$this->onAuthenticationFail($event);
 			return false;
 		}
+	}
+	
+	/**
+	 * @return void
+	 */
+	protected function onAuthenticationFail($event)
+	{
+		$event->setAutoTriggerEvent(Event\Type\Http\Response500::create());		
 	}
 }

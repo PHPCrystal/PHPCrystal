@@ -145,12 +145,12 @@ final class Factory
 		$this->bind($service);
 		
 		// dispatch init service event
-		$initServiceEvent = $this->getPackage()
-			->getApplication()
-			->dispatchInitServiceEvent($service);		
-		if ($initServiceEvent->hasCustomInitRoutine()) {
-			$service->setCustomInitClosure($initServiceEvent->getResult());
-		}
+		//$initServiceEvent = $this->getPackage()
+		//	->getApplication()
+		//	->dispatchInitServiceEvent($service);		
+		//if ($initServiceEvent->hasCustomInitRoutine()) {
+		//	$service->setCustomInitClosure($initServiceEvent->getResult());
+		//}
 		
 		// initialize service if necessary.
 		if ( ! ($service->isInitialized() || $className::hasLazyInit())) {
@@ -235,6 +235,10 @@ final class Factory
 	{
 		$targetClass = $metaClass->getTargetClass();		
 		$newInstance = $this->create($targetClass);
+		
+		foreach ($metaClass->getEventCatalystAnnotations() as $annot) {
+			$newInstance->addPriorEvent($annot->getEvent());
+		}
 
 		return $newInstance;
 	}

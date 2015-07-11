@@ -80,9 +80,13 @@ final class Manager extends AbstractService
 			return null;
 		}		
 
-		$event->setCurrentNode($node);
+		$event->setCurrentNode($node);		
 		$newHandler = $handler->bindTo($node, $node);
-		$result = $newHandler($event);		
+		$result = $newHandler($event);
+		
+		if ($event->getStatus() == STATUS_DISCARDED) {
+			return;
+		}
 		
 		$event->setResult($result);		
 		$event->setStatus(STATUS_DISPATCHED);
@@ -135,6 +139,7 @@ final class Manager extends AbstractService
 	private function checkEvent($event)
 	{
 		if ($event->getStatus() == STATUS_DISCARDED ||
+			$event->getStopPropagationFlag() ||
 			$event->getPhase() >= PHASE_POSTDISPATCH ||
 			($event->hasResult() && ($event->getResultType() == RESULT_TYPE_SINGLE ||
 				$event->getResultType() == RESULT_TYPE_SINGLE_CLOSURE)))
@@ -153,65 +158,101 @@ final class Manager extends AbstractService
 		return count($this->getHandlers($event, $node)) > 0 ? true : false;
 	}
 	
-	private function walkNodes($event, $nodesArray)
+	/**
+	 * Returns discared event in the case of a failure
+	 * 
+	 * @return AbstractEvent|null
+	 */
+	private function triggerPriorEvents($parentEvent, $target)
+	{
+		if ($parentEvent->getPhase() == PHASE_DOWN) {
+			$dispatchChain = $target->getDispatchChain();
+		} else if ($parentEvent->getPhase() == PHASE_UP) {
+			$dispatchChain = $target->getReverseDispatchChain();
+		}
+		
+		foreach ($dispatchChain as $listener) {
+			foreach ($listener->getPriorEvents() as $priorEvent) {
+				
+				$this->walkNodes($priorEvent,
+					$target->sliceDispatchChain($listener));
+				
+				if ($priorEvent->getStatus() == STATUS_DISCARDED) {
+					return $priorEvent;
+				}
+			}
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * @return void
+	 */
+	private function walkNodes($event, array $nodes)
 	{
 		$lastNode = null;
 		
-		foreach ($nodesArray as $node) {
+		foreach ($nodes as $node) {
 			if ( ! $this->hasEventListener($event, $node)) {
 				continue;
 			}
 
-			$lastNode = $node;
+			$lastNode = $node;			
 			$this->trigger($event, $node);
 
 			if ( ! $this->checkEvent($event)) {
-				return;
-			} else if ($event->getStopPropagationFlag()) {
-				return $lastNode;
+				break;
 			}
 		}
-		
-		return $lastNode;
 	}
 	
 	/**
-	 * @return 
+	 * @return AbstractEvent
 	 */
 	private function dispatchSingleDirectional($event, $target)
 	{
 		$event->setPhase(PHASE_DOWN);
-		return $this->walkNodes($event, $target->getPropagationPath());
+		
+		$discardedEvent = $this->triggerPriorEvents($event, $target);		
+		if (null !== $discardedEvent) {
+			return $discardedEvent;
+		}
+		
+		$this->walkNodes($event, $target->getDispatchChain());
+		
+		return $event;
 	}
 	
 	/**
 	 * 
 	 */
-	private function dispatchSingleDirectionalReverse($event, $target, $offset = null)
+	private function dispatchSingleDirectionalReverse($event, $target)
 	{
-		$event->setPhase(PHASE_UP);		
-		return $this->walkNodes($event,
-			array_reverse($target->getPropagationSubPath($offset)));
+		$event->setPhase(PHASE_UP);
+		$this->walkNodes($event, $target->getReverseDispatchChain());
+		
+		return $event;
 	}
 	
+	/**
+	 * @return AbstractEvent
+	 */
 	private function dispatchBidirectional($event, $target)
 	{	
-		$lastNode = $this->dispatchSingleDirectional($event, $target);		
+		$event = $this->dispatchSingleDirectional($event, $target);		
 		if ( ! $this->checkEvent($event)) {
-			return;
+			return $event;
 		}
 
 		$event->resetStopPropagationFlag();
-		if ( ! $lastNode ) {
-			$lastNode = $target->getTerminateNode();
-		}
-
 		$this->triggerTerminateNode($event, $target->getTerminateNode());
-		if ($event->getStatus() == STATUS_DISCARDED) {
-			return;
+		
+		if ( ! $this->checkEvent($event)) {
+			return $event;
 		}		
 
-		$this->dispatchSingleDirectionalReverse($event, $target, $lastNode);		
+		return $this->dispatchSingleDirectionalReverse($event, $target);
 	}
 
 	/**
@@ -270,15 +311,15 @@ final class Manager extends AbstractService
 
 		switch ($event->getType()) {
 			case TYPE_UNICAST_BIDIRECTIONAL:
-				$this->dispatchBidirectional($event, $target);
+				$event = $this->dispatchBidirectional($event, $target);
 				break;
 			
 			case TYPE_UNICAST_SINGLE_DIRECTIONAL:
-				$this->dispatchSingleDirectional($event, $target);
+				$event = $this->dispatchSingleDirectional($event, $target);
 				break;
 			
 			case TYPE_UNICAST_SINGLE_DIRECTIONAL_REVERSE:
-				$this->dispatchSingleDirectionalReverse($event, $target);
+				$event = $this->dispatchSingleDirectionalReverse($event, $target);
 				break;
 
 			case TYPE_BROADCAST_LEVEL_ORDER: 
@@ -296,6 +337,8 @@ final class Manager extends AbstractService
 		//}
 		
 		$event->setPhase(PHASE_FINISHED);
+		
+		return $event;
 	}
 	
 	/**
@@ -309,7 +352,7 @@ final class Manager extends AbstractService
 			{
 				return $event;
 			}
-			$this->dispatchHelper($event, $target);
+			$event = $this->dispatchHelper($event, $target);
 		} catch (Exception\AbstractException $e) {
 			$e->setPackage($this);
 		} catch (\Exception $e) {

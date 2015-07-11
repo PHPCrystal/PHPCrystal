@@ -41,7 +41,8 @@ class Metadriver extends AbstractService
 		
 		$this->annotReader = new SimpleAnnotationReader();
 		$this->annotReader->addNamespace('PHPCrystal\PHPCrystal\Annotation\Action');
-		
+		$this->annotReader->addNamespace('PHPCrystal\PHPCrystal\Annotation\Common');
+
 		$this->filename = PathResolver::create('@cache', 'furball.ser');
 		$data = $this->filename->unserialize();
 
