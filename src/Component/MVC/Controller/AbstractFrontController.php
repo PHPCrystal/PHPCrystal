@@ -4,22 +4,8 @@ namespace PHPCrystal\PHPCrystal\Component\MVC\Controller;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
 use PHPCrystal\PHPCrystal\Component\Factory as Factory;
 
-abstract class AbstractFrontController extends Event\AbstractNode implements
-	Factory\Aware\DependencyInjectionInterface
+abstract class AbstractFrontController extends Event\AbstractAppListener
 {
-	public function __construct()
-	{
-		parent::__construct();
-	}
-	
-	/**
-	 * @return boolean
-	 */
-	public static function fireEventUponInstantiation()
-	{
-		return false;
-	}
-	
 	/**
 	 * @return void
 	 */

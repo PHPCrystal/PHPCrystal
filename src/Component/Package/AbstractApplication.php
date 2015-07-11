@@ -481,8 +481,15 @@ abstract class AbstractApplication extends AbstractPackage
 	// Event hooks
 	//
 	
-	protected function onQueryCommand($event)
+	protected function onApplySecurityPolicy($event)
 	{
-		echo 'Query' . PHP_EOL;
+		$sess = Facade\Session::create();
+
+		if ($event->isAuthRequired() && ! $sess->isAuthenticated()) {
+			$event->setError(ERR_SECURITY_AUTHENTICATION_REQUIRED);
+			return false;
+		}
+		
+		return true;
 	}
 }

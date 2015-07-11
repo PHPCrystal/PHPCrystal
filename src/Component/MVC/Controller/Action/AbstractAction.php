@@ -8,9 +8,7 @@ use PHPCrystal\PHPCrystal\Component\Http\Uri;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
 use PHPCrystal\PHPCrystal\Component\Factory as Factory;
 
-abstract class AbstractAction extends Event\AbstractNode implements
-	Factory\InitiableInterface,
-	Factory\Aware\DependencyInjectionInterface
+abstract class AbstractAction extends Event\AbstractAppListener
 {
 	/**
 	 * URI path pattern to match. Example /user/<d:user_id>/profile/edit/
@@ -61,14 +59,6 @@ abstract class AbstractAction extends Event\AbstractNode implements
 	protected $routerHostname;
 	protected $routerUriPathPrefix;
 
-	/**
-	 * @return boolean
-	 */
-	public static function fireEventUponInstantiation()
-	{
-		return false;
-	}
-	
 	/**
 	 * Returns the canonical name of an action
 	 * 
