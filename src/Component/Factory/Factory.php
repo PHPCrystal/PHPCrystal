@@ -242,39 +242,27 @@ final class Factory
 
 		return $newInstance;
 	}
-	
+
 	/**
-	 * @return string
+	 * @return object
 	 */
 	public function createControllerByAction($action)
 	{
-		$className = is_string($action) ? $action : get_class($action);
-		// Vendor\PackageName\Action\FrontController\Controller\ActionName
-		$classNameParts = explode('\\', $className);
-		$controllerBaseClass = $this->getPackage()
-			->getNamespace() . '\\Controller\\' . $classNameParts[3] . '\\' . $classNameParts[4];
-		
-		$metaClass = Metadriver::findMetaClassByBaseClass($controllerBaseClass);
+		$metaClass = Metadriver::getControllerMetaClassByAction($action);
 		
 		return $this->createFromMetaClass($metaClass);
 	}
-	
+
 	/**
-	 * @return
+	 * @return object
 	 */
 	public function createFrontControllerByAction($action)
 	{
-		$className = is_string($action) ? $action : get_class($action);
-		// Vendor\PackageName\Action\FrontController\Controller\ActionName
-		$classNameParts = explode('\\', $className);
-		$fcBaseClass = $this->getPackage()
-			->getNamespace() . '\\FrontController\\' . $classNameParts[3];
+		$metaClass = Metadriver::getFrontControllerMetaClassByAction($action);
 		
-		$metaClass = Metadriver::findMetaClassByBaseClass($fcBaseClass);
-		
-		return $this->createFromMetaClass($metaClass);		
+		return $this->createFromMetaClass($metaClass);	
 	}
-	
+
 	/**
 	 * @return boolean
 	 */

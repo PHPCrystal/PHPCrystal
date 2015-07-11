@@ -17,7 +17,10 @@ abstract class AbstractException extends \Exception implements
 	{
 		echo 'Exception message: ' . $this->getMessage() . PHP_EOL;
 	}
-	
+
+	/**
+	 * @api
+	 */
 	public function __construct($message, $code = 0, \Exception $previous = null)
     {
 		parent::__construct($message, $code,  $previous);
@@ -30,6 +33,7 @@ abstract class AbstractException extends \Exception implements
 	{
 		$errMsg = sprintf($formatStr, ...$params);
 		$instance = new static($errMsg, $errCode);		
+
 		// retrieve package instance from which the given exception originates
 		$backtrace = debug_backtrace();
 		while (count($backtrace) > 0) {
@@ -37,6 +41,7 @@ abstract class AbstractException extends \Exception implements
 			if ( ! isset($entry['object'])) {
 				continue;
 			}
+
 			$object = $entry['object'];
 			if ($object instanceof AbstractPackage) {
 				$instance->setPackage($object);

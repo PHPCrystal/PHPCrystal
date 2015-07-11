@@ -1,7 +1,6 @@
 <?php
 namespace PHPCrystal\PHPCrystal\Service\Event;
 
-use PHPCrystal\PHPCrystal\Component\Factory as Factory;
 use PHPCrystal\PHPCrystal\Component\Service\AbstractService;
 
 const PHASE_INIT = 1;
@@ -30,25 +29,19 @@ const RESULT_TYPE_STACKED = 4;
 
 final class Manager extends AbstractService
 {
-	protected $eventHandlers = array();
+	/**
+	 * @var array
+	 */
+	protected $eventHandlers = [];
 	
+	/**
+	 * @return bool
+	 */
 	public static function isSingleton()
 	{
 		return true;
 	}
 
-	/**
-	 * @return boolean
-	 */
-	protected function checkEventType($eventClassName)
-	{
-		if ( ! is_subclass_of($eventClassName,
-			'PHPCrystal\\PHPCrystal\\Service\\Event\\Type\\AbstractEvent'))
-		{
-			throw new \Exception('event does not exists');
-		}
-	}
-	
 	/**
 	 * Return an array of event handlers of the given node
 	 * 
@@ -120,8 +113,6 @@ final class Manager extends AbstractService
 	 */
 	public function addEventListener($eventType, $node, \Closure $handler)
 	{
-		$this->checkEventType($eventType);
-		
 		$nodeKey = spl_object_hash($node);
 		if ( ! isset($this->eventHandlers[$nodeKey])) {
 			$this->eventHandlers[$nodeKey] = array();
@@ -135,7 +126,10 @@ final class Manager extends AbstractService
 		
 		return $this;
 	}
-	
+
+	/**
+	 * @return bool
+	 */
 	private function checkEvent($event)
 	{
 		if ($event->getStatus() == STATUS_DISCARDED ||
@@ -292,11 +286,13 @@ final class Manager extends AbstractService
 		}
 	}
 
+	/**
+	 * @return AbstractEvent
+	 */
 	private function dispatchHelper($event, $target)
 	{
 		$event->setTarget($target);
 
-		// Call onPreDispatch method and change event phase
 		if ($event->getPhase() == PHASE_INIT) {
 			$event->setPhase(PHASE_PREDISPATCH);
 			$event->onPreDispatch();
@@ -331,10 +327,10 @@ final class Manager extends AbstractService
 				break;
 		}
 
-		//if ($event->getPhase() == PHASE_UP) {
-		//	$event->setPhase(PHASE_POSTDISPATCH);
+		if ($event->getPhase() == PHASE_UP) {
+			$event->setPhase(PHASE_POSTDISPATCH);
 			$event->onPostDispatch();
-		//}
+		}
 		
 		$event->setPhase(PHASE_FINISHED);
 		
@@ -347,19 +343,18 @@ final class Manager extends AbstractService
 	public function dispatch($event, $target)
 	{
 		try {
-			if ($event->getStatus() != STATUS_NONE ||
-				$event->getPhase() == PHASE_FINISHED)
-			{
-				return $event;
+			if ( ! $this->checkEvent($event)) {
+				return;
 			}
+			
 			$event = $this->dispatchHelper($event, $target);
 		} catch (Exception\AbstractException $e) {
 			$e->setPackage($this);
-		} catch (\Exception $e) {
-			var_dump($e); exit;
+		} catch (\Exception $e) {			
 			$legacyExcep = Exception\System\Legacy::create()
 				->setLegacyException($e)
 				->setPackage($this);
+			
 			$event->setException($legacyExcep);
 			$event->setStatus(Event\STATUS_INTERRUPTED);
 		} finally {

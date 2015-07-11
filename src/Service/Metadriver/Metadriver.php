@@ -55,8 +55,77 @@ class Metadriver extends AbstractService
 		}
 		
 		$this->isInitialized = true;
-	}	
+	}
 	
+	/**
+	 * Returns a package instance by the name of one of its classes
+	 * 
+	 * @return \PHPCrystal\PHPCrystal\Component\Package\AbstractPackage
+	 */
+	public function getPackageByItsMember($mixed)
+	{
+		$pkgNamespace = $this->getPackageNamespaceByItsMemeber($mixed);
+
+		foreach ($this->getApplication()->getExtensions(true) as $pkg) {
+			if ($pkgNamespace == $pkg->getNamespace()) {
+				return $pkg;
+			}
+		}
+	}
+	
+	/**
+	 * @return \PHPCrystal\PHPCrystal\Service\Metadriver\ExtendableController
+	 */
+	public function getControllerMetaClassByAction($action)
+	{
+		$parts = explode('\\', get_class($action));
+		$pkgInstance = $this->getPackageByItsMember($action);
+		
+		$baseClass = $pkgInstance->getNamespace() . '\\Controller\\' .
+			$parts[3] . '\\' . $parts[4];
+		
+		$pkgControllers = $this->data['controllers'][$pkgInstance->getKey()];
+		
+		foreach ($pkgControllers as $metaClass) {
+			if ($metaClass->getBaseClass() == $baseClass) {
+				return $metaClass;
+			}
+		}
+	}
+	
+	/**
+	 * @return \PHPCrystal\PHPCrystal\Service\Metadriver\ExtendableFrontController
+	 */
+	public function getFrontControllerMetaClassByAction($action)
+	{
+		$parts = explode('\\', get_class($action));
+		$pkgInstance = $this->getPackageByItsMember($action);
+		
+		$baseClass = $pkgInstance->getNamespace() . '\\FrontController\\' .
+			$parts[3];
+		
+		$pkgControllers = $this->data['frontcontrollers'][$pkgInstance->getKey()];
+		
+		foreach ($pkgControllers as $metaClass) {
+			if ($metaClass->getBaseClass() == $baseClass) {
+				return $metaClass;
+			}
+		}
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getPackageNamespaceByItsMemeber($mixed)
+	{
+		$className = is_object($mixed) ? get_class($mixed) : $mixed;
+		
+		$parts = explode('\\', $className);
+		$pkgNamespace = $parts[0] . '\\' . $parts[1];
+		
+		return $pkgNamespace;
+	}
+
 	/**
 	 * @return array
 	 */
@@ -184,7 +253,7 @@ class Metadriver extends AbstractService
 	{
 		return $this->data['actions'];
 	}
-	
+
 	/**
 	 * @return null
 	 */

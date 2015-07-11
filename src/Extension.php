@@ -9,10 +9,4 @@ class Extension extends Package\AbstractExtension
 	{
 		return new static();
 	}
-	
-	public function __construct()
-	{
-		parent::__construct();
-		$this->setRouter('\\PHPCrystal\\PHPCrystal\\Service\\Router\\Utility');
-	}	
 }
