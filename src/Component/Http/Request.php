@@ -2,7 +2,7 @@
 namespace PHPCrystal\PHPCrystal\Component\Http;
 
 use PHPCrystal\PHPCrystal\Component\MVC\Controller\Input\Input;
-use PHPCrystal\PHPCrystal\Component\Filesystem\PathResolver;
+use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
 use PHPCrystal\PHPCrystal\Component\Http\Uri;
 
 const REQUEST_INPUT_GET = 1;
@@ -169,7 +169,7 @@ class Request extends \Zend\Http\Request
 	 */
 	public static function createFromFile($filename)
 	{
-		$requestStr = PathResolver::create($filename)
+		$requestStr = FileHelper::create($filename)
 			->getFileContent();
 
 		$request =  static::createFromString($requestStr);

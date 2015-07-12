@@ -1,15 +1,10 @@
 <?php
 namespace PHPCrystal\PHPCrystal;
 
-use PHPCrystal\PHPCrystal\Component\Filesystem\PathResolver;
+use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
 use PHPCrystal\PHPCrystal\Facade as Facade;
 
 $this->set('env', 'prod');
-
-$this->addPathAlias('cache', '@app/cache');
-$this->addPathAlias('web', '@app/public_html');
-$this->addPathAlias('template', '@app/resources/template');
-$this->addPathAlias('tmp', '@app/tmp');
 
 $this->openSection('app');
 	$this->set('hostname', 'locahost');
@@ -20,8 +15,8 @@ $this->openSection('phpcrystal.core');
 
 	$this->set('twig.debug', true);
 	$this->set('twig.auto_reaload', true);
-	$this->set('twig.cache', PathResolver::create('@cache'));
-	$this->set('twig.templates', PathResolver::create('@template'));
+	$this->set('twig.cache', FileHelper::create('@cache'));
+	$this->set('twig.templates', FileHelper::create('@template'));
 	$this->set('twig.autoescape', true);
 
 $this->closeSection();
@@ -67,11 +62,11 @@ $this->closeSection();
 // Doctrine ORM default setup
 $this->openSection('phpcrystal.core.doctrine');
 
-	$this->set('proxyDir', PathResolver::create('@cache/doctrine/proxy')); // directory for proxy class files
+	$this->set('proxyDir', FileHelper::create('@cache/doctrine/proxy')); // directory for proxy class files
 	$this->set('proxyNamespace', 'Model\\Doctrine\\Proxy\\');
 	$this->set('modelNamespace', 'Model\\Doctrine\\');
-	$this->set('modelPaths', [PathResolver::create('@app/Model/Physical')]);
-	$this->set('entityPaths', [PathResolver::create('@app/Model/Physical/Entity')]);
+	$this->set('modelPaths', [FileHelper::create('@app/Model/Physical')]);
+	$this->set('entityPaths', [FileHelper::create('@app/Model/Physical/Entity')]);
 	$this->set('dbal.autocommit', false);
 	
 $this->closeSection();

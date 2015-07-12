@@ -1,7 +1,7 @@
 <?php
 namespace PHPCrystal\PHPCrystal\Service\Metadriver;
 
-use PHPCrystal\PHPCrystal\Component\Filesystem\PathResolver;
+use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
 use PHPCrystal\PHPCrystal\Component\Service\AbstractService;
 use PHPCrystal\PHPCrystal\Component\Package\AbstractExtension;
 use Doctrine\Common\Annotations\SimpleAnnotationReader;
@@ -51,7 +51,7 @@ class Metadriver extends AbstractService
 		$this->annotReader->addNamespace('PHPCrystal\PHPCrystal\Annotation\Action');
 		$this->annotReader->addNamespace('PHPCrystal\PHPCrystal\Annotation\Common');
 
-		$this->filename = PathResolver::create('@cache', 'furball.ser');
+		$this->filename = FileHelper::create('@cache', 'furball.ser');
 		$data = $this->filename->unserialize();
 
 		if ($data !== null) {
@@ -167,7 +167,7 @@ class Metadriver extends AbstractService
 	 */
 	public function addExtensionsToAutoload()
 	{
-		$composerLock = PathResolver::create('@app/composer.lock');
+		$composerLock = FileHelper::create('@app/composer.lock');
 		
 		if ( ! $composerLock->fileExists()) {
 			return;
@@ -176,7 +176,7 @@ class Metadriver extends AbstractService
 		$composerJson = $composerLock->readJson();
 		foreach ($composerJson['packages'] as $pkgInfo) {
 			$pkgName = $pkgInfo['name'];
-			$pkgBootstrap = PathResolver::create('@app/vendor/', $pkgName, 'bootstrap.php');
+			$pkgBootstrap = FileHelper::create('@app/vendor/', $pkgName, 'bootstrap.php');
 			if ( ! $pkgBootstrap->fileExists()) {
 				continue;
 			}

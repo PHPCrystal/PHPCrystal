@@ -2,13 +2,13 @@
 namespace PHPCrystal\PHPCrystal\Component\Package\Option;
 
 use PHPCrystal\PHPCrystal\Component\Container\AbstractItem;
-use PHPCrystal\PHPCrystal\Component\Filesystem\PathResolver;
+use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
 
 class Option extends AbstractItem
 {
 	private function convertItemValue($mixed)
 	{
-		if ($mixed instanceof PathResolver) {
+		if ($mixed instanceof FileHelper) {
 			return $mixed->toString();
 		} else if (is_array($mixed)) {
 			foreach ($mixed as $arrKey => $arrValue) {

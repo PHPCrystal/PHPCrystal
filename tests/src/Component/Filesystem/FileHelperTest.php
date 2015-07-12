@@ -1,14 +1,14 @@
 <?php
 namespace PHPCrystal\PHPCrystalTest;
 
-use PHPCrystal\PHPCrystal\Component\Filesystem\PathResolver;
+use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
 
-class PathResolverTest extends TestCase
+class FileHelperTest extends TestCase
 {
 	public function testBulk()
 	{
-		PathResolver::addAlias('current', __DIR__);		
-		$path = PathResolver::create('@current', basename(__FILE__));
+		FileHelper::addAlias('current', __DIR__);		
+		$path = FileHelper::create('@current', basename(__FILE__));
 		$this->assertEquals(__FILE__, $path->toString());
 	}
 	
@@ -17,10 +17,10 @@ class PathResolverTest extends TestCase
 	 */
 	public function testCircularReference()
 	{
-		PathResolver::addAlias('foo', '@bar');
-		PathResolver::addAlias('bar', '@baz');
-		PathResolver::addAlias('baz', '@foo');
-		$path = PathResolver::create('@foo');
+		FileHelper::addAlias('foo', '@bar');
+		FileHelper::addAlias('bar', '@baz');
+		FileHelper::addAlias('baz', '@foo');
+		$path = FileHelper::create('@foo');
 		$path->toString();
 	}
 	
@@ -29,13 +29,13 @@ class PathResolverTest extends TestCase
 	 */
 	public function testUndefinedAlias()
 	{
-		$path = PathResolver::create('@ziggy');		
+		$path = FileHelper::create('@ziggy');		
 		$path->toString();
 	}
 	
 	public function testAppAlias()
 	{
-		$appPath = PathResolver::create('@app');
+		$appPath = FileHelper::create('@app');
 		$this->assertEquals(realpath(__DIR__ . '/../../../'), $appPath->toString());
 	}
 }

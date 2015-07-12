@@ -14,7 +14,7 @@ class Dummy extends AbstractExternal implements InternalEventInterface
 	
 	public function createContext()
 	{
-		return Event\Context\Dummy::create('dummyContext');
+		return Event\Context\Dummy::create('DummyContext');
 	}
 
 	/**

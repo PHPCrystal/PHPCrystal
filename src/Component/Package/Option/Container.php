@@ -2,7 +2,7 @@
 namespace PHPCrystal\PHPCrystal\Component\Package\Option;
 
 use PHPCrystal\PHPCrystal\Component\Container\AbstractContainer;
-use PHPCrystal\PHPCrystal\Component\Filesystem\PathResolver;
+use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
 use PHPCrystal\PHPCrystal\Component\Service\AbstractSubcontractor;
 
 const SECTION_TYPE_GLOBAL = 1;
@@ -57,7 +57,7 @@ class Container extends AbstractContainer
 	 */
 	public function addPathAlias($alias, $pathname, $allowOverride = true)
 	{
-		PathResolver::addAlias($alias, $pathname, $allowOverride);
+		FileHelper::addAlias($alias, $pathname, $allowOverride);
 
 		return $this;
 	}

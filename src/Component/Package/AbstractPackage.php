@@ -4,7 +4,7 @@ namespace PHPCrystal\PHPCrystal\Component\Package;
 use PHPCrystal\PHPCrystal\Component\Facade\AbstractFacade;
 use PHPCrystal\PHPCrystal\Component\Exception as Exception;
 use PHPCrystal\PHPCrystal\Component\Factory as Factory;
-use PHPCrystal\PHPCrystal\Component\Filesystem\PathResolver;
+use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
 
 abstract class AbstractPackage extends Event\AbstractNode

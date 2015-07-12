@@ -1,7 +1,7 @@
 <?php
 namespace PHPCrystal\PHPCrystal\Component\Package;
 
-use PHPCrystal\PHPCrystal\Component\Filesystem\PathResolver;
+use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
 use PHPCrystal\PHPCrystal\Facade\Metadriver;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
 use PHPCrystal\PHPCrystal\Component\Facade as Facade;
@@ -156,7 +156,7 @@ abstract class AbstractApplication extends AbstractPackage
 	 */
 	final public function addExtension($extDirPath)
 	{
-		$extInstance = PathResolver::create($extDirPath, 'bootstrap.php')
+		$extInstance = FileHelper::create($extDirPath, 'bootstrap.php')
 			->_require();
 
 		if ( ! $extInstance->getDisabledFlag()) {		
@@ -257,7 +257,7 @@ abstract class AbstractApplication extends AbstractPackage
 
 		foreach ($this->getExtensions(true) as $pkg) {
 			$newContext = $externalEvent->createContext();
-			PathResolver::create($pkg->getDirectory(), 'manifest.php')
+			FileHelper::create($pkg->getDirectory(), 'manifest.php')
 				->_require($newContext);
 			if ($target) {
 				$target->merge($newContext);
@@ -289,9 +289,6 @@ abstract class AbstractApplication extends AbstractPackage
 			foreach ($metaClassArray as $metaClass) {
 				$action = $package->getFactory()
 					->createFromMetaClass($metaClass);
-
-
-
 				$this->addAction($action);
 			}
 		}		
@@ -302,8 +299,11 @@ abstract class AbstractApplication extends AbstractPackage
 	 */
 	protected function addPathAliases()
 	{
-		PathResolver::addAlias('app', $this->getDirectory(), false);
-		PathResolver::addAlias('core', __DIR__ . '/../..');
+		FileHelper::addAlias('app', $this->getDirectory(), false);
+		FileHelper::addAlias('cache', '@app/cache');
+		FileHelper::addAlias('web', '@app/public_html');
+		FileHelper::addAlias('template', '@app/resources/template');
+		FileHelper::addAlias('tmp', '@app/tmp');		
 	}
 	
 	/**
@@ -311,9 +311,16 @@ abstract class AbstractApplication extends AbstractPackage
 	 */
 	private function autoloadExtensions()
 	{
-		foreach (Metadriver::getExtensionsAll() as $metaExt) {
-			$this->addExtension($metaExt->getDirectoryName());
+		if ($this->getContext()->getEnv() != 'prod') {
+			Metadriver::flush();
+			Metadriver::addExtensionsToAutoload();
 		}
+		
+		if ($this->getExtensionAutoloadFlag()) {
+			foreach (Metadriver::getExtensionsAll() as $metaExt) {
+				$this->addExtension($metaExt->getDirectoryName());
+			}
+		}	
 	}
 
 	/**
@@ -322,16 +329,7 @@ abstract class AbstractApplication extends AbstractPackage
 	private function buildApp()
 	{
 		if ($this->getContext()->getEnv() != 'prod') {
-			Metadriver::flush();
-			Metadriver::addExtensionsToAutoload();
-			if ($this->getExtensionAutoloadFlag()) {
-				$this->autoloadExtensions();
-			}		
 			parent::dispatch(Event\Type\System\Build::create());
-		} else {
-			if ($this->getExtensionAutoloadFlag()) {
-				$this->autoloadExtensions();
-			}
 		}
 	}
 
@@ -368,8 +366,10 @@ abstract class AbstractApplication extends AbstractPackage
 		if ($this->bootstrapFlag) {
 			return;
 		}
+		$this->context = $externalEvent->createContext();
 		$this->addPathAliases();
-		$this->assignEventListeners();		
+		$this->assignEventListeners();
+		$this->autoloadExtensions();
 		$this->flattenManifestFile($externalEvent);
 		$this->buildApp();
 		$this->addServices();
@@ -412,13 +412,12 @@ abstract class AbstractApplication extends AbstractPackage
 			return $this;
 		}
 
-		// form a propagation path through which the event will be passed.
-		// Package -> Front Controller -> Controller -> Action
-		
 		$fcInstance = $router->getFrontController();
 		$ctrlInstance = $router->getController();
 		$actionInstance = $router->getAction();
 
+		// form a propagation path through which the event will be passed.
+		// Package -> Front Controller -> Controller -> Action
 		$package
 			->dispatchChainAddElement($fcInstance)
 			->dispatchChainAddElement($ctrlInstance)
@@ -445,7 +444,9 @@ abstract class AbstractApplication extends AbstractPackage
 
 		try {
 			// handle internal events
-			if ($event instanceof Event\Type\AbstractInternal || $reentered) {
+			if ($event instanceof Event\Type\AbstractInternal ||
+				$reentered)
+			{
 				return parent::dispatch($event);
 			}
 			

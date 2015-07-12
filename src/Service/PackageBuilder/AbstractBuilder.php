@@ -5,7 +5,7 @@ use PHPCrystal\PHPCrystal\Component\Service\MetaService;
 use PHPCrystal\PHPCrystal\Component\Service\AbstractService;
 use PHPCrystal\PHPCrystal\Component\Service\AbstractContractor;
 use PHPCrystal\PHPCrystal\Component\Filesystem\Finder;
-use PHPCrystal\PHPCrystal\Component\Filesystem\PathResolver;
+use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
 use PHPCrystal\PHPCrystal\Component\PhpParser\PhpParser;
 use Doctrine\Common\Annotations\AnnotationReader;
 use PHPCrystal\PHPCrystal\Service\Metadriver as Metadriver;
@@ -24,7 +24,7 @@ abstract class AbstractBuilder extends AbstractService
 		$result = array();
 		$pkgDir = $this->getPackage()->getDirectory();
 
-		$contractsDir = PathResolver::create($pkgDir, 'src', 'Contract');
+		$contractsDir = FileHelper::create($pkgDir, 'src', 'Contract');
 		if ( ! $contractsDir->dirExists()) {
 			return $result;
 		}
@@ -50,7 +50,7 @@ abstract class AbstractBuilder extends AbstractService
 
 		$contractDefs = $this->getContractDefinitions();
 		$pkgDir = $this->getPackage()->getDirectory();
-		$serviceDir = PathResolver::create($pkgDir, 'src', 'Service');
+		$serviceDir = FileHelper::create($pkgDir, 'src', 'Service');
 		
 		if ( ! $serviceDir->dirExists()) {
 			return $result;
@@ -87,9 +87,9 @@ abstract class AbstractBuilder extends AbstractService
 		
 		$appPkg = $this->getApplication();
 		$pkgDir = $this->getPackage()->getDirectory();
-		$extDir = PathResolver::create($appPkg->getDirectory(), 'Extension');
+		$extDir = FileHelper::create($appPkg->getDirectory(), 'Extension');
 
-		$baseDir = PathResolver::create($pkgDir, 'src', $baseDir);
+		$baseDir = FileHelper::create($pkgDir, 'src', $baseDir);
 		if ( ! $baseDir->dirExists()) {
 			return $result;
 		}
