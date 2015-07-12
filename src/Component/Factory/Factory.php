@@ -2,10 +2,11 @@
 namespace PHPCrystal\PHPCrystal\Component\Factory;
 
 use PHPCrystal\PHPCrystal\Component\Service\MetaService;
+use PHPCrystal\PHPCrystal\Service\Metadriver as Metadriver;
 use PHPCrystal\PHPCrystal\Component\Service\AbstractService;
 use PHPCrystal\PHPCrystal\Component\Service\AbstractContractor;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
-use PHPCrystal\PHPCrystal\Facade\Metadriver;
+use PHPCrystal\PHPCrystal\Facade\Metadriver as FacadeMetadriver;
 use PHPCrystal\PHPCrystal\Component\Facade as Facade;
 
 const DI_INTERFACE = 'PHPCrystal\\PHPCrystal\\Component\\Factory\\Aware\\DependencyInjectionInterface';
@@ -239,6 +240,16 @@ final class Factory
 		foreach ($metaClass->getEventCatalystAnnotations() as $annot) {
 			$newInstance->addPriorEvent($annot->getEvent());
 		}
+		
+		if ($metaClass instanceof Metadriver\ExtendableAction) {
+			$ruleAnnot = $metaClass->getRuleAnnotation();
+			$ctrlMethodAnnot = $metaClass->getControllerMethodAnnotation();
+
+			$newInstance->setAllowedHttpMethods($ruleAnnot->getAllowedHttpMethods());
+			$newInstance->setControllerMethod($ctrlMethodAnnot->value);
+			$newInstance->setUriMatchRegExp($ruleAnnot->getUriMatchRegExp());
+			$newInstance->setURIMatchPattern($ruleAnnot->matchPattern);			
+		}
 
 		return $newInstance;
 	}
@@ -248,7 +259,7 @@ final class Factory
 	 */
 	public function createControllerByAction($action)
 	{
-		$metaClass = Metadriver::getControllerMetaClassByAction($action);
+		$metaClass = FacadeMetadriver::getControllerMetaClassByAction($action);
 		
 		return $this->createFromMetaClass($metaClass);
 	}
@@ -258,7 +269,7 @@ final class Factory
 	 */
 	public function createFrontControllerByAction($action)
 	{
-		$metaClass = Metadriver::getFrontControllerMetaClassByAction($action);
+		$metaClass = FacadeMetadriver::getFrontControllerMetaClassByAction($action);
 		
 		return $this->createFromMetaClass($metaClass);	
 	}
@@ -394,13 +405,15 @@ final class Factory
 		return $result;
 	}
 	
-	// _Default\Index\Index
+	/**
+	 * @return object
+	 */
 	private function createExtendable($classGroup, $unqualifiedName, $pkgNamespace = null)
 	{
 		$pkgNamespace = $pkgNamespace ?: $this->getPackage()->getNamespace();
 		$baseClass = $pkgNamespace . '\\' . $classGroup . '\\' . $unqualifiedName;
 		
-		$metaClass = Metadriver::findMetaClassByBaseClass($baseClass);
+		$metaClass = FacadeMetadriver::findMetaClassByBaseClass($baseClass);
 		
 		$extendableInstance = $this->createFromMetaClass($metaClass);
 		
@@ -453,6 +466,9 @@ final class Factory
 			$this->isQualifiedName($extendableName) ? false : true;
 	}
 	
+	/**
+	 * @return object
+	 */
 	public function createAction($actionName)
 	{
 		if ($this->isUnqualifiedName($actionName)) {

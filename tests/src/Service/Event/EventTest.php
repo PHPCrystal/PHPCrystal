@@ -3,6 +3,7 @@ namespace PHPCrystal\PHPCrystalTest;
 
 use PHPCrystal\PHPCrystal\Service\Event as Event;
 use PHPCrystal\PHPCrystalTest\Facade\Dummy;
+use PHPCrystal\PHPCrystalTest\_Trait\MakeRequest;
 
 class EventTest extends TestCase
 {

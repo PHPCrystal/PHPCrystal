@@ -33,6 +33,14 @@ class Metadriver extends AbstractService
 	}
 	
 	/**
+	 * @return bool
+	 */
+	public function isFullyQualifiedName($name)
+	{
+		return strpos($name, '\\') === 0;
+	}
+	
+	/**
 	 * @return null
 	 */
 	public function init()

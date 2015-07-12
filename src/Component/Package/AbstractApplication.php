@@ -290,12 +290,7 @@ abstract class AbstractApplication extends AbstractPackage
 				$action = $package->getFactory()
 					->createFromMetaClass($metaClass);
 
-				$ruleAnnot = $metaClass->getActionAnnotation();
-				$ctrlMethodAnnot = $metaClass->getControllerMethodAnnotation();
-				$action->setAllowedHttpMethods($ruleAnnot->getAllowedHttpMethods());
-				$action->setControllerMethod($ctrlMethodAnnot->value);
-				$action->setUriMatchRegExp($ruleAnnot->getUriMatchRegExp());
-				$action::setURIMatchPattern($ruleAnnot->matchPattern);
+
 
 				$this->addAction($action);
 			}
@@ -430,7 +425,7 @@ abstract class AbstractApplication extends AbstractPackage
 			->dispatchChainAddElement($actionInstance);
 		
 		if (null !== $fcInstance && null !== $ctrlInstance && null !== $actionInstance) {
-			$fcInstance->mergePriorEvents($ctrlInstance, $actionInstance);
+			$fcInstance->mergePriorEvents($event, $ctrlInstance, $actionInstance);
 		}
 		
 		// actions are terminate nodes

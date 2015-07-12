@@ -159,14 +159,16 @@ final class Manager extends AbstractService
 	 */
 	private function triggerPriorEvents($parentEvent, $target)
 	{
-		if ($parentEvent->getPhase() == PHASE_DOWN) {
+		$parentPhase = $parentEvent->getPhase();
+
+		if ($parentPhase == PHASE_DOWN) {
 			$dispatchChain = $target->getDispatchChain();
 		} else if ($parentEvent->getPhase() == PHASE_UP) {
 			$dispatchChain = $target->getReverseDispatchChain();
 		}
 		
 		foreach ($dispatchChain as $listener) {
-			foreach ($listener->getPriorEvents() as $priorEvent) {
+			foreach ($listener->getPriorEvents($parentPhase) as $priorEvent) {
 				
 				$this->walkNodes($priorEvent,
 					$target->sliceDispatchChain($listener));
@@ -219,16 +221,22 @@ final class Manager extends AbstractService
 	}
 	
 	/**
-	 * 
+	 * @return AbstractEvent
 	 */
 	private function dispatchSingleDirectionalReverse($event, $target)
 	{
 		$event->setPhase(PHASE_UP);
+
+		$discardedEvent = $this->triggerPriorEvents($event, $target);		
+		if (null !== $discardedEvent) {
+			return $discardedEvent;
+		}
+
 		$this->walkNodes($event, $target->getReverseDispatchChain());
-		
+
 		return $event;
 	}
-	
+
 	/**
 	 * @return AbstractEvent
 	 */
@@ -241,10 +249,10 @@ final class Manager extends AbstractService
 
 		$event->resetStopPropagationFlag();
 		$this->triggerTerminateNode($event, $target->getTerminateNode());
-		
+
 		if ( ! $this->checkEvent($event)) {
 			return $event;
-		}		
+		}
 
 		return $this->dispatchSingleDirectionalReverse($event, $target);
 	}
@@ -350,7 +358,8 @@ final class Manager extends AbstractService
 			$event = $this->dispatchHelper($event, $target);
 		} catch (Exception\AbstractException $e) {
 			$e->setPackage($this);
-		} catch (\Exception $e) {			
+		} catch (\Exception $e) {
+			var_dump($e); exit;
 			$legacyExcep = Exception\System\Legacy::create()
 				->setLegacyException($e)
 				->setPackage($this);

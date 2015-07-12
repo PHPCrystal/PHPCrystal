@@ -15,7 +15,7 @@ abstract class AbstractAction extends Event\AbstractAppListener
 	 * 
 	 * @var string
 	 */
-	private static $uriMatchPattern;
+	private $uriMatchPattern;
 	
 	/**
 	 * @var array
@@ -281,17 +281,17 @@ abstract class AbstractAction extends Event\AbstractAppListener
 	/**
 	 * @return tring
 	 */
-	final static public function getURIMatchPattern()
+	final public function getURIMatchPattern()
 	{
-		return self::$uriMatchPattern;
+		return $this->uriMatchPattern;
 	}
 	
 	/**
 	 * @return void
 	 */
-	final static public function setURIMatchPattern($pattern)
+	final public function setURIMatchPattern($pattern)
 	{
-		self::$uriMatchPattern = $pattern;
+		$this->uriMatchPattern = $pattern;
 	}
 	
 	/**

@@ -227,9 +227,27 @@ abstract class AbstractNode implements
 	/**
 	 * @return array
 	 */
-	final public function getPriorEvents()
+	final public function getPriorEvents($parentPhase)
 	{
-		return $this->priorEvents;
+		$result = [];
+		
+		foreach ($this->priorEvents as $type => $priorEvent) {
+			switch ($parentPhase) {
+				case PHASE_DOWN:
+					if ($priorEvent->getType() == TYPE_UNICAST_SINGLE_DIRECTIONAL) {
+						$result[$type] = $priorEvent;
+					}
+					break;
+					
+				case PHASE_UP:
+					if ($priorEvent->getType() == TYPE_UNICAST_SINGLE_DIRECTIONAL_REVERSE) {
+						$result[$type] = $priorEvent;
+					}					
+					break;
+			}
+		}
+
+		return $result;
 	}
 	
 	/**
@@ -245,25 +263,35 @@ abstract class AbstractNode implements
 	/**
 	 * @return void
 	 */
-	final public function flushPriorEvents()
+	final public function flushPriorEvents($phase = null)
 	{
-		$this->priorEvents = [];
+		if (null === $phase) {
+			$this->priorEvents = [];
+			return;
+		}
+		
+		foreach (array_keys($this->getPriorEvents($phase)) as $key) {
+			unset($this->priorEvents[$key]);
+		}
 	}
 	
 	/**
 	 * @return array
 	 */
-	final public function mergePriorEvents(...$listeners)
+	final public function mergePriorEvents($parentEvent, ...$listeners)
 	{
+		$phase = $parentEvent->getPhase();
+
 		foreach ($listeners as $listener) {
-			foreach ($listener->getPriorEvents() as $priorEvent) {
+			foreach ($listener->getPriorEvents($phase) as $priorEvent) {
 				$type = $priorEvent::toType();
 				if (isset($this->priorEvents[$type]) && $priorEvent instanceof EventMergeable) {
 					$this->priorEvents[$type]->merge($priorEvent);
 				} else {
 					$this->priorEvents[$type] = $priorEvent;
-				}				
-				$listener->flushPriorEvents();
+				}
+
+				$listener->flushPriorEvents($phase);
 			}
 		}
 	}

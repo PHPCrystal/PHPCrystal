@@ -8,7 +8,7 @@ class ExtendableAction extends AbstractExtendable
 	/**
 	 * @return 
 	 */
-	public function getActionAnnotation()
+	public function getRuleAnnotation()
 	{
 		foreach ($this->getAnnotations() as $annot) {
 			if ($annot instanceof Action\Rule) {
