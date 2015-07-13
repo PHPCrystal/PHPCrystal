@@ -132,7 +132,7 @@ class FileHelper
 		
 		return $resolved;
 	}
-	
+
 	/**
 	 * @return bool
 	 */

@@ -64,6 +64,9 @@ final class Factory
 		return $result;
 	}
 	
+	/**
+	 * @return void
+	 */
 	private function bind($newInstance)
 	{
 		if ($newInstance instanceof Aware\PackageInterface) {
@@ -337,7 +340,7 @@ final class Factory
 	/**
 	 * return void
 	 */
-	private function chechWakeupEvents($metaClass, $isDependencyOptional)
+	private function checkWakeupEvents($metaClass, $isDependencyOptional)
 	{
 		$serviceClass = $metaClass->getClassName();		
 		if ( ! $serviceClass::getWakeupEvents()) {
@@ -382,7 +385,7 @@ final class Factory
 				$metaClass = new MetaService($typeHinted->name, null, 999);
 			}
 			
-			$this->chechWakeupEvents($metaClass, $param->isOptional());
+			$this->checkWakeupEvents($metaClass, $param->isOptional());
 			$result[] = $metaClass;
 		}
 
