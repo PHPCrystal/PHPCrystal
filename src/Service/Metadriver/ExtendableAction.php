@@ -6,7 +6,7 @@ use PHPCrystal\PHPCrystal\Annotation\Action as Action;
 class ExtendableAction extends AbstractExtendable
 {	
 	/**
-	 * @return 
+	 * @return \PHPCrystal\PHPCrystal\Annotation\Action\Rule
 	 */
 	public function getRuleAnnotation()
 	{
@@ -18,7 +18,7 @@ class ExtendableAction extends AbstractExtendable
 	}
 
 	/**
-	 * @return 
+	 * @return \PHPCrystal\PHPCrystal\Annotation\Action\ControllerMethod
 	 */
 	public function getControllerMethodAnnotation()
 	{

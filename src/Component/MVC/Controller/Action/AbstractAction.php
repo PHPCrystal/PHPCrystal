@@ -72,6 +72,25 @@ abstract class AbstractAction extends Event\AbstractAppListener
 	}
 	
 	/**
+	 * @return string 
+	 */
+	final static public function getControllerName()
+	{
+		return join('\\', array_slice(explode('\\', static::class), 3, 2));
+	}
+	
+	/**
+	 * @return string
+	 */
+	final static public function getControllerClassName()
+	{
+		$parts = explode('\\', static::class);
+				
+		return join('\\', array_merge(array_slice($parts, 0, 2), ['Controller'],
+			array_slice($parts, 3, 2)));
+	}
+	
+	/**
 	 * @return boolean
 	 */
 	final public function isValid()

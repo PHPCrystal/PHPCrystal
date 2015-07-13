@@ -249,7 +249,7 @@ final class Factory
 			$ctrlMethodAnnot = $metaClass->getControllerMethodAnnotation();
 
 			$newInstance->setAllowedHttpMethods($ruleAnnot->getAllowedHttpMethods());
-			$newInstance->setControllerMethod($ctrlMethodAnnot->value);
+			$newInstance->setControllerMethod($ctrlMethodAnnot->getMethodName($newInstance));
 			$newInstance->setUriMatchRegExp($ruleAnnot->getUriMatchRegExp());
 			$newInstance->setURIMatchPattern($ruleAnnot->matchPattern);			
 		}

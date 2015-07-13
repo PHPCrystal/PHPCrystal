@@ -9,6 +9,7 @@ use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
 use PHPCrystal\PHPCrystal\Component\PhpParser\PhpParser;
 use Doctrine\Common\Annotations\AnnotationReader;
 use PHPCrystal\PHPCrystal\Service\Metadriver as Metadriver;
+use PHPCrystal\PHPCrystal\Component\Exception as Exception;
 
 const EVENT_MODEL_ABSTRACT_NODE_CLASS = 'PHPCrystal\PHPCrystal\Service\Event\AbstractNode';
 
@@ -126,9 +127,23 @@ abstract class AbstractBuilder extends AbstractService
 	 */
 	protected function getActions()
 	{
-		$metaClassName = '\\PHPCrystal\\PHPCrystal\\Service\\Metadriver\\ExtendableAction';
-		
+		$metaClassName = '\\PHPCrystal\\PHPCrystal\\Service\\Metadriver\\ExtendableAction';		
 		$metaClasses = $this->getExtendableMetaClasses('Action', $metaClassName);
+
+		// check whether controller method is callable
+		foreach ($metaClasses as $metaClass) {
+			$target = $metaClass->getTargetClass();
+
+			$ctrlMethodName = $metaClass->getControllerMethodAnnotation()
+				->getMethodName();
+			$ctrlCallback = [$target::getControllerClassName(), $ctrlMethodName];
+
+			if ( ! is_callable($ctrlCallback)) {
+				Exception\System\LastChineseWarning::create('Controller method "%s::%s" isn\'t callable',
+					null, $ctrlCallback[0], $ctrlCallback[1])
+					->_throw();
+			}
+		}
 
 		return $metaClasses;
 	}

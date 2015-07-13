@@ -9,4 +9,12 @@ class _Default extends AbstractController
 	{
 		return 'Unit tests rock!';
 	}
+	
+	/**
+	 * @return void
+	 */
+	public function editUserProfileAction()
+	{
+		
+	}
 }
