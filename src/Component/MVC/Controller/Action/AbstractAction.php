@@ -173,6 +173,22 @@ abstract class AbstractAction extends Event\AbstractAppListener
 			$execResult = $requestEvent->getResult();
 			return $this->onResponse200($event, $execResult);
 		});
+		
+		$ruleAnnot = $this->getMetaClass()
+			->getRuleAnnotation();		
+		$ctrlMethodAnnot = $this->getMetaClass()
+			->getControllerMethodAnnotation();
+
+		$this->setAllowedHttpMethods($ruleAnnot->getAllowedHttpMethods());
+		$this->setControllerMethod($ctrlMethodAnnot->getMethodName($newInstance));
+		$this->setUriMatchRegExp($ruleAnnot->getUriMatchRegExp());
+		$this->setURIMatchPattern($ruleAnnot->matchPattern);
+
+		$inputAnnot = $this->getInputAnnot();
+		if (null === $inputAnnot) {
+			//$newInstance->setInput(->)
+		}
+		$newInstance->setInput();		
 	}
 
 	/**

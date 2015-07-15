@@ -24,6 +24,9 @@ abstract class AbstractAppListener extends AbstractNode  implements
 	 */
 	private $annots;
 	
+	/** @var */
+	private $extendableMetaClass;
+	
 	/**
 	 * @return bool
 	 */

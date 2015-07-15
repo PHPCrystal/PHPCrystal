@@ -28,14 +28,24 @@ class TestCase extends \PHPUnit_Framework_TestCase
 	}
 	
 	/**
-	 * @return \PHPCrystal\PHPCrystalTest\Action\_Default\_Default\Index
+	 * @return \PHPCrystal\PHPCrystalTest\Action\_Default\Account\Edit
+	 */
+	protected function createAccountEditAction()
+	{
+		AbstractClassFacade::setClassName('\\PHPCrystal\\PHPCrystalTest\\Action\\_Default\\Account\\Edit');	
+		
+		return AbstractClassFacade::create();
+	}
+	
+	/**
+	 * @return \PHPCrystal\PHPCrystalTest\Action\_Default\_Default\Update
 	 */
 	protected function createIndexAction()
 	{
 		AbstractClassFacade::setClassName('\\PHPCrystal\\PHPCrystalTest\\Action\\_Default\\_Default\\Index');	
 		
 		return AbstractClassFacade::create();
-	}
+	}	
 	
 	/**
 	 * @return \PHPCrystal\PHPCrystalTest\Controller\_Default\_Default
