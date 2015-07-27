@@ -25,7 +25,7 @@ abstract class AbstractAppListener extends AbstractNode  implements
 	private $annots;
 	
 	/** @var */
-	private $extendableMetaClass;
+	private $extandableInstance;
 	
 	/**
 	 * @return bool
@@ -72,6 +72,22 @@ abstract class AbstractAppListener extends AbstractNode  implements
 	final public function setAnnotations(array $annots)
 	{
 		$this->annots = $annots;
+	}
+	
+	/**
+	 * @return
+	 */
+	public function getExtendableInstance()
+	{
+		return $this->extandableInstance;
+	}
+	
+	/**
+	 * @return void
+	 */
+	public function setExtendableInstance($instance)
+	{
+		$this->extandableInstance = $instance;
 	}
 
 	/**

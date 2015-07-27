@@ -164,31 +164,29 @@ abstract class AbstractAction extends Event\AbstractAppListener
 	 */
 	public function init()
 	{
+		parent::init();
+
 		$this->addEventListener(Event\Type\Http\Request::toType(), function($event) {
 			$this->onHttpRequest($event);
 		});
-		
+
 		$this->addEventListener(Event\Type\Http\Response200::toType(), function($event) {
 			$requestEvent = $event->getLastDispatchedEvent();
 			$execResult = $requestEvent->getResult();
 			return $this->onResponse200($event, $execResult);
 		});
-		
-		$ruleAnnot = $this->getMetaClass()
-			->getRuleAnnotation();		
-		$ctrlMethodAnnot = $this->getMetaClass()
-			->getControllerMethodAnnotation();
 
-		$this->setAllowedHttpMethods($ruleAnnot->getAllowedHttpMethods());
-		$this->setControllerMethod($ctrlMethodAnnot->getMethodName($newInstance));
-		$this->setUriMatchRegExp($ruleAnnot->getUriMatchRegExp());
-		$this->setURIMatchPattern($ruleAnnot->matchPattern);
+		$extendable = $this->getExtendableInstance();		
 
-		$inputAnnot = $this->getInputAnnot();
-		if (null === $inputAnnot) {
-			//$newInstance->setInput(->)
+		if ($extendable) {
+			$ruleAnnot = $extendable->getRuleAnnotation();
+			$ctrlMethodAnnot = $extendable->getControllerMethodAnnotation();
+
+			$this->setAllowedHttpMethods($ruleAnnot->getAllowedHttpMethods());
+			$this->setControllerMethod($ctrlMethodAnnot->getMethodName());
+			$this->setUriMatchRegExp($ruleAnnot->getUriMatchRegExp());		
+			$this->setURIMatchPattern($ruleAnnot->matchPattern);			
 		}
-		$newInstance->setInput();		
 	}
 
 	/**

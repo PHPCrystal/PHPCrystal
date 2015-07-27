@@ -125,9 +125,9 @@ final class Factory
 		$instance = new $className(...$constArgs);		
 		$this->bind($instance);		
 
-		if ($instance instanceof InitiableInterface) {
-			$instance->init();
-		}
+//		if ($instance instanceof InitiableInterface) {
+//			$instance->init();
+//		}
 
 		return $instance;
 	}
@@ -244,23 +244,11 @@ final class Factory
 		foreach ($metaClass->getEventCatalystAnnotations() as $annot) {
 			$newInstance->addPriorEvent($annot->getEvent());
 		}
-		
-		$newInstance->setExtendableMetaClass($metaClass);
-		
-		if ($metaClass instanceof Metadriver\ExtendableAction) {
-			$ruleAnnot = $metaClass->getRuleAnnotation();
-			$ctrlMethodAnnot = $metaClass->getControllerMethodAnnotation();
 
-			$newInstance->setAllowedHttpMethods($ruleAnnot->getAllowedHttpMethods());
-			$newInstance->setControllerMethod($ctrlMethodAnnot->getMethodName($newInstance));
-			$newInstance->setUriMatchRegExp($ruleAnnot->getUriMatchRegExp());
-			$newInstance->setURIMatchPattern($ruleAnnot->matchPattern);
-			
-			$inputAnnot = $this->getInputAnnot();
-			if (null === $inputAnnot) {
-				//$newInstance->setInput(->)
-			}
-			$newInstance->setInput();
+		$newInstance->setExtendableInstance($metaClass);
+
+		if ($newInstance instanceof InitiableInterface) {
+			$newInstance->init();
 		}
 
 		return $newInstance;
