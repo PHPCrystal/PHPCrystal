@@ -8,8 +8,8 @@ class Account extends AbstractController
 	/**
 	 * @return void
 	 */
-	public function editAction()
+	public function editUserProfileAction()
 	{
-		
+		echo 1;
 	}
 }

@@ -240,7 +240,7 @@ final class Factory
 	{
 		$targetClass = $metaClass->getTargetClass();		
 		$newInstance = $this->create($targetClass);
-		
+
 		foreach ($metaClass->getEventCatalystAnnotations() as $annot) {
 			$newInstance->addPriorEvent($annot->getEvent());
 		}

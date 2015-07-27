@@ -345,6 +345,10 @@ abstract class AbstractContainer
 	 */
 	public function merge($container)
 	{
+		if (null == $container) {
+			return $this;
+		}
+		
 		foreach ($container->getAllKeys() as $itemKey) {
 			$this->set($itemKey, $container->get($itemKey));
 		}

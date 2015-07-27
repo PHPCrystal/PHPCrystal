@@ -8,7 +8,7 @@ abstract class AbstractRule
 	use CreateObject;
 
 	/** @var string */
-	private $inputItemKey;
+	private $itemKey;
 
 
 	private $errorMessage;
@@ -16,9 +16,14 @@ abstract class AbstractRule
 	/**
 	 * @api
 	 */
-	public function __construct($inputItemKey)
+	public function __construct($itemKey)
 	{
-		$this->inputItemKey = $inputItemKey;
+		$this->itemKey = $itemKey;
+	}
+	
+	public function getItemKey()
+	{
+		return $this->itemKey;
 	}
 	
 	/**

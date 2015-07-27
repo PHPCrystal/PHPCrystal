@@ -366,6 +366,7 @@ abstract class AbstractApplication extends AbstractPackage
 		if ($this->bootstrapFlag) {
 			return;
 		}
+		$this->setCurrentEvent($externalEvent);		
 		$this->context = $externalEvent->createContext();
 		$this->addPathAliases();
 		$this->assignEventListeners();
@@ -450,8 +451,7 @@ abstract class AbstractApplication extends AbstractPackage
 				return parent::dispatch($event);
 			}
 			
-			$event->setOriginalTarget($this);			
-			$this->setCurrentEvent($event);
+			$event->setOriginalTarget($this);
 			
 			// bootstrap
 			$this->bootstrap($event);

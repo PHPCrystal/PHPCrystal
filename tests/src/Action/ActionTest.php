@@ -28,7 +28,7 @@ class ActionTest extends TestCase
 	
 	public function testAccountEditAction()
 	{
-		$this->makeRequest('@app/fixture/http_request/post_account_edit.txt');
+		$this->makeRequest(__DIR__ . '/../../fixture/http_request/post_account_edit.txt');
 		//$editAction = $this->createAccountEditAction();
 	}
 }

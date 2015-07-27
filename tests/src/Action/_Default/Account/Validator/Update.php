@@ -1,5 +1,5 @@
 <?php
-namespace PHPCrystal\PHPCrystalTest\Actiion\_Default\_Default\Validator;
+namespace PHPCrystal\PHPCrystalTest\Action\_Default\Account\Validator;
 
 use PHPCrystal\PHPCrystal\Component\MVC\Controller\Validator\AbstractValidator;
 use PHPCrystal\PHPCrystal\Component\MVC\Controller\Validator\Rule as Rule;

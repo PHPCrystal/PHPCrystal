@@ -39,6 +39,9 @@ abstract class AbstractAction extends Event\AbstractAppListener
 	 */
 	private $isValid = true;
 
+	/** @var */
+	private $validator;
+
 	/**
 	 * @var boolean
 	 */
@@ -119,7 +122,15 @@ abstract class AbstractAction extends Event\AbstractAppListener
 	 */
 	protected function getValidator()
 	{
-		return null;
+		return $this->validator;
+	}
+	
+	/**
+	 * @return void
+	 */
+	protected function setValidator($object)
+	{
+		$this->validator = $object;
 	}
 	
 	/**
@@ -181,12 +192,84 @@ abstract class AbstractAction extends Event\AbstractAppListener
 		if ($extendable) {
 			$ruleAnnot = $extendable->getRuleAnnotation();
 			$ctrlMethodAnnot = $extendable->getControllerMethodAnnotation();
-
-			$this->setAllowedHttpMethods($ruleAnnot->getAllowedHttpMethods());
+			
 			$this->setControllerMethod($ctrlMethodAnnot->getMethodName());
+			$this->setAllowedHttpMethods($ruleAnnot->getAllowedHttpMethods());
 			$this->setUriMatchRegExp($ruleAnnot->getUriMatchRegExp());		
-			$this->setURIMatchPattern($ruleAnnot->matchPattern);			
+			$this->setURIMatchPattern($ruleAnnot->matchPattern);
+			
+			$validator = $this->instantiateValidator();			
+			$this->setValidator($validator);
 		}
+	}
+	
+	private function createControllerInput()
+	{
+		$ctrlInput = Input::create('ControllerInput');
+		$request = $this->getApplication()->getRequest();
+		if (null === ($extandable = $this->getExtendableInstance()) ||
+			null === ($inputAnnot = $extandable->getInputAnnot()))
+		{
+			$ctrlInput->merge($request->getGetInput());
+			$ctrlInput->merge($request->getPostInput());
+			$ctrlInput->merge($request->getCookieInput());
+			$ctrlInput->merge($request->getURIInput());
+		} else {
+			foreach ($inputAnnot->getInputChannelList() as $channelName) {
+				switch ($channelName) {
+					case 'POST':
+						$ctrlInput->merge($request->getPostInput());
+						break;
+					case 'GET':
+						$ctrlInput->merge($request->getGetInput());
+						break;
+					case 'COOKIE':
+						$ctrlInput->merge($request->getCookieInput());
+						break;
+					case 'URI':
+						$ctrlInput->merge($request->getURIInput());
+						break;
+				}
+			}
+		}
+		
+		return $ctrlInput;
+	}
+	
+	/**
+	 * @return object
+	 */
+	private function instantiateValidator()
+	{
+		$validatorAnnot = $this->getExtendableInstance()
+			->getValidatorAnnot();
+
+		if ( ! $validatorAnnot) {
+			return;
+		}
+
+		$request = $this->getApplication()->getRequest();		
+		$requestMethod = $request->getMethod();
+		$targetMethods = $validatorAnnot->getTargetMethods();
+		if ( ! in_array($requestMethod, $targetMethods) &&
+			$targetMethods[0] != 'ALL')
+		{
+			return;
+		}
+
+		$validatorClass = $validatorAnnot->getClassName();
+		if (empty($validatorClass)) {
+			$name = $validatorAnnot->getDefaultName();
+			$parts = explode('\\', static::class);
+			array_pop($parts);
+			$parts[] = 'Validator';
+			$parts[] = $name;
+			$validatorClass = join('\\', $parts);
+		}
+
+		$validatorInstance = new $validatorClass();
+		
+		return $validatorInstance;
 	}
 
 	/**
@@ -283,9 +366,9 @@ abstract class AbstractAction extends Event\AbstractAppListener
 	final public function execute($event)
 	{
 		try {
-			$this->onPreExec($event);			
+			$this->onPreExec($event);
 			
-			$methodName = $this->getControllerMethod($event->getRequest());				
+			$methodName = $this->getControllerMethod($event->getRequest());
 			$ctrlMethodServices = $this->getFactory()
 				->getMethodInjectedServices($this->ctrlInstance, $methodName);
 			
@@ -356,11 +439,13 @@ abstract class AbstractAction extends Event\AbstractAppListener
 
 			// Do data validation if necessary
 			$validator = $this->getValidator();
-			if ($validator) {
+			if (null !== $validator) {
+				$this->ctrlInput = $this->createControllerInput();
+				$validator->setInput($this->ctrlInput);
 				$result = $validator->run();
 				if ( ! $result) {
 					$event->discard();
-					$this->onDataValidationFail($validator);
+					$this->onDataValidationFail($event, $validator);
 				}
 			}
 

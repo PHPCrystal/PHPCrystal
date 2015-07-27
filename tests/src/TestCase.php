@@ -24,7 +24,8 @@ class TestCase extends \PHPUnit_Framework_TestCase
 
 		$this->appPkg = Application::create($autoloader)
 			->addExtension(__DIR__ . '/../..')
-			->bootstrap(Event\Type\Dummy::create());
+		//	->bootstrap(Event\Type\Dummy::create())
+		;
 	}
 	
 	/**

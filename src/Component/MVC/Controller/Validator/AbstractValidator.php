@@ -32,25 +32,25 @@ abstract class AbstractValidator
 	 */
 	final public function run()
 	{
-		foreach ($this->getRules() as $itemName => $rule) {
-			$value = $this->input->get($itemName);
+		foreach ($this->getRules() as $itemKey => $rule) {
+			$value = $this->input->get($itemKey);
 			
 			if ( ! $rule->validate($value)) {
-				$this->addError($itemName, $rule->getErrorMessage());				
+				$this->addError($itemKey, $rule->getErrorMessage());				
 			}
 
 			if ($this->sanitizeFlag) {
 				$newValue = $rule->sanitize($value);
-				$this->input->set($itemName, $newValue);
+				$this->input->set($itemKey, $newValue);
 			}			
 		}
 		
 		return count($this->getErrors()) ? false : true;
 	}
 	
-	final public function addRule($itemName, $rule)
+	final public function addRule($rule)
 	{
-		$this->rules[$itemName] = $rule;
+		$this->rules[$rule->getItemKey()] = $rule;
 	}
 	
 	final public function addError($itemName, $errorMsg)

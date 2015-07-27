@@ -28,4 +28,22 @@ class ExtendableAction extends AbstractExtendable
 			}
 		}
 	}
+	
+	public function getValidatorAnnot()
+	{
+		foreach ($this->getAnnotations() as $annot) {
+			if ($annot instanceof Action\Validator) {
+				return $annot;
+			}
+		}
+	}
+	
+	public function getInputAnnot()
+	{
+		foreach ($this->getAnnotations() as $annot) {
+			if ($annot instanceof Action\Input) {
+				return $annot;
+			}
+		}
+	}
 }

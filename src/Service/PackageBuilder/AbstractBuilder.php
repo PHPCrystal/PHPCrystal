@@ -112,6 +112,7 @@ abstract class AbstractBuilder extends AbstractService
 			}
 
 			$extended = Metadriver\Metadriver::getExtendedClassNameByBase($baseClass);
+
 			if (class_exists($extended)) {
 				$result[] = new $metaClassName($baseClass, $extended);				
 			} else {
