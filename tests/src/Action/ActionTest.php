@@ -20,15 +20,8 @@ class ActionTest extends TestCase
 			Index::getControllerClassName());
 	}
 	
-	public function testParseNamespace()
-	{
-		$action = $this->createIndexAction();
-		$this->assertEquals('_Default\_Default\Index', $action->getName());
-	}
-	
 	public function testAccountEditAction()
 	{
 		$this->makeRequest(__DIR__ . '/../../fixture/http_request/post_account_edit.txt');
-		//$editAction = $this->createAccountEditAction();
 	}
 }

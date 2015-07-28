@@ -10,6 +10,6 @@ class Account extends AbstractController
 	 */
 	public function editUserProfileAction()
 	{
-		echo 1;
+
 	}
 }

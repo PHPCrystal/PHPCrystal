@@ -243,8 +243,10 @@ abstract class AbstractAction extends Event\AbstractAppListener
 	{
 		$validatorAnnot = $this->getExtendableInstance()
 			->getValidatorAnnot();
+		
+		$externalEvent = $this->getApplication()->getCurrentEvent();
 
-		if ( ! $validatorAnnot) {
+		if ( ! $validatorAnnot || ! ($externalEvent instanceof Event\Type\Http\Request)) {
 			return;
 		}
 

@@ -104,7 +104,17 @@ abstract class AbstractApplication extends AbstractPackage
 
 		parent::init();
 	}
-	
+
+	/**
+	 * @inherited
+	 */
+	final public function setDirectory($pathname)
+	{
+		FileHelper::addAlias('app', $pathname);
+
+		return parent::setDirectory($pathname);
+	}
+
 	/**
 	 * @return boolean
 	 */
@@ -298,8 +308,7 @@ abstract class AbstractApplication extends AbstractPackage
 	 * @return 
 	 */
 	protected function addPathAliases()
-	{
-		FileHelper::addAlias('app', $this->getDirectory(), false);
+	{	
 		FileHelper::addAlias('cache', '@app/cache');
 		FileHelper::addAlias('web', '@app/public_html');
 		FileHelper::addAlias('template', '@app/resources/template');
@@ -365,8 +374,14 @@ abstract class AbstractApplication extends AbstractPackage
 	{
 		if ($this->bootstrapFlag) {
 			return;
+		}		
+		// assign application directory path
+		if ( ! $this->getDirectory()) {
+			$this->setDirectory(realpath($this->getClassPath(get_class($this)) . '/..'));
 		}
+		// set event being dispatched
 		$this->setCurrentEvent($externalEvent);		
+		// create event context
 		$this->context = $externalEvent->createContext();
 		$this->addPathAliases();
 		$this->assignEventListeners();
@@ -377,7 +392,7 @@ abstract class AbstractApplication extends AbstractPackage
 		$this->assignActions();
 		$this->initRouting();
 		$this->bootstrapFlag = true;
-		
+
 		return $this;
 	}
 

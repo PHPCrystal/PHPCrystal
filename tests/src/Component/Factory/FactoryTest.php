@@ -1,7 +1,7 @@
 <?php
 namespace PHPCrystal\PHPCrystalTest;
 
-class FactoryTest extends TestCase
+class FactoryTest extends TestCaseDummy
 {
 	public function testDependencyInjection()
 	{

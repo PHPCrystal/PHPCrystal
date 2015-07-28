@@ -150,12 +150,12 @@ final class Factory
 		$this->bind($service);
 		
 		// dispatch init service event
-		//$initServiceEvent = $this->getPackage()
-		//	->getApplication()
-		//	->dispatchInitServiceEvent($service);		
-		//if ($initServiceEvent->hasCustomInitRoutine()) {
-		//	$service->setCustomInitClosure($initServiceEvent->getResult());
-		//}
+		$initServiceEvent = $this->getPackage()
+			->getApplication()
+			->dispatchInitServiceEvent($service);		
+		if ($initServiceEvent->hasCustomInitRoutine()) {
+			$service->setCustomInitClosure($initServiceEvent->getResult());
+		}
 		
 		// initialize service if necessary.
 		if ( ! ($service->isInitialized() || $className::hasLazyInit())) {

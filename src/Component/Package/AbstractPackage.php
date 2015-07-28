@@ -27,11 +27,7 @@ abstract class AbstractPackage extends Event\AbstractNode
 	 */
 	public function __construct()
 	{
-		parent::__construct();
-		// set package root directory
-		if ( ! $this->getDirectory()) {
-			$this->setDirectory(realpath($this->getClassPath(get_class($this)) . '/..'));
-		}		
+		parent::__construct();	
 		// set package name and namespace
 		$parts = explode('\\', get_class($this));		
 		$pkgName = strtolower($parts[0] . '/' . $parts[1]);		
@@ -181,7 +177,7 @@ abstract class AbstractPackage extends Event\AbstractNode
 	/**
 	 * @return $this
 	 */
-	final public function setDirectory($pathname)
+	public function setDirectory($pathname)
 	{
 		$this->dirname = $pathname;
 		
