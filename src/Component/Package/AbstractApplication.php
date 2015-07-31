@@ -101,7 +101,6 @@ abstract class AbstractApplication extends AbstractPackage
 	 */
 	public function init()
 	{
-
 		parent::init();
 	}
 
@@ -357,6 +356,8 @@ abstract class AbstractApplication extends AbstractPackage
 	 */
 	private function initRouting()
 	{
+		$this->setRouter('\\PHPCrystal\\PHPCrystal\\Service\\Router\\_Default');
+
 		// router service must have lazy initialization. it's being initialized
 		// after application is built
 		foreach ($this->getExtensions(true) as $package) {

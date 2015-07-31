@@ -192,12 +192,12 @@ abstract class AbstractAction extends Event\AbstractAppListener
 		if ($extendable) {
 			$routeAnnot = $extendable->getRouteAnnotation();
 			$ctrlMethodAnnot = $extendable->getControllerMethodAnnotation();
-			
+
 			$this->setControllerMethod($ctrlMethodAnnot->getMethodName());
 			$this->setAllowedHttpMethods($routeAnnot->getAllowedHttpMethods());
 			$this->setUriMatchRegExp($routeAnnot->getUriMatchRegExp());		
 			$this->setURIMatchPattern($routeAnnot->matchPattern);
-			
+
 			$validator = $this->instantiateValidator();			
 			$this->setValidator($validator);
 		}
@@ -417,14 +417,16 @@ abstract class AbstractAction extends Event\AbstractAppListener
 	 */
 	public function getReverseURI(...$params)
 	{
-		$matchPattern = static::getURIMatchPattern();
-		if ( ! empty($matchPattern)) {
-			return preg_replace_callback('|<[^>]+>|', function() use($params) {
+		$uriString = $this->getURIMatchPattern();
+		if ( ! empty($uriString)) {
+			$uriString = preg_replace_callback('|{[^}]+}|', function() use($params) {
 				return array_shift($params);
-			}, $matchPattern);
+			}, $uriString);
 		}
+		
+		return $uriString;
 	}
-	
+
 	//
 	// Event hooks
 	//

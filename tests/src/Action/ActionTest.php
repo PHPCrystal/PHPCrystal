@@ -22,6 +22,16 @@ class ActionTest extends TestCase
 	
 	public function testAccountEditAction()
 	{
-		$this->makeRequest(__DIR__ . '/../../fixture/http_request/post_account_edit.txt');
+		$this->makeRequest('@app/fixture/http_request/post_account_edit.txt');
+
+		$router = $this->appPkg->getRouter();
+		$action = $router->getAction();
+		$this->assertInstanceOf('PHPCrystal\PHPCrystalTest\Action\_Default\Account\Edit', $action);
+
+		$uriString = $action->getReverseURI(658263);
+		$this->assertEquals('/user/658263/edit/', $uriString);
+		
+		$ctrlAnnot = $action->getExtendableInstance()->getControllerMethodAnnotation();
+		$this->assertEquals('editUserProfileAction', $ctrlAnnot->getMethodName());
 	}
 }
