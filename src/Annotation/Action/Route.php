@@ -2,7 +2,7 @@
 namespace PHPCrystal\PHPCrystal\Annotation\Action;
 
 use PHPCrystal\PHPCrystal\Component\Http\Request;
-use PHPCrystal\PHPCrystal\Component\Exception\System\LastChineseWarning;
+use PHPCrystal\PHPCrystal\Component\Exception\System\FrameworkRuntimeError;
 
 /**
  * @Annotation
@@ -12,7 +12,7 @@ use PHPCrystal\PHPCrystal\Component\Exception\System\LastChineseWarning;
  *  @Attribute("matchPattern", type="string")
  * })
  */
-class Rule
+class Route
 {
 	private $allowedHttpMethods = array();
 	private $uriMatchRegExp;
@@ -37,28 +37,19 @@ class Rule
 	public static function convertMatchPatternToRegexp($inputStr)
 	{
 		$matches = null;
-		$patternRegExp = '/<(d|any):([^>]+)>/';		
+		$patternRegExp = '/{([^}]+)}/';
 
 		while (preg_match($patternRegExp, $inputStr, $matches)) {
-			$subpatternName = $matches[2];
-			switch ($matches[1]) {
-				case 'd':
-					$subpatternRegexp = '[0-9]+';
-					break;
-				
-				case 'any':
-					$subpatternRegexp = '[^/]+';
-			}
-			
-			$replacement = "(?P<$subpatternName>$subpatternRegexp)";
+			$subpatternName = $matches[1];
+			$replacement = "(?P<$subpatternName>[^/]+)";
 			$inputStr = preg_replace($patternRegExp, $replacement, $inputStr);
 		}
 
-		$inputStr = "|^$inputStr/?$|";
+		$outputRegExp = "|^$inputStr/?$|";
 
-		return $inputStr;
+		return $outputRegExp;
 	}
-	
+
 	/**
 	 * @return array
 	 */
@@ -78,7 +69,7 @@ class Rule
 			$parts = explode('|', $mixed);
 			foreach ($parts as $methodName) {
 				if ( ! in_array($methodName, Request::getKnownHttpMethods())) {
-					LastChineseWarning::create('Unknown HTTP method "%s"', null, $methodName)
+					FrameworkRuntimeError::create('Unknown HTTP method "%s"', null, $methodName)
 						->_throw();
 				}
 				$this->allowedHttpMethods[] = $methodName;

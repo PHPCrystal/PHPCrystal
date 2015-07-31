@@ -190,13 +190,13 @@ abstract class AbstractAction extends Event\AbstractAppListener
 		$extendable = $this->getExtendableInstance();		
 
 		if ($extendable) {
-			$ruleAnnot = $extendable->getRuleAnnotation();
+			$routeAnnot = $extendable->getRouteAnnotation();
 			$ctrlMethodAnnot = $extendable->getControllerMethodAnnotation();
 			
 			$this->setControllerMethod($ctrlMethodAnnot->getMethodName());
-			$this->setAllowedHttpMethods($ruleAnnot->getAllowedHttpMethods());
-			$this->setUriMatchRegExp($ruleAnnot->getUriMatchRegExp());		
-			$this->setURIMatchPattern($ruleAnnot->matchPattern);
+			$this->setAllowedHttpMethods($routeAnnot->getAllowedHttpMethods());
+			$this->setUriMatchRegExp($routeAnnot->getUriMatchRegExp());		
+			$this->setURIMatchPattern($routeAnnot->matchPattern);
 			
 			$validator = $this->instantiateValidator();			
 			$this->setValidator($validator);

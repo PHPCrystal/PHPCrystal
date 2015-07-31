@@ -72,7 +72,7 @@ abstract class AbstractApplication extends AbstractPackage
 		if ($this->getContext()->getEnv() == 'dev' &&
 			strlen(($outputStr = ob_get_clean()) > 0))
 		{
-			Exception\System\LastChineseWarning::create('Output buffer is not empty "%s"', null, $outputStr)
+			Exception\System\FrameworkRuntimeError::create('Output buffer is not empty "%s"', null, $outputStr)
 				->addParam($outputStr)
 				->_throw();
 		} else {
@@ -145,7 +145,7 @@ abstract class AbstractApplication extends AbstractPackage
 		// do not allow to add the same extension twice
 		foreach ($this->getExtensions() as $loadedExt) {
 			if ($loadedExt->getNamespace() == $extInstance->getNamespace()) {
-				Exception\System\LastChineseWarning::create('The extension "%s" is already loaded',
+				Exception\System\FrameworkRuntimeError::create('The extension "%s" is already loaded',
 					null, $extInstance->getComposerName())
 					->_throw();
 			}

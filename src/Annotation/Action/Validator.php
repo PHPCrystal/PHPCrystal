@@ -2,7 +2,7 @@
 namespace PHPCrystal\PHPCrystal\Annotation\Action;
 
 use PHPCrystal\PHPCrystal\Component\Http\Request;
-use PHPCrystal\PHPCrystal\Component\Exception\System\LastChineseWarning;
+use PHPCrystal\PHPCrystal\Component\Exception\System\FrameworkRuntimeError;
 
 /**
  * @Annotation

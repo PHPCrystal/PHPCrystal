@@ -5,7 +5,7 @@ use PHPCrystal\PHPCrystal\Component\MVC\Controller\Action\AbstractAction;
 
 /**
  * @ControllerMethod("indexAction")
- * @Rule(method="GET", matchPattern="/")
+ * @Route(method="GET", matchPattern="/")
  */
 class Index extends AbstractAction
 {

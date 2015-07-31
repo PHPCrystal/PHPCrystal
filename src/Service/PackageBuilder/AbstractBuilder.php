@@ -140,7 +140,7 @@ abstract class AbstractBuilder extends AbstractService
 			$ctrlCallback = [$target::getControllerClassName(), $ctrlMethodName];
 
 			if ( ! is_callable($ctrlCallback)) {
-				Exception\System\LastChineseWarning::create('Controller method "%s::%s" isn\'t callable',
+				Exception\System\FrameworkRuntimeError::create('Controller method "%s::%s" isn\'t callable',
 					null, $ctrlCallback[0], $ctrlCallback[1])
 					->_throw();
 			}
