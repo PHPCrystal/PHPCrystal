@@ -3,6 +3,7 @@
 	"description": "An event-driven PHP Web application framework",
 	"keywords": ["php","framework"],
 	"license": "MIT",
+	"minimum-stability": "dev",
 	"config": {
 		"process-timeout": 3600
 	},
@@ -22,5 +23,5 @@
 		"psr-4": {
 			"PHPCrystal\\PHPCrystalTest\\": "tests/src/"
 		}
-	}	
+	}
 }
