@@ -1,6 +1,9 @@
 <?php
 namespace PHPCrystal\PHPCrystal\Component\Package;
 
+use Composer\Installer\PackageEvent;
+use PHPCrystal\PHPCrystal\Service\Event as Event;
+
 abstract class AbstractExtension extends AbstractPackage 
 {
 	/**
@@ -24,5 +27,18 @@ abstract class AbstractExtension extends AbstractPackage
 		$this->disabledFlag = $flagValue;
 		
 		return $this;
+	}
+	
+	/**
+	 * @return void
+	 */
+	public static function install(PackageEvent $event)
+	{
+		$pkgInstance = $event->getOperation()->getPackage();
+		
+		$extInstallEvent = Event\System\ExtensionInstall::create($pkgInstance);
+		
+		$appPkg = require __DIR__ . '/../../bootstrap.php';
+		$appPkg->dispatch($extInstallEvent);
 	}
 }

@@ -16,6 +16,7 @@ abstract class AbstractPackage extends Event\AbstractNode
 	private $namespace;
 	private $composerName;
 	private $key;
+	private $pkgName;
 
 	/**
 	 * @var \Composer\Autoload\ClassLoader
@@ -247,10 +248,5 @@ abstract class AbstractPackage extends Event\AbstractNode
 			return;
 		}
 		$builder->run();
-	}
-	
-	public static function install()
-	{
-		echo 1;
 	}
 }
