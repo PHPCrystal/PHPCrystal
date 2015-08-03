@@ -38,7 +38,7 @@ abstract class AbstractExtension extends AbstractPackage
 		
 		$extInstallEvent = Event\Type\System\ExtensionInstall::create($pkgInstance);
 		
-		$appPkg = require __DIR__ . '/../../bootstrap.php';
+		$appPkg = require __DIR__ . '/../../../bootstrap.php';
 		$appPkg->dispatch($extInstallEvent);
 	}
 }
