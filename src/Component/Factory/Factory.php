@@ -150,9 +150,9 @@ final class Factory
 		$this->bind($service);
 		
 		// dispatch init service event
-		$initServiceEvent = $this->getPackage()
-			->getApplication()
+		$initServiceEvent = self::getApplication()
 			->dispatchInitServiceEvent($service);		
+
 		if ($initServiceEvent->hasCustomInitRoutine()) {
 			$service->setCustomInitClosure($initServiceEvent->getResult());
 		}
