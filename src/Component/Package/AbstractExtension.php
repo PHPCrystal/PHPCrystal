@@ -35,10 +35,12 @@ abstract class AbstractExtension extends AbstractPackage
 	public static function install(PackageEvent $event)
 	{
 		$pkgInstance = $event->getOperation()->getPackage();
+
+		$appPkg = require ($pkgInstance->getTargetDir() . '/../../bootstrap.php');
 		
+		var_dump($pkgInstance->getName(), $pkgInstance->getPrettyName(), $pkgInstance->getTargetDir() . '/../../bootstrap.php');
 		$extInstallEvent = Event\Type\System\ExtensionInstall::create($pkgInstance);
-		
-		$appPkg = require __DIR__ . '/../../../bootstrap.php';
+
 		$appPkg->dispatch($extInstallEvent);
 	}
 }
