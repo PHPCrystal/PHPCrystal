@@ -3,7 +3,6 @@ namespace PHPCrystal\PHPCrystal\Component\Package;
 
 use Composer\Installer\PackageEvent;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
-use PHPCrystal\PHPCrystal\Component\Exception\System\FrameworkRuntimeError;
 
 abstract class AbstractExtension extends AbstractPackage 
 {

@@ -25,6 +25,16 @@ class ExtensionInstall extends Event\Type\AbstractExternal
 	{
 		return $this->packageInstance;
 	}
+	
+	/**
+	 * Returns composer package name
+	 * 
+	 * @return string
+	 */
+	public function getComposerPackageName()
+	{
+		return $this->getComposerPackageInstance()->getName();
+	}
 
 	/**
 	 * @return \PHPCrystal\PHPCrystal\Service\Event\Context\Cli
