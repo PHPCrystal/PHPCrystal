@@ -3,6 +3,7 @@ namespace PHPCrystal\PHPCrystal\Component\Package;
 
 use Composer\Installer\PackageEvent;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
+use PHPCrystal\PHPCrystal\Component\Exception\System\FrameworkRuntimeError;
 
 abstract class AbstractExtension extends AbstractPackage 
 {
@@ -34,13 +35,14 @@ abstract class AbstractExtension extends AbstractPackage
 	 */
 	public static function install(PackageEvent $event)
 	{
-		$pkgInstance = $event->getOperation()->getPackage();
-		var_dump($pkgInstance->getName(), $pkgInstance->getPrettyName(), $pkgInstance->getTargetDir() . '/../../bootstrap.php');
-		return;
-		$appPkg = require ($pkgInstance->getTargetDir() . '/../../bootstrap.php');
-		
-		$extInstallEvent = Event\Type\System\ExtensionInstall::create($pkgInstance);
+		$composerJson = getenv('COMPOSER');		
+		$appRootDir = empty($composerJson) ? getcwd() : dirname($composerJson);
 
-		$appPkg->dispatch($extInstallEvent);
+		$appPkgInstance = require "{$appRootDir}/bootstrap.php";
+		$composerPkg = $event->getOperation()->getPackage();
+
+		$extInstallEvent = Event\Type\System\ExtensionInstall::create($composerPkg);
+
+		$appPkgInstance->dispatch($extInstallEvent);
 	}
 }
