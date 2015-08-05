@@ -47,36 +47,52 @@ abstract class AbstractExtension extends AbstractPackage
 	}
 	
 	/**
-	 * 
+	 * @return void
+	 */
+	protected function onInstallHelper(Event\Type\System\ExtensionInstall $event)
+	{
+		if ($this->getComposerName() != $event->getComposerPackageName()) {
+			return;
+		}
+
+		$composerLock = FileHelper::create($this->getApplication()->getDirectory(),
+			'composer.lock');
+
+		$composerLockJson = $composerLock->readJson();
+		$currentPkgEntry = null;
+		foreach ($composerLockJson['packages'] as $pkgEntry) {
+			if ($pkgEntry['name'] == $this->getComposerName()) {
+				$currentPkgEntry = &$pkgEntry;
+				break;
+			}
+		}
+
+		if (isset($currentPkgEntry['installed']) && 'yes'  === $currentPkgEntry['installed']) {
+			return;
+		}
+
+		// install extension and mark it as installed
+		$success = $this->onInstall($event);
+		if ($success) {
+			$currentPkgEntry['installed'] = 'yes';
+			$composerLock->writeJson($composerLockJson,
+				JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+		}
+	}
+	
+	/**
+	 * @return $this
 	 */
 	public function init()
 	{
 		parent::init();
+
+		// extension installation event listener
 		$this->addEventListener(Event\Type\System\ExtensionInstall::toType(), function($event) {
-			if ($this->getComposerName() == $event->getComposerPackageName()) {
-				$composerLock = FileHelper::create($this->getApplication()->getDirectory(),
-					'composer.lock');
-				
-				$composerLockJson = $composerLock->readJson();
-				$currentPkgEntry = null;
-				foreach ($composerLockJson['packages'] as $pkgEntry) {
-					if ($pkgEntry['name'] == $this->getComposerName()) {
-						$currentPkgEntry = &$pkgEntry;
-						break;
-					}
-				}
-
-				if (isset($currentPkgEntry['installed']) && 'yes'  === $currentPkgEntry['installed']) {
-					return;
-				}
-
-				$success = $this->onInstall($event);
-				if ($success) {
-					$currentPkgEntry['install'] = 'yes';
-					$composerLock->write($composerLockJson);
-				}
-			}
+			$this->onInstallHelper($event);
 		});
+		
+		return $this;
 	}
 
 	//

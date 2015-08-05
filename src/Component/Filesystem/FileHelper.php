@@ -256,4 +256,12 @@ class FileHelper
 		
 		return $jsonData;
 	}
+	
+	/**
+	 * @return void
+	 */
+	public function writeJson(array $data, $options = 0)
+	{
+		$this->write(json_encode($data, $options));
+	}
 }

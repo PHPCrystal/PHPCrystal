@@ -50,4 +50,13 @@ class EventTest extends TestCaseDummy
 		$this->assertEquals('I hope it will work', $dummy->saySomething());
 		$this->assertEquals('phpcrystal/phpcrystaltest', $dummy->getPackageName());
 	}
+	
+	
+	public function testExtensionInstallation()
+	{
+		$extInstallationEvt = Event\Type\System\ExtensionInstall::create()
+			->setComposerPackageName('phpcrystal/phpcrystal');
+		
+		$this->appPkg->dispatch($extInstallationEvt);
+	}
 }

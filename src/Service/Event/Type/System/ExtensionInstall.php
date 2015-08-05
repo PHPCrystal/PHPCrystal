@@ -7,11 +7,12 @@ use PHPCrystal\PHPCrystal\Service\Event\Context\Cli;
 class ExtensionInstall extends Event\Type\AbstractExternal
 {
 	private $packageInstance;
+	private $composerPackageName;
 
 	/**
 	 * @api
 	 */
-	public function __construct(\Composer\Package\CompletePackage $pkgInstance)
+	public function __construct(\Composer\Package\CompletePackage $pkgInstance = null)
 	{
 		parent::__construct();
 		$this->packageInstance = $pkgInstance;
@@ -33,7 +34,17 @@ class ExtensionInstall extends Event\Type\AbstractExternal
 	 */
 	public function getComposerPackageName()
 	{
-		return $this->getComposerPackageInstance()->getName();
+		return $this->composerPackageName;
+	}
+	
+	/**
+	 * @return $this
+	 */
+	public function setComposerPackageName($pkgName)
+	{
+		$this->composerPackageName = $pkgName;
+		
+		return $this;
 	}
 
 	/**
