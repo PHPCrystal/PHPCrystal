@@ -92,7 +92,19 @@ class FileHelper
 		
 		return $content;
 	}
-	
+
+	/**
+	 * @return string
+	 */
+	public function write($data)
+	{
+		$filename = $this->toString();
+		$fd = fopen($filename, 'w');
+		IO_Filesystem::assertFd($fd, $filename);
+		fwrite($fd, $data);
+		fclose($fd);
+	}
+
 	/**
 	 * @return string
 	 */
