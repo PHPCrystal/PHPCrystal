@@ -52,6 +52,9 @@ class ExtensionInstall extends Event\Type\AbstractExternal
 	 */
 	public function createContext()
 	{
-		return Cli::create('ExtInstallContext');
+		$context =  Cli::create('ExtInstallContext');
+		$context->setEnv('dev');
+		
+		return $context;
 	}
 }

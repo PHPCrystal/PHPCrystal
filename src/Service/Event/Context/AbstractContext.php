@@ -18,6 +18,6 @@ abstract class AbstractContext extends Container implements
 	 */
 	public function getEnv()
 	{
-		return $this->get('env');
+		return $this->get('env', 'dev');
 	}
 }
