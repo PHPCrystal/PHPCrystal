@@ -16,6 +16,9 @@ class ExtensionInstall extends Event\Type\AbstractExternal
 	{
 		parent::__construct();
 		$this->packageInstance = $pkgInstance;
+		if ($pkgInstance) {
+			$this->composerPackageName = $pkgInstance->getName();
+		}
 		$this->type = Event\TYPE_BROADCAST_POST_ORDER;
 	}
 

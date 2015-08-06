@@ -35,51 +35,62 @@ abstract class AbstractExtension extends AbstractPackage
 	 */
 	public static function install(PackageEvent $event)
 	{
-		$composerJson = getenv('COMPOSER');		
-		$appRootDir = empty($composerJson) ? getcwd() : dirname($composerJson);
+		global $app;
+		
+		$composer_json_filename = getenv('COMPOSER');
+		$app_root_dir = empty($composer_json_filename) ? getcwd() : dirname($composer_json_filename);
 
-		$appPkgInstance = require "{$appRootDir}/bootstrap.php";
-		$composerPkg = $event->getOperation()->getPackage();
+		$app = require "{$app_root_dir}/bootstrap.php";
+		$composer_pkg = $event->getOperation()->getPackage();
 
-		$extInstallEvent = Event\Type\System\ExtensionInstall::create($composerPkg);
+		$vendor_dir = getenv('COMPOSER_VENDOR_DIR');
+		$vendor_dir_abs = empty($vendor_dir) ? "{$app_root_dir}/vendor" : "{$app_root_dir}/{$vendor_dir}";
 
-		$appPkgInstance->dispatch($extInstallEvent);
+		$composer_pkg_dir = $vendor_dir_abs . DIRECTORY_SEPARATOR . $composer_pkg->getName();
+		$app->addExtension($composer_pkg_dir);
+
+		$ext_install_event = Event\Type\System\ExtensionInstall::create($composer_pkg);
+		$app->dispatch($ext_install_event);		
 	}
 	
 	/**
 	 * @return void
 	 */
-	protected function onInstallHelper(Event\Type\System\ExtensionInstall $event)
+	public static function finishInstallation(Event\Type\System\ExtensionInstall $event)
 	{
-		if ($this->getComposerName() != $event->getComposerPackageName()) {
-			return;
-		}
+		$app = $event->getCurrentNode()->getRootNode();
 
-		$composerLock = FileHelper::create($this->getApplication()->getDirectory(),
-			'composer.lock');
+		$composer_lock = FileHelper::create($app->getDirectory(), 'composer.lock');
+		$composer_lock_json = $composer_lock->readJson();
 
-		$composerLockJson = $composerLock->readJson();
-		$currentPkgEntry = null;
-		foreach ($composerLockJson['packages'] as $pkgEntry) {
-			if ($pkgEntry['name'] == $this->getComposerName()) {
-				$currentPkgEntry = &$pkgEntry;
-				break;
+		foreach ($composer_lock_json['packages'] as &$pkg_entry) {
+			if ($pkg_entry['name'] == $event->getComposerPackageName() &&
+				true === $event->getResult())
+			{
+				// Mark extension as installed
+				$pkg_entry['installed'] = 'yes';
+				$composer_lock->writeJson($composer_lock_json,
+					JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);				
 			}
 		}
+	}
 
-		if (isset($currentPkgEntry['installed']) && 'yes'  === $currentPkgEntry['installed']) {
+	/**
+	 * @return void
+	 */
+	public static function onPostAutoloadDump()
+	{
+		global $app;
+
+		if ( ! $app || null === ($current_event = $app->getCurrentEvent())) {
 			return;
 		}
 
-		// install extension and mark it as installed
-		$success = $this->onInstall($event);
-		if ($success) {
-			$currentPkgEntry['installed'] = 'yes';
-			$composerLock->writeJson($composerLockJson,
-				JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+		if ($current_event instanceof Event\Type\System\ExtensionInstall) {
+			self::finishInstallation($current_event);
 		}
 	}
-	
+
 	/**
 	 * @return $this
 	 */
@@ -89,7 +100,7 @@ abstract class AbstractExtension extends AbstractPackage
 
 		// extension installation event listener
 		$this->addEventListener(Event\Type\System\ExtensionInstall::toType(), function($event) {
-			$this->onInstallHelper($event);
+			return $this->onInstall($event);
 		});
 		
 		return $this;
