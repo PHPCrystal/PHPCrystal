@@ -76,22 +76,6 @@ abstract class AbstractExtension extends AbstractPackage
 	}
 
 	/**
-	 * @return void
-	 */
-	public static function onPostAutoloadDump()
-	{
-		global $app;
-
-		if ( ! $app || null === ($current_event = $app->getCurrentEvent())) {
-			return;
-		}
-
-		if ($current_event instanceof Event\Type\System\ExtensionInstall) {
-			self::finishInstallation($current_event);
-		}
-	}
-
-	/**
 	 * @return $this
 	 */
 	public function init()
@@ -109,6 +93,24 @@ abstract class AbstractExtension extends AbstractPackage
 	//
 	// Event hooks
 	//
+
+	/**
+	 * Composer on-autoload-dump event listener
+	 * 
+	 * @return void
+	 */
+	public static function onPostAutoloadDump()
+	{
+		global $app;
+
+		if ( ! $app || null === ($current_event = $app->getCurrentEvent())) {
+			return;
+		}
+
+		if ($current_event instanceof Event\Type\System\ExtensionInstall) {
+			self::finishInstallation($current_event);
+		}
+	}
 
 	/**
 	 * Installs an extension.

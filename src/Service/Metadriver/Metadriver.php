@@ -20,18 +20,18 @@ class Metadriver extends AbstractService
 	{
 		return true;
 	}
-	
+
 	/**
 	 * @return string
 	 */
 	public static function geExtendedClassNameByBase($baseClass)
 	{
-		$extendedName = '\\' . $this->getApplication()->getNamespace() .
+		$extended_class_name = '\\' . $this->getApplication()->getNamespace() .
 			'\\Extension\\' . $baseClass;
 		
-		return $extendedName;
+		return $extended_class_name;
 	}
-	
+
 	/**
 	 * @return bool
 	 */
@@ -201,7 +201,7 @@ class Metadriver extends AbstractService
 	/**
 	 * @return array
 	 */
-	public function getExportedServices()
+	public function getContractors()
 	{
 		return $this->data['export'];
 	}

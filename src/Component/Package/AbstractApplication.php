@@ -346,7 +346,7 @@ abstract class AbstractApplication extends AbstractPackage
 	 */
 	private function addServices()
 	{
-		foreach (Metadriver::getExportedServices() as $metaservice) {
+		foreach (Metadriver::getContractors() as $metaservice) {
 			$this->getFactory()->addMetaService($metaservice);
 		}		
 	}

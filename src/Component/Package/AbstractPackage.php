@@ -43,7 +43,7 @@ abstract class AbstractPackage extends Event\AbstractNode
 		// application instance explicitly
 		$this->setApplication(AbstractFacade::getApplication());
 		// set default package services
-		$this->setBuilder('\\PHPCrystal\\PHPCrystal\\Service\\PackageBuilder\\_Default');
+		$this->setBuilder('\\PHPCrystal\\PHPCrystal\\Service\\PackageBuilder\\PackageBuilder');
 		// assign event listeners
 		$this->addEventListener(Event\Type\System\Build::toType(), function($event) {
 			$this->onBuildEvent($event);

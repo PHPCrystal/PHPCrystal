@@ -18,105 +18,106 @@ abstract class AbstractBuilder extends AbstractService
 	private $annotReader;
 
 	/**
+	 * Returns an array of service contract definition
+	 * 
 	 * @return array
 	 */
 	protected function getContractDefinitions()
 	{
 		$result = array();
-		$pkgDir = $this->getPackage()->getDirectory();
 
-		$contractsDir = FileHelper::create($pkgDir, 'src', 'Contract');
-		if ( ! $contractsDir->dirExists()) {
+		$scan_dir = FileHelper::create($this->getPackage()->getDirectory(), 'src', 'Contract');
+		if ( ! $scan_dir->dirExists()) {
 			return $result;
 		}
-		
-		$phpFilesColl = Finder::create()
-			->findPhpFiles($contractsDir->toString());
-		
-		foreach ($phpFilesColl as $file) {
+
+		$php_files = Finder::create()->findPhpFiles($scan_dir->toString());
+		foreach ($php_files as $file) {
 			$interface = PhpParser::loadFromFile($file->getRealpath())
 				->parseInterface();
 			$result[] = $interface;
 		}
-		
+
 		return $result;
 	}
 
 	/**
+	 * Returns an array of service contractors
+	 * 
 	 * @return array
 	 */
-	public function getExportedServices()
+	public function getContractors()
 	{
 		$result = array();
+		$contract_defs = $this->getContractDefinitions();
 
-		$contractDefs = $this->getContractDefinitions();
-		$pkgDir = $this->getPackage()->getDirectory();
-		$serviceDir = FileHelper::create($pkgDir, 'src', 'Service');
-		
-		if ( ! $serviceDir->dirExists()) {
+		$scan_dir = FileHelper::create($this->getPackage()->getDirectory(), 'src', 'Service');		
+		if ( ! $scan_dir->dirExists()) {
 			return $result;
 		}
-		
-		$phpFiles = Finder::create()->findPhpFiles($serviceDir->toString());		
-		foreach ($phpFiles as $file) {
-			$className = PhpParser::loadFromFile($file->getRealpath())
+
+		$php_files = Finder::create()->findPhpFiles($scan_dir->toString());		
+		foreach ($php_files as $file) {
+			$class_name = PhpParser::loadFromFile($file->getRealpath())
 				->parseClass();
 
-			if ( ! empty($className) && ! class_exists($className)) {
+			if ( ! empty($class_name) && ! class_exists($class_name)) {
 				continue;
 			}
 
-			if (null === ($interface = AbstractContractor::getContract($className, $contractDefs)) ||
-				! AbstractContractor::isContractor($className))
+			if (null === ($interface = AbstractContractor::getContract($class_name, $contract_defs)) ||
+				! AbstractContractor::isContractor($class_name))
 			{
 				continue;
 			}
 
-			$result[] = new MetaService($className, $interface,
+			$result[] = new MetaService($class_name, $interface,
 				$this->getPackage()->getPriority());
 		}
-		
+
 		return $result;
 	}
-	
+
 	/**
+	 * Returns an array of package extendable classes
+	 * 
+	 * @param string $relPathname Relative path to a directory with extendable classes
+	 * @param string $metaClassName Name of an extendable meta class
 	 * @return array
 	 */
-	protected function getExtendableMetaClasses($baseDir, $metaClassName)
+	protected function getPackageExtendables($relPathname, $metaClassName)
 	{
 		$result = array();
-		
-		$appPkg = $this->getApplication();
-		$pkgDir = $this->getPackage()->getDirectory();
-		$extDir = FileHelper::create($appPkg->getDirectory(), 'Extension');
 
-		$baseDir = FileHelper::create($pkgDir, 'src', $baseDir);
-		if ( ! $baseDir->dirExists()) {
+		$app = $this->getApplication();
+		$pkg_root_dir = $this->getPackage()->getDirectory();
+
+		$scan_dir = FileHelper::create($pkg_root_dir, 'src', $relPathname);
+		if ( ! $scan_dir->dirExists()) {
 			return $result;
 		}
 
-		$phpFiles = Finder::create()->findPhpFiles($baseDir->toString());
-		foreach ($phpFiles as $file) {
-			$baseClass = PhpParser::loadFromFile($file->getRealpath())
+		$php_files = Finder::create()->findPhpFiles($scan_dir->toString());
+		foreach ($php_files as $file) {
+			$base_class = PhpParser::loadFromFile($file->getRealpath())
 				->parseClass();
 
 			// all package extendable classes are derived from the AbstractNode
-			// class. if not then it's something else
-			if ( ! is_subclass_of($baseClass, EVENT_MODEL_ABSTRACT_NODE_CLASS)) {
+			// class if not then it's something else
+			if ( ! is_subclass_of($base_class, EVENT_MODEL_ABSTRACT_NODE_CLASS)) {
 				continue;
 			}
 
-			if ($appPkg === $this->getPackage()) {
-				$result[]  = new $metaClassName($baseClass, null);
+			if ($app === $this->getPackage()) {
+				$result[]  = new $metaClassName($base_class, null);
 				continue;
 			}
 
-			$extended = Metadriver\Metadriver::getExtendedClassNameByBase($baseClass);
-
+			$extended = Metadriver\Metadriver::getExtendedClassNameByBase($base_class);
 			if (class_exists($extended)) {
-				$result[] = new $metaClassName($baseClass, $extended);				
+				$result[] = new $metaClassName($base_class, $extended);				
 			} else {
-				$result[] = new $metaClassName($baseClass, null);				
+				$result[] = new $metaClassName($base_class, null);				
 			}
 		}
 
@@ -128,25 +129,24 @@ abstract class AbstractBuilder extends AbstractService
 	 */
 	protected function getActions()
 	{
-		$metaClassName = '\\PHPCrystal\\PHPCrystal\\Service\\Metadriver\\ExtendableAction';		
-		$metaClasses = $this->getExtendableMetaClasses('Action', $metaClassName);
+		$extendable_actions = $this->getPackageExtendables('Action',
+			'\\PHPCrystal\\PHPCrystal\\Service\\Metadriver\\ExtendableAction');
 
 		// check whether controller method is callable
-		foreach ($metaClasses as $metaClass) {
-			$target = $metaClass->getTargetClass();
+		foreach ($extendable_actions as $action_meta_class) {
+			$target = $action_meta_class->getTargetClass();
 
-			$ctrlMethodName = $metaClass->getControllerMethodAnnotation()
+			$ctrl_method_name = $action_meta_class->getControllerMethodAnnotation()
 				->getMethodName();
-			$ctrlCallback = [$target::getControllerClassName(), $ctrlMethodName];
-
-			if ( ! is_callable($ctrlCallback)) {
+			$ctrl_callback = [$target::getControllerClassName(), $ctrl_method_name];
+			if ( ! is_callable($ctrl_callback)) {
 				Exception\System\FrameworkRuntimeError::create('Controller method "%s::%s" isn\'t callable',
-					null, $ctrlCallback[0], $ctrlCallback[1])
+					null, $ctrl_callback[0], $ctrl_callback[1])
 					->_throw();
 			}
 		}
 
-		return $metaClasses;
+		return $extendable_actions;
 	}
 
 	/**
@@ -154,11 +154,10 @@ abstract class AbstractBuilder extends AbstractService
 	 */
 	protected function getControllers()
 	{
-		$metaClassName = '\\PHPCrystal\\PHPCrystal\\Service\\Metadriver\\ExtendableController';
-		
-		$metaClasses = $this->getExtendableMetaClasses('Controller', $metaClassName);
+		$extendable_ctrls = $this->getPackageExtendables('Controller',
+			'\\PHPCrystal\\PHPCrystal\\Service\\Metadriver\\ExtendableController');
 
-		return $metaClasses;
+		return $extendable_ctrls;
 	}
 
 	/**
@@ -166,13 +165,12 @@ abstract class AbstractBuilder extends AbstractService
 	 */
 	protected function getFrontControllers()
 	{
-		$metaClassName = '\\PHPCrystal\\PHPCrystal\\Service\\Metadriver\\ExtendableFrontController';
-		
-		$metaClasses = $this->getExtendableMetaClasses('FrontController', $metaClassName);
+		$extendable_fcs = $this->getPackageExtendables('FrontController',
+			'\\PHPCrystal\\PHPCrystal\\Service\\Metadriver\\ExtendableFrontController');
 
-		return $metaClasses;
+		return $extendable_fcs;
 	}
-	
+
 	/**
 	 * @return void
 	 */	
@@ -180,6 +178,10 @@ abstract class AbstractBuilder extends AbstractService
 	{
 		$this->annotReader = new AnnotationReader();
 	}
-	
+
+	//
+	// Abstract methods
+	//
+
 	abstract public function run();
 }
