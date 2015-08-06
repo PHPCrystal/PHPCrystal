@@ -11,6 +11,7 @@ abstract class AbstractExtension extends AbstractPackage
 	 * @var bool
 	 */
 	private $disabledFlag;
+	private $disableAutoloadFlag;
 	
 	/**
 	 * @return bool
@@ -27,6 +28,24 @@ abstract class AbstractExtension extends AbstractPackage
 	{
 		$this->disabledFlag = $flagValue;
 		
+		return $this;
+	}
+
+	/**
+	 * @return bool
+	 */
+	final public function getDisableAutoloadFlag()
+	{
+		return $this->disableAutoloadFlag;
+	}
+
+	/**
+	 * @return $this
+	 */
+	final public function setDisableAutoloadFlag($value)
+	{
+		$this->disableAutoloadFlag = $value;
+
 		return $this;
 	}
 	

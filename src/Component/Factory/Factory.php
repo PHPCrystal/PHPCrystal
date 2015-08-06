@@ -2,12 +2,12 @@
 namespace PHPCrystal\PHPCrystal\Component\Factory;
 
 use PHPCrystal\PHPCrystal\Component\Service\MetaService;
-use PHPCrystal\PHPCrystal\Service\Metadriver as Metadriver;
 use PHPCrystal\PHPCrystal\Component\Service\AbstractService;
 use PHPCrystal\PHPCrystal\Component\Service\AbstractContractor;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
 use PHPCrystal\PHPCrystal\Facade\Metadriver as FacadeMetadriver;
 use PHPCrystal\PHPCrystal\Component\Facade as Facade;
+use PHPCrystal\PHPCrystal\Component\Exception\System\FrameworkRuntimeError;
 
 const DI_INTERFACE = 'PHPCrystal\\PHPCrystal\\Component\\Factory\\Aware\\DependencyInjectionInterface';
 
@@ -125,10 +125,6 @@ final class Factory
 		$instance = new $className(...$constArgs);		
 		$this->bind($instance);		
 
-//		if ($instance instanceof InitiableInterface) {
-//			$instance->init();
-//		}
-
 		return $instance;
 	}
 
@@ -168,9 +164,13 @@ final class Factory
 	/**
 	 * @return boolean
 	 */
-	private function circularReferenceCheck($input)
+	private function circularReferenceCheck($input, $className)
 	{
-		return count(array_unique($input)) != count($input) ? true : false;		
+		if (count(array_unique($input)) != count($input)) {
+			FrameworkRuntimeError::create('A circular dependency for the class "%s" has been detected',
+				null, $className)
+				->_throw();
+		}
 	}
 	
 	/**
@@ -178,36 +178,38 @@ final class Factory
 	 */
 	public function create($className, $recursionDepth = 0)
 	{
-		static $originClassName = null;
-		
+		static $origin_class_name = null;
+
 		if (AbstractService::isService($className) && $className::isSingleton() &&
 			$this->singletonHasInstance($className))
 		{
 			return $this->singletonGetInstance($className);
 		}
-		
+
 		if ($recursionDepth == 0) {
-			$originClassName = $className;
+			$origin_class_name = $className;
 			$this->dependenciesTracker = array();
 		}
-		
-		if ($this->circularReferenceCheck($this->dependenciesTracker)) {
-			throw new \RuntimeException(sprintf('A circular dependency of the class "%s" has been detected',
-				$originClassName));
-		}
-		
+
+		$this->circularReferenceCheck($this->dependenciesTracker, $origin_class_name);
 		$deps = array();
-		foreach ($this->getClassDeps($className) as $metaservice) {
-			if ($metaservice->isIdle()) {
+
+		// Interate over class dependecies
+		foreach ($this->getClassDeps($className) as $meta_service) {
+			// Dependencies might be optional, i.e. theiy are being activated
+			// only upon some event
+			if ($meta_service->isIdle()) {
 				$deps[] = null;
 				continue;
 			}
-			$depClassName = $metaservice->getClassName();
-			$newService = $this->create($depClassName, $recursionDepth + 1);
-			$deps[] = $newService;
-			$this->dependenciesTracker[] = $depClassName;
+
+			$dep_class_name = $meta_service->getClassName();
+			$new_service_instance = $this->create($dep_class_name, $recursionDepth + 1);
+			$deps[] = $new_service_instance;
+			$this->dependenciesTracker[] = $dep_class_name;
 		}
-		
+
+		// Fire `DependencyInjection` event if necessary
 		if (self::hasInterface($className, DI_INTERFACE) &&
 			$className::fireEventUponInstantiation())
 		{
@@ -216,21 +218,23 @@ final class Factory
 			$deps = $dIEvent->getDependencies();
 		}
 
-		$newInstance = AbstractService::isService($className) ?
+		$new_instance = AbstractService::isService($className) ?
 			$this->newServiceInstance($className, $deps) :
 			$this->newInstance($className, $deps);
 		
-		return $newInstance;
+		return $new_instance;
 	}
-	
+
 	/**
-	 * @return 
+	 * Creates a service by its interface
+	 * 
+	 * @return \PHPCrystal\PHPCrystal\Component\Service\AbstractService
 	 */
-	public function createByInterface($interface)
+	public function createServiceByInterface($interface)
 	{
-		$meta = $this->getMetaServiceByInterface($interface);
+		$meta_service = $this->getMetaServiceByInterface($interface);
 		
-		return $this->create($meta->getClassName());
+		return $this->create($meta_service->getClassName());
 	}
 	
 	/**

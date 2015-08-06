@@ -315,6 +315,8 @@ abstract class AbstractApplication extends AbstractPackage
 	}
 	
 	/**
+	 * Autoloads application extensions using composer.lock file
+	 * 
 	 * @return void
 	 */
 	private function autoloadExtensions()
@@ -323,12 +325,10 @@ abstract class AbstractApplication extends AbstractPackage
 			Metadriver::flush();
 			Metadriver::addExtensionsToAutoload();
 		}
-		
-		if ($this->getExtensionAutoloadFlag()) {
-			foreach (Metadriver::getExtensionsAll() as $metaExt) {
-				$this->addExtension($metaExt->getDirectoryName());
-			}
-		}	
+
+		foreach (Metadriver::getExtensionsAll() as $metaExt) {
+			$this->addExtension($metaExt->getDirectoryName());
+		}
 	}
 
 	/**

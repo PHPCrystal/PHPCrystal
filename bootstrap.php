@@ -11,5 +11,6 @@ return Extension::create()
 	->setDirectory(__DIR__)
 	->setPriority(1)
 	->setComposerName('phpcrystal/phpcrystal')
+	->setDisableAutoloadFlag(true)
 	->init()
 ;

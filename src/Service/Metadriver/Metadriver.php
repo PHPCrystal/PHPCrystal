@@ -167,22 +167,24 @@ class Metadriver extends AbstractService
 	 */
 	public function addExtensionsToAutoload()
 	{
-		$composerLock = FileHelper::create('@app/composer.lock');
+		$composer_lock = FileHelper::create('@app/composer.lock');
 		
-		if ( ! $composerLock->fileExists()) {
+		if ( ! $composer_lock->fileExists()) {
 			return;
 		}
 		
-		$composerJson = $composerLock->readJson();
-		foreach ($composerJson['packages'] as $pkgInfo) {
+		$composer_json = $composer_lock->readJson();
+		foreach ($composer_json['packages'] as $pkgInfo) {
 			$pkgName = $pkgInfo['name'];
 			$pkgBootstrap = FileHelper::create('@app/vendor/', $pkgName, 'bootstrap.php');
 			if ( ! $pkgBootstrap->fileExists()) {
 				continue;
 			}
 			
-			$pkgInstance = $pkgBootstrap->_require();
-			if ( ! $pkgInstance instanceof AbstractExtension) {
+			$pkg_instance = $pkgBootstrap->_require();
+			if ( ! $pkg_instance instanceof AbstractExtension ||
+				$pkg_instance->getDisableAutoloadFlag())
+			{
 				continue;
 			}
 			
