@@ -10,5 +10,6 @@ require_once __DIR__ . '/src/Annotation/Common/SecurityPolicy.php';
 return Extension::create()
 	->setDirectory(__DIR__)
 	->setPriority(1)
+	->setComposerName('phpcrystal/phpcrystal')
 	->init()
 ;
