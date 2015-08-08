@@ -194,9 +194,9 @@ final class Factory
 		$this->circularReferenceCheck($this->dependenciesTracker, $origin_class_name);
 		$deps = array();
 
-		// Interate over class dependecies
+		// interate over class dependecies
 		foreach ($this->getClassDeps($className) as $meta_service) {
-			// Dependencies might be optional, i.e. theiy are being activated
+			// dependencies might be optional, i.e. they are being activated
 			// only upon some event
 			if ($meta_service->isIdle()) {
 				$deps[] = null;
@@ -209,7 +209,7 @@ final class Factory
 			$this->dependenciesTracker[] = $dep_class_name;
 		}
 
-		// Fire `DependencyInjection` event if necessary
+		// fire `DependencyInjection` event if necessary
 		if (self::hasInterface($className, DI_INTERFACE) &&
 			$className::fireEventUponInstantiation())
 		{
@@ -337,30 +337,32 @@ final class Factory
 		
 		return $metaService;
 	}
-	
+
 	/**
-	 * return void
+	 * @return void
 	 */
-	private function checkWakeupEvents($metaClass, $isDependencyOptional)
+	private function checkWakeupEvents($metaClass, $depName, $isOptional)
 	{
 		$serviceClass = $metaClass->getClassName();		
 		if ( ! $serviceClass::getWakeupEvents()) {
 			return;
 		}
-		
+
 		$currentEvent = $this->getApplication()->getCurrentEvent();
-		$wakeupFlag = false;		
+		$wakeupFlag = false;
+
 		foreach ($serviceClass::getWakeupEvents() as $wakeupEvent) {
 			if ($currentEvent instanceof $wakeupEvent) {
 				$wakeupFlag = true;
 				break;
 			}
 		}
-		
-		if ( ! $wakeupFlag && ! $isDependencyOptional) {
-			throw new \RuntimeException('Service injection parameter has to be optional');
+
+		if ( ! ($wakeupFlag && $isOptional)) {
+			FrameworkRuntimeError::create('Dependency "%s" must be optional, class "%s"', null, $depName, $serviceClass)
+				->_throw();
 		}
-		
+
 		if ( ! $wakeupFlag) {
 			$metaClass->setIdle(true);			
 		}
@@ -386,7 +388,7 @@ final class Factory
 				$metaClass = new MetaService($typeHinted->name, null, 999);
 			}
 			
-			$this->checkWakeupEvents($metaClass, $param->isOptional());
+			$this->checkWakeupEvents($metaClass, $typeHinted->name, $param->isOptional());
 			$result[] = $metaClass;
 		}
 
