@@ -44,7 +44,7 @@ class Session extends AbstractContractor implements
 	{
 		$request = $this->getApplication()->getRequest();
 		
-		return md5($request->getRemoteIpAddr() . $request->getUserAgent() . microtime());
+		return md5($request->getRemoteAddr() . $request->getUserAgent() . microtime());
 	}
 	
 	/**
