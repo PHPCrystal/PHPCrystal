@@ -195,8 +195,8 @@ abstract class AbstractAction extends Event\AbstractAppListener
 
 			$this->setControllerMethod($ctrlMethodAnnot->getMethodName());
 			$this->setAllowedHttpMethods($routeAnnot->getAllowedHttpMethods());
-			$this->setUriMatchRegExp($routeAnnot->getUriMatchRegExp());		
-			$this->setURIMatchPattern($routeAnnot->matchPattern);
+			$this->setURIMatchRegExp($routeAnnot->getURIMatchRegExp());		
+			$this->setURIMatchPattern($routeAnnot->getMatchPattern());
 
 			$validator = $this->instantiateValidator();			
 			$this->setValidator($validator);

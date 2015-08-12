@@ -9,45 +9,101 @@ use PHPCrystal\PHPCrystal\Component\Exception\System\FrameworkRuntimeError;
  * @Target({"CLASS"})
  * @Attributes({
  *  @Attribute("method", type="string", required=true),
- *  @Attribute("matchPattern", type="string")
+ *  @Attribute("matchPattern", type="string", required=true),
  * })
  */
 class Route
 {
 	private $allowedHttpMethods = array();
+	private $matchPattern;
+	private $placeholderAnnots = [];
 	private $uriMatchRegExp;
-	public $matchPattern;
-	
+
 	/**
 	 * 
 	 */
 	public function __construct(array $values)
 	{
 		$this->setAllowedHttpMethods($values['method']);
-		if (isset($values['matchPattern'])) {
-			$this->matchPattern = $values['matchPattern'];
-			$regExp = self::convertMatchPatternToRegexp($values['matchPattern']);
-			$this->uriMatchRegExp = $regExp;
-		}
+		$this->matchPattern = $values['matchPattern'];
 	}
 	
 	/**
-	 * @return string
+	 * @return void
 	 */
-	public static function convertMatchPatternToRegexp($inputStr)
+	public function addPlaceholderAnnots(array $annots)
 	{
-		$matches = null;
-		$patternRegExp = '/{([^}]+)}/';
-
-		while (preg_match($patternRegExp, $inputStr, $matches)) {
-			$subpatternName = $matches[1];
-			$replacement = "(?P<$subpatternName>[^/]+)";
-			$inputStr = preg_replace($patternRegExp, $replacement, $inputStr);
+		$this->placeholderAnnots = array_merge($this->placeholderAnnots, $annots);
+	}
+	
+	/**
+	 * @return \PHPCrystal\PHPCrystal\Annotation\Action\RoutePlaceholder|null
+	 */
+	public function getPlaceholderAnnotByName($placeholderName)
+	{
+		foreach ($this->placeholderAnnots as $annot) {
+			if ($annot->getName() == $placeholderName) {
+				return $annot;
+			}
 		}
 
-		$outputRegExp = "|^$inputStr/?$|";
+		return null;
+	}
 
-		return $outputRegExp;
+	/**
+	 * @return string
+	 */
+	private function replacePlaceholder($placeholderName, &$subject, $matchUntilCharSet)
+	{
+		$subject = preg_replace("|{{$placeholderName}}|",
+			"(?<{$placeholderName}>[^{$matchUntilCharSet}]+)", $subject, 1);
+	}
+
+	/**
+	 * @return string
+	 */
+	private function replacePlaceholderWithRegExp($placeholderName, $regExp, &$subject)
+	{
+		$subject = preg_replace("|{{$placeholderName}}|", "(?<$placeholderName>$regExp)", $subject, 1);
+	}
+
+	/**
+	 * @return string
+	 */
+	public function convertMatchPatternToRegExp($matchPattern)
+	{
+		$matches = null;
+		
+		if (preg_match_all('|{([^}]+)}|', $matchPattern, $matches)) {
+			$matchRegExp = $matchPattern;
+
+			while (($phName = array_shift($matches[1]))) {
+				$phAnnot = $this->getPlaceholderAnnotByName($phName);
+
+				if ( ! $phAnnot) {
+					$this->replacePlaceholder($phName, $matchRegExp, '/');
+					continue;
+				}
+
+				if ($phAnnot->isInteger()) {
+					$charset = $phAnnot->getMatchUntilCharSet();
+					$intRegExp = "[0-9]+(?=[{$charset}])";
+					$this->replacePlaceholderWithRegExp($phName, $intRegExp,
+						$matchRegExp);
+					continue;
+				}
+
+				if ( ! empty($phAnnot->getRegExp())) {
+					$this->replacePlaceholderWithRegExp($phName, $phAnnot->getRegExp(),
+						$matchRegExp);
+					continue;
+				}
+			}
+		} else {
+			$matchRegExp = $matchPattern;
+		}
+
+		return '|^' . rtrim($matchRegExp, '/') . '/?$|'; 
 	}
 
 	/**
@@ -57,7 +113,7 @@ class Route
 	{
 		return $this->allowedHttpMethods;
 	}
-	
+
 	/**
 	 * @return void
 	 */
@@ -85,5 +141,21 @@ class Route
 	public function getURIMatchRegExp()
 	{
 		return $this->uriMatchRegExp;
+	}
+	
+	/**
+	 * @return void
+	 */
+	public function setURIMatchRegExp($regExp)
+	{
+		$this->uriMatchRegExp = $regExp;
+	}
+	
+	/**
+	 * @return string
+	 */
+	public function getMatchPattern()
+	{
+		return $this->matchPattern;
 	}
 }
