@@ -59,6 +59,14 @@ class RoutePlaceholder
 	{
 		return $this->defaultValue;
 	}
+	
+	/**
+	 * @return bool
+	 */
+	public function hasDefaultValue()
+	{
+		return empty($this->getDefaultValue()) ? false : true;
+	}
 
 	/**
 	 * @return bool

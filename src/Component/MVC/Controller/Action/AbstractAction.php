@@ -164,6 +164,13 @@ abstract class AbstractAction extends Event\AbstractAppListener
 			$uriInput = $this->getApplication()->getRequest()->getURIInput();
 			$uriInput->merge(Input::create(null, $tmpArray));
 
+			// set default placeholder value
+			$routeAnnot = $this->getExtendableInstance()->getRouteAnnotation();
+			if ($routeAnnot->hasDefaultItemValue()) {
+				$uriInput->set($routeAnnot->getDefaultItemKey(),
+					$routeAnnot->getDefaultItemValue());
+			}
+
 			return true;
 		} else {
 			return false;

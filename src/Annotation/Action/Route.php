@@ -19,6 +19,9 @@ class Route
 	private $placeholderAnnots = [];
 	private $uriMatchRegExp;
 
+	private $defaultItemValue;
+	private $defaultItemKey;
+
 	/**
 	 * 
 	 */
@@ -48,6 +51,26 @@ class Route
 		}
 
 		return null;
+	}
+	
+	/**
+	 * @retur string|null
+	 */
+	private function getPlaceholderLookBehind($placeholderName, $matchPattern)
+	{
+		$matches = null;
+
+		if ( ! preg_match("/(.*)\{{$placeholderName}\}/", $matchPattern,  $matches)) {
+			return null;
+		}
+		
+		$lookBehind = $matches[1];
+		if (strpos($lookBehind, '{') !== false) {
+			FrameworkRuntimeError::create('Placeholder with default value must be single, pattern %s', null, $matchPattern)
+				->_throw();
+		}
+		
+		return $lookBehind;
 	}
 
 	/**
@@ -102,11 +125,18 @@ class Route
 				}
 
 				if ($phAnnot->isInteger()) {
-					$charset = $phAnnot->getMatchUntilCharSet();
-					$intRegExp = "[0-9]+(?=[{$charset}])";
+					$intRegExp = "[0-9]+";
 					$this->replacePlaceholderWithRegExp($phName, $intRegExp,
 						$matchRegExp);
 					continue;
+				}
+
+				if ($phAnnot->hasDefaultValue()) {
+					$lookBehind = $this->getPlaceholderLookBehind($phName, $matchPattern);
+					$matchRegExp = $lookBehind;
+					$this->defaultItemValue = $phAnnot->getDefaultValue();
+					$this->defaultItemKey = $phName;
+					break;
 				}
 
 				if ( ! empty($phAnnot->getRegExp())) {
@@ -173,5 +203,29 @@ class Route
 	public function getMatchPattern()
 	{
 		return $this->matchPattern;
+	}
+	
+	/**
+	 * @return bool
+	 */
+	public function hasDefaultItemValue()
+	{
+		return empty($this->defaultItemValue) ? false : true;
+	}
+	
+	/**
+	 * @return string
+	 */
+	public function getDefaultItemKey()
+	{
+		return $this->defaultItemKey;
+	}
+	
+	/**
+	 * @return string
+	 */
+	public function getDefaultItemValue()
+	{
+		return $this->defaultItemValue;
 	}
 }
