@@ -54,23 +54,14 @@ class Route
 	}
 	
 	/**
-	 * @retur string|null
+	 * @return null
 	 */
-	private function getPlaceholderLookBehind($placeholderName, $matchPattern)
+	private function singlePlaceholderCheck($matchPattern)
 	{
-		$matches = null;
-
-		if ( ! preg_match("/(.*)\{{$placeholderName}\}/", $matchPattern,  $matches)) {
-			return null;
-		}
-		
-		$lookBehind = $matches[1];
-		if (strpos($lookBehind, '{') !== false) {
-			FrameworkRuntimeError::create('Placeholder with default value must be single, pattern %s', null, $matchPattern)
+		if (preg_match("/\{{2,}/", $matchPattern,  $matches)) {
+			FrameworkRuntimeError::create('Only one placeholder is allowed for the pattern "%s"', null, $matchPattern)
 				->_throw();
 		}
-		
-		return $lookBehind;
 	}
 
 	/**
@@ -133,7 +124,7 @@ class Route
 
 				// route default param
 				if ($phAnnot->hasDefaultValue()) {
-					$lookBehind = $this->getPlaceholderLookBehind($phName, $matchPattern);
+					$this->singlePlaceholderCheck($matchPattern);
 					$stopChars = $phAnnot->getMatchUntilCharSet();
 					$defaultRegExp = "([^{$stopChars}]+)?";
 					$this->replacePlaceholderWithRegExp($phName, $defaultRegExp,
