@@ -53,10 +53,26 @@ class Route
 	/**
 	 * @return string
 	 */
-	private function replacePlaceholder($placeholderName, &$subject, $matchUntilCharSet)
+	private function replacePlaceholder($placeholderName, &$subject)
 	{
-		$subject = preg_replace("|{{$placeholderName}}|",
-			"(?<{$placeholderName}>[^{$matchUntilCharSet}]+)", $subject, 1);
+		$replacementRegExp = "(?<{$placeholderName}>";
+		$matches = null;
+
+		if (preg_match("/\{{$placeholderName}\}(.{1,1})/", $subject, $matches)) {
+			$lookAhead = $matches[1];
+
+			if ($lookAhead[0] == '{') {
+				FrameworkRuntimeError::create('Common placeholders cannot be adjacent, pattern %s', null, $subject)
+					->_throw();
+			}
+
+			$stopChar = $lookAhead[0];
+			$replacementRegExp .= "[^{$stopChar}]+)";
+		} else {
+			$replacementRegExp .= '[^/]+)'; // match everything until the end of the string
+		}
+
+		$subject = preg_replace("|{{$placeholderName}}|", $replacementRegExp, $subject, 1);
 	}
 
 	/**

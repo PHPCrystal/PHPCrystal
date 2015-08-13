@@ -1,11 +1,12 @@
 <?php
 namespace PHPCrystal\PHPCrystalTest\Annotation\Action;
 
+use PHPCrystal\PHPCrystal\Component\Exception\System\FrameworkRuntimeError;
 use PHPCrystal\PHPCrystalTest\TestCase;
 use PHPCrystal\PHPCrystal\Annotation\Action\Route;
 use Doctrine\Common\Annotations\DocParser;
 
-class RuleTest extends TestCase
+class RouteTest extends TestCase
 {
 	private $parser;
 
@@ -50,5 +51,22 @@ DocBlock
 		$routeAnnot->setURIMatchRegExp($routeAnnot->convertMatchPatternToRegExp(
 			$routeAnnot->getMatchPattern()));		
 		$this->assertRegExp($routeAnnot->getURIMatchRegExp(), '/account/view/john@mail.com/');
-	}	
+	}
+	
+	/**
+	 * @expectedException \PHPCrystal\PHPCrystal\Component\Exception\System\FrameworkRuntimeError
+	 */
+	public function testRouteAnnot3()
+	{
+		$annots = $this->parser->parse(<<<DocBlock
+/**
+ * @Route(method="GET", matchPattern="/page/{page_id}{page_title}")
+ */
+DocBlock
+		, '');
+
+		$routeAnnot = $annots[0];
+		$routeAnnot->setURIMatchRegExp($routeAnnot->convertMatchPatternToRegExp(
+			$routeAnnot->getMatchPattern()));		
+	}		
 }
