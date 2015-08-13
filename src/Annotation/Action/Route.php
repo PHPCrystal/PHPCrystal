@@ -131,9 +131,13 @@ class Route
 					continue;
 				}
 
+				// route default param
 				if ($phAnnot->hasDefaultValue()) {
 					$lookBehind = $this->getPlaceholderLookBehind($phName, $matchPattern);
-					$matchRegExp = $lookBehind;
+					$stopChars = $phAnnot->getMatchUntilCharSet();
+					$defaultRegExp = "([^{$stopChars}]+)?";
+					$this->replacePlaceholderWithRegExp($phName, $defaultRegExp,
+						$matchRegExp);
 					$this->defaultItemValue = $phAnnot->getDefaultValue();
 					$this->defaultItemKey = $phName;
 					break;

@@ -34,4 +34,20 @@ class ActionTest extends TestCase
 		$ctrlAnnot = $action->getExtendableInstance()->getControllerMethodAnnotation();
 		$this->assertEquals('editUserProfileAction', $ctrlAnnot->getMethodName());
 	}
+	
+	public function testDefaultRouteParam()
+	{
+		$this->makeRequest('@app/fixture/http_request/get_account');
+		$currEvent = $this->appPkg->getCurrentEvent();
+		$uriInput = $currEvent->getRequest()->getURIInput();
+		$this->assertEquals('master', $uriInput->get('default_param'));
+	}
+
+	public function testDefaultRouteParam2()
+	{
+		$this->makeRequest('@app/fixture/http_request/get_account_8627');
+		$currEvent = $this->appPkg->getCurrentEvent();
+		$uriInput = $currEvent->getRequest()->getURIInput();
+		$this->assertEquals(8627, $uriInput->get('default_param'));
+	}
 }

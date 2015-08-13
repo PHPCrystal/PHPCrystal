@@ -5,11 +5,13 @@ use PHPCrystal\PHPCrystal\Component\MVC\Controller\AbstractController;
 
 class Account extends AbstractController
 {
-	/**
-	 * @return string
-	 */
 	public function editUserProfileAction()
 	{
-		return __METHOD__;
+		return __CLASS__;
+	}
+	
+	public function routeDefaultParamAction()
+	{
+		return __CLASS__;
 	}
 }

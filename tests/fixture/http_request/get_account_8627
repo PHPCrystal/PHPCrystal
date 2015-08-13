@@ -1,0 +1,2 @@
+GET /account/8627 HTTP/1.1
+Host: mywebsite.com

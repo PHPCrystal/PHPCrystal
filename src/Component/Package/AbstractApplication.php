@@ -37,7 +37,7 @@ abstract class AbstractApplication extends AbstractPackage
 		$this->setPriority(999);		
 		parent::__construct();		
 	}
-
+	
 	/**
 	 * @return bool
 	 */

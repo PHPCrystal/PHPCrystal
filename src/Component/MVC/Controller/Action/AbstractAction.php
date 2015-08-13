@@ -143,7 +143,7 @@ abstract class AbstractAction extends Event\AbstractAppListener
 			return false;
 		}
 		
-		$regExp = $this->getUriMatchRegExp();
+		$regExp = $this->getURIMatchRegExp();
 		
 		if ( ! empty($regExp)) {
 			$matches = null;
@@ -167,8 +167,10 @@ abstract class AbstractAction extends Event\AbstractAppListener
 			// set default placeholder value
 			$routeAnnot = $this->getExtendableInstance()->getRouteAnnotation();
 			if ($routeAnnot->hasDefaultItemValue()) {
-				$uriInput->set($routeAnnot->getDefaultItemKey(),
-					$routeAnnot->getDefaultItemValue());
+				$itemValue = isset($matches[1]) ? $matches[1] :
+					$routeAnnot->getDefaultItemValue();
+
+				$uriInput->set($routeAnnot->getDefaultItemKey(), $itemValue);
 			}
 
 			return true;
@@ -332,7 +334,7 @@ abstract class AbstractAction extends Event\AbstractAppListener
 	/**
 	 * @return string
 	 */
-	public function getUriMatchRegExp()
+	public function getURIMatchRegExp()
 	{
 		return $this->uriMatchRegExp;
 	}
