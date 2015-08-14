@@ -223,33 +223,34 @@ abstract class AbstractNode implements
 	{
 		$this->priorEvents[$event::toType()] = $event;
 	}
-	
+
 	/**
+	 * Returns an array of prior events.
+	 * 
+	 * A prior event is an event that is triggered before the main event will be
+	 * dispatched to the current node
+	 * 
 	 * @return array
 	 */
-	final public function getPriorEvents($parentPhase)
+	final public function getPriorEvents($parentEventPhase)
 	{
 		$result = [];
 		
 		foreach ($this->priorEvents as $type => $priorEvent) {
-			switch ($parentPhase) {
-				case PHASE_DOWN:
-					if ($priorEvent->getType() == TYPE_UNICAST_SINGLE_DIRECTIONAL) {
-						$result[$type] = $priorEvent;
-					}
-					break;
-					
-				case PHASE_UP:
-					if ($priorEvent->getType() == TYPE_UNICAST_SINGLE_DIRECTIONAL_REVERSE) {
-						$result[$type] = $priorEvent;
-					}					
-					break;
+			if  ($parentEventPhase <= PHASE_DOWN) {
+				if ($priorEvent->getType() == TYPE_UNICAST_SINGLE_DIRECTIONAL) {
+					$result[$type] = $priorEvent;
+				}
+			} else if ($parentEventPhase >= PHASE_UP) {
+				if ($priorEvent->getType() == TYPE_UNICAST_SINGLE_DIRECTIONAL_REVERSE) {
+					$result[$type] = $priorEvent;
+				}				
 			}
 		}
 
 		return $result;
 	}
-	
+
 	/**
 	 * @return void
 	 */
@@ -274,7 +275,7 @@ abstract class AbstractNode implements
 			unset($this->priorEvents[$key]);
 		}
 	}
-	
+
 	/**
 	 * @return array
 	 */
@@ -285,7 +286,9 @@ abstract class AbstractNode implements
 		foreach ($listeners as $listener) {
 			foreach ($listener->getPriorEvents($phase) as $priorEvent) {
 				$type = $priorEvent::toType();
-				if (isset($this->priorEvents[$type]) && $priorEvent instanceof EventMergeable) {
+				if (isset($this->priorEvents[$type]) &&
+					$this->priorEvents[$type] instanceof Type\MergeableInterface)
+				{
 					$this->priorEvents[$type]->merge($priorEvent);
 				} else {
 					$this->priorEvents[$type] = $priorEvent;

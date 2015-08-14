@@ -71,6 +71,8 @@ class Container extends AbstractContainer
 	}
 
 	/**
+	 * Opens a service configuration section
+	 * 
 	 * @return void
 	 */
 	public function serviceSection($serviceName)
@@ -78,7 +80,7 @@ class Container extends AbstractContainer
 		$this->openSection($serviceName, SECTION_TYPE_SERVICE);
 		$this->currentSectionType = SECTION_TYPE_SERVICE;
 	}
-	
+
 	/**
 	 * @return void
 	 */
@@ -101,12 +103,16 @@ class Container extends AbstractContainer
 		$this->sectionDef = [];
 		$this->currentSectionType = SECTION_TYPE_GLOBAL;
 	}
-	
 
+	/**
+	 * {@inherited}
+	 */
 	public function set($keySegment, $value)
 	{
 		$itemKey = $this->getItemKey($keySegment);
-		
+
+		// if value to set is an subcontractor instance we have to let it 'know' that
+		// it's needed by a specified contractor so it would do a proper initialization
 		if ($value instanceof AbstractSubcontractor &&
 			$this->currentSectionType = SECTION_TYPE_SERVICE)
 		{

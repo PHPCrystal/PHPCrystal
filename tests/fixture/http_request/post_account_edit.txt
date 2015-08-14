@@ -1,4 +1,4 @@
-POST /user/535972/edit/ HTTP/1.1
+POST /account/535972/edit/ HTTP/1.1
 Host: mywebsite.com
 
 email=vasiliy.pupkin%40gmail.com&name=Vasiliy%20Pupkin

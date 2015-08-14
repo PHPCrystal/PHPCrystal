@@ -4,11 +4,13 @@ namespace PHPCrystal\PHPCrystal\Service\Event\Type\System;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
 
 class SecurityPolicyApplication extends Event\Type\AbstractInternal
+	implements Event\Type\MergeableInterface
 {
 	/**
 	 * @var bool
 	 */
 	private $authRequired = false;
+	private $csrfTokenRequired = false;
 
 	/**
 	 * @api
@@ -35,5 +37,22 @@ class SecurityPolicyApplication extends Event\Type\AbstractInternal
 	public function isAuthRequired()
 	{
 		return $this->authRequired;
+	}
+	
+	/**
+	 * @return bool
+	 */
+	public function isCsrfTokenRequired()
+	{
+		return $this->csrfTokenRequired;
+	}
+	
+	/**
+	 * @return void
+	 */
+	public function merge($event)
+	{
+		$this->authRequired = $event->authRequired;
+		$this->csrfTokenRequired = $event->csrfTokenRequired;
 	}
 }

@@ -5,7 +5,8 @@ use PHPCrystal\PHPCrystal\Component\MVC\Controller\Action\AbstractAction;
 
 /**
  * @ControllerMethod("editUserProfileAction")
- * @Route(method="POST", matchPattern="/user/{user_id}/edit/")
+ * @Route(method="POST", matchPattern="/account/{user_id}/edit/")
+ * @SecurityPolicy(authRequired=true)
  * @Validator("Update")
  */
 class Edit extends AbstractAction

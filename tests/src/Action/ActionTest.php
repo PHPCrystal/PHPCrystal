@@ -4,6 +4,7 @@ namespace PHPCrystal\PHPCrystalTest\Action;
 use PHPCrystal\PHPCrystalTest\TestCase;
 use PHPCrystal\PHPCrystalTest\Action\_Default\_Default\Index;
 use PHPCrystal\PHPCrystalTest\_Trait\MakeRequest;
+use PHPCrystal\PHPCrystal\Component\Exception as Exception;
 
 class ActionTest extends TestCase
 {
@@ -29,7 +30,7 @@ class ActionTest extends TestCase
 		$this->assertInstanceOf('PHPCrystal\PHPCrystalTest\Action\_Default\Account\Edit', $action);
 
 		$uriString = $action->getReverseURI(658263);
-		$this->assertEquals('/user/658263/edit/', $uriString);
+		$this->assertEquals('/account/658263/edit/', $uriString);
 		
 		$ctrlAnnot = $action->getExtendableInstance()->getControllerMethodAnnotation();
 		$this->assertEquals('editUserProfileAction', $ctrlAnnot->getMethodName());
@@ -49,5 +50,14 @@ class ActionTest extends TestCase
 		$currEvent = $this->appPkg->getCurrentEvent();
 		$uriInput = $currEvent->getRequest()->getURIInput();
 		$this->assertEquals(8627, $uriInput->get('default_param'));
+	}
+	
+	/**
+	 * @expectedException PHPCrystal\PHPCrystal\Component\Exception\Security\AuthRequired
+	 */
+	public function testAuthentication()
+	{
+		Exception\AbstractException::$nonMaskable = true;
+		$this->makeRequest('@app/fixture/http_request/edit_account_1_no_sid');		
 	}
 }

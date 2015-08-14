@@ -17,7 +17,7 @@ abstract class AbstractFrontController extends Event\AbstractAppListener
 			} else if ($event->getPhase() == Event\PHASE_UP) {
 				return $this->onAfterExecution($event);
 			}
-		});
+		});		
 	}
 	
 	//

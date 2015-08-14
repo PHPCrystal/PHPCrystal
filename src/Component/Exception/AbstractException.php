@@ -11,6 +11,14 @@ abstract class AbstractException extends \Exception implements
 	private $params = array();
 	
 	/**
+	 * If set to true exceptions will not be handled. This feature, for instance,
+	 * is being used in some unit tests
+	 * 
+	 * @var bool
+	 */
+	public static $nonMaskable = false;
+
+	/**
 	 * @return void
 	 */
 	public function __debugInfo()
@@ -25,7 +33,7 @@ abstract class AbstractException extends \Exception implements
     {
 		parent::__construct($message, $code,  $previous);
     }
-	
+
 	/**
 	 * @return $this
 	 */
@@ -59,7 +67,7 @@ abstract class AbstractException extends \Exception implements
 	{
 		return $this->package;
 	}
-	
+
 	/**
 	 * @return void
 	 */

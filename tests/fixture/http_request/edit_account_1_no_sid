@@ -1,0 +1,4 @@
+POST /account/1/edit/ HTTP/1.1
+Host: phpcrystal-framework.com
+
+email=a.samuylik%40gmail.com&name=Andrei%20Samuilik

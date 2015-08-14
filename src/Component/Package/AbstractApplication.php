@@ -6,6 +6,7 @@ use PHPCrystal\PHPCrystal\Facade\Metadriver;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
 use PHPCrystal\PHPCrystal\Component\Facade as Facade;
 use PHPCrystal\PHPCrystal\Component\Exception as Exception;
+use PHPCrystal\PHPCrystal\Facade\SecurityGuard;
 
 abstract class AbstractApplication extends AbstractPackage
 {
@@ -37,7 +38,7 @@ abstract class AbstractApplication extends AbstractPackage
 		$this->setPriority(999);		
 		parent::__construct();		
 	}
-	
+
 	/**
 	 * @return bool
 	 */
@@ -283,11 +284,9 @@ abstract class AbstractApplication extends AbstractPackage
 	 */
 	protected function assignEventListeners()
 	{
-		//$this->addEventListener(Event\Type\Cli\Command\Query::toType(), function($event) {
-		//	return $this->onQueryCommand($event);
-		//});		
+		$context = $this->getContext();
 	}
-	
+
 	/**
 	 * @return void
 	 */
@@ -385,13 +384,13 @@ abstract class AbstractApplication extends AbstractPackage
 		// create event context
 		$this->context = $externalEvent->createContext();
 		$this->addPathAliases();
-		$this->assignEventListeners();
 		$this->autoloadExtensions();
 		$this->flattenManifestFile($externalEvent);
 		$this->buildApp();
 		$this->addServices();
 		$this->assignActions();
 		$this->initRouting();
+		$this->assignEventListeners();		
 		$this->bootstrapFlag = true;
 
 		return $this;
@@ -443,7 +442,15 @@ abstract class AbstractApplication extends AbstractPackage
 		if (null !== $fcInstance && null !== $ctrlInstance && null !== $actionInstance) {
 			$fcInstance->mergePriorEvents($event, $ctrlInstance, $actionInstance);
 		}
-		
+
+		// hook default services into corresponding events
+		if ($fcInstance && $this->context->get('phpcrystal.security_guard.enabled')) {
+			$fcInstance->addEventListener(Event\Type\System\SecurityPolicyApplication::toType(), function($event) {
+				$securityGuard  = SecurityGuard::create(); 
+				return $securityGuard->process($event);
+			});
+		}
+
 		// actions are terminate nodes
 		$event->setTerminateNodeHandler(function($event) {
 			return $this->execute($event);
@@ -486,9 +493,14 @@ abstract class AbstractApplication extends AbstractPackage
 				$event = parent::dispatch($event);
 			}
 		} catch (\Exception $e) {
-			var_dump($e); exit;
 			$event->setException($e);
 			$event->setStatus(Event\STATUS_INTERRUPTED);
+
+			if ($e instanceof Exception\AbstractException &&
+				Exception\AbstractException::$nonMaskable)
+			{
+				throw $e;
+			}
 		}
 		
 		if ($event->getStatus() == Event\STATUS_INTERRUPTED) {

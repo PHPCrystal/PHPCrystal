@@ -72,3 +72,9 @@ $this->openSection('phpcrystal.core.doctrine');
 $this->closeSection();
 
 
+$this->serviceSection('phpcrystal.security_guard');
+	$this->set('enabled', true);	
+	$this->set('csrf-token-cookie-name', 'csrf-token');
+	$this->set('csrf-token-header-field-name', 'X-Csrf-Token');
+	$this->set('csrf-token-secret-key', mt_rand(0, mt_getrandmax()));
+$this->closeSection();

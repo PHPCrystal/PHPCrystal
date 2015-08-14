@@ -2,6 +2,7 @@
 namespace PHPCrystal\PHPCrystal\Service\Event;
 
 use PHPCrystal\PHPCrystal\Component\Service\AbstractService;
+use PHPCrystal\PHPCrystal\Component\Exception as Exception;
 
 const PHASE_INIT = 1;
 const PHASE_PREDISPATCH = 2;
@@ -208,15 +209,15 @@ final class Manager extends AbstractService
 	 */
 	private function dispatchSingleDirectional($event, $target)
 	{
-		$event->setPhase(PHASE_DOWN);
+		$event->setPhase(PHASE_DOWN);		
 		
-		$discardedEvent = $this->triggerPriorEvents($event, $target);		
+		$discardedEvent = $this->triggerPriorEvents($event, $target);
 		if (null !== $discardedEvent) {
 			return $discardedEvent;
 		}
-		
+
 		$this->walkNodes($event, $target->getDispatchChain());
-		
+
 		return $event;
 	}
 	
@@ -359,7 +360,6 @@ final class Manager extends AbstractService
 		} catch (Exception\AbstractException $e) {
 			$e->setPackage($this);
 		} catch (\Exception $e) {
-			var_dump($e); exit;
 			$legacyExcep = Exception\System\Legacy::create()
 				->setLegacyException($e)
 				->setPackage($this);
@@ -367,7 +367,11 @@ final class Manager extends AbstractService
 			$event->setException($legacyExcep);
 			$event->setStatus(Event\STATUS_INTERRUPTED);
 		} finally {
-			if ($event->hasAutoTriggerEvent()) {
+			if (isset($e) && $e instanceof Exception\AbstractException &&
+				Exception\AbstractException::$nonMaskable)
+			{
+				throw $e;
+			} else if ($event->hasAutoTriggerEvent()) {
 				$newEvent = $event->getAutoTriggerEvent();
 				$newEvent->setLastDispatchedEvent($event);
 				return $this->dispatch($newEvent, $target);
