@@ -4,29 +4,29 @@ namespace PHPCrystal\PHPCrystal\Service\Event;
 use PHPCrystal\PHPCrystal\Component\Service\AbstractService;
 use PHPCrystal\PHPCrystal\Component\Exception as Exception;
 
-const PHASE_INIT = 1;
-const PHASE_PREDISPATCH = 2;
-const PHASE_DOWN = 3;
+const PHASE_INIT           = 1;
+const PHASE_PREDISPATCH    = 2;
+const PHASE_DOWN           = 3;
 const PHASE_TERMINATE_NODE = 4;
-const PHASE_UP = 5;
-const PHASE_POSTDISPATCH = 6;
-const PHASE_FINISHED = 7;
+const PHASE_UP             = 5;
+const PHASE_POSTDISPATCH   = 6;
+const PHASE_FINISHED       = 7;
 
-const STATUS_NONE = 1;
-const STATUS_DISPATCHED = 2;
-const STATUS_DISCARDED = 3;
+const STATUS_NONE        = 1;
+const STATUS_DISPATCHED  = 2;
+const STATUS_DISCARDED   = 3;
 const STATUS_INTERRUPTED = 4;
 
-const TYPE_BROADCAST_POST_ORDER = 1;
-const TYPE_BROADCAST_LEVEL_ORDER = 2;
-const TYPE_UNICAST_BIDIRECTIONAL = 3;
-const TYPE_UNICAST_SINGLE_DIRECTIONAL = 4;
+const TYPE_BROADCAST_POST_ORDER               = 1;
+const TYPE_BROADCAST_LEVEL_ORDER              = 2;
+const TYPE_UNICAST_BIDIRECTIONAL              = 3;
+const TYPE_UNICAST_SINGLE_DIRECTIONAL         = 4;
 const TYPE_UNICAST_SINGLE_DIRECTIONAL_REVERSE = 5;
 
 const RESULT_TYPE_ALLOW_OVERWRITE = 1;
-const RESULT_TYPE_SINGLE = 2;
-const RESULT_TYPE_SINGLE_CLOSURE = 3;
-const RESULT_TYPE_STACKED = 4;
+const RESULT_TYPE_SINGLE          = 2;
+const RESULT_TYPE_SINGLE_CLOSURE  = 3;
+const RESULT_TYPE_STACKED         = 4;
 
 final class Manager extends AbstractService
 {

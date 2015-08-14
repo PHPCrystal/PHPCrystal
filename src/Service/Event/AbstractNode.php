@@ -133,9 +133,22 @@ abstract class AbstractNode implements
 	{
 		$this->dispatchChain[] = $node;
 		
+		// add the given node to dispatch chains of nodes in the main chain
+		for ($i = 1; $i < count($this->dispatchChain) - 1; $i++) {
+			$this->dispatchChain[$i++]->dispatchChainAddElement($node);
+		}
+
 		return $this;
 	}
 	
+	/**
+	 * @return void
+	 */
+	final public function flushDispatchChain()
+	{
+		$this->dispatchChain = [];
+	}
+
 	/**
 	 * @return $this
 	 */
