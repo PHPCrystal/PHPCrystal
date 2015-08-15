@@ -11,7 +11,7 @@ class _Default extends AbstractRouter
 	 */
 	public function init()
 	{
-
+		parent::init();
 	}
 	
 	public function handle(Event\Type\Http\Request $event)

@@ -4,34 +4,45 @@ namespace PHPCrystal\PHPCrystal\Service\Doctrine;
 use PHPCrystal\PHPCrystal\Component\Service\AbstractService;
 use PHPCrystal\PHPCrystal\Component\Factory as Factory;
 use Doctrine\ORM\Tools\Setup;
-use Doctrine\ORM\EntityManager;
 use Doctrine\Common\EventManager;
 use Doctrine\ORM\Configuration as OrmConf;
 use Doctrine\ORM\Events;
+use Doctrine\DBAL\DriverManager;
+
+use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
+
+use Doctrine\Common\ClassLoader,
+    Doctrine\ORM\Configuration,
+    Doctrine\ORM\EntityManager,
+    Doctrine\Common\Cache\ArrayCache,
+    Doctrine\DBAL\Logging\EchoSQLLogger;
 
 class Doctrine extends AbstractService
 {
 	private $config;
 	private $eventManager;
-	private $autoCommit;
-	private $proxyDir;
-	private $proxyNamespace;
-	private $modelNamespace;
-	private $modelPaths;
-	private $entitiesPaths;
-	
 	private $entityManager;
-	
+	private $ormConfig;
+
+	/**
+	 * {@inherited}
+	 */
 	public static function hasLazyInit()
 	{
 		return true;
 	}
-	
+
+	/**
+	 * {@inherited}
+	 */
 	public static function isSingleton()
 	{
 		return true;
 	}
 
+	/**
+	 * @return void
+	 */
 	public function init()
 	{
 		if ($this->isInitialized()) {
@@ -39,25 +50,39 @@ class Doctrine extends AbstractService
 		}
 		
 		$context = $this->getApplication()->getContext();
-		$opts = $context->pluck('phpcrystal.core.doctrine');
+		$this->config = $context->pluck('phpcrystal.phpcrystal.doctrine');
 		
-		$this->proxyDir = $opts->get('proxyDir');
-		$this->proxyNamespace = $opts->get('proxyNamespace');
-		$this->modelNamespace  = $opts->get('modelNamespace');
-		$this->modelPaths = $opts->get('modelPaths');
-		$this->entitiesPaths = $opts->get('entitiesPaths');
-		$this->autoCommit = $opts->get('dbal.autocommit');
+		$this->proxyDir = $this->config->get('proxyDir');
+		$this->proxyNamespace = $this->config->get('proxyNamespace');
+		$this->modelNamespace  = $this->config->get('modelNamespace');
+		$this->modelPaths = $this->config->get('modelPaths');
+		$this->entitiesPaths = $this->config->get('entitiesPaths');
+		$this->autoCommit = $this->config->get('dbal.autocommit');
 		
-		$this->getApplication()->getAutoloader()
-			->addPsr4($this->modelNamespace, $this->modelPaths);
 
 		$this->eventManager = new EventManager();
 		
-		$conn = $context->pluck('phpcrystal.core.database')
+		$conn = $context->pluck('phpcrystal.phpcrystal.database')
 			->toArray(); // database connection config
+
 		$isDevEnv = $context->getEnv() == 'dev';
-		//$this->config = Setup::createAnnotationMetadataConfiguration($this->modelPaths, $isDevEnv);
-		$this->entityManager = $this->createEntityManager($conn, null, $this->eventManager);
+		$this->ormConfig = Setup::createAnnotationMetadataConfiguration([], $isDevEnv);
+		$this->ormConfig = new Configuration();
+		$cache = new ArrayCache;
+		$this->ormConfig->setMetadataCacheImpl($cache);
+
+		$driverImpl = $this->ormConfig->newDefaultAnnotationDriver([], false);
+
+		$this->ormConfig->setMetadataDriverImpl($driverImpl);
+		$this->ormConfig->setQueryCacheImpl($cache);
+		$this->ormConfig->setQueryCacheImpl($cache);
+
+		$this->ormConfig->setEntityNamespaces(['MyRepo' => 'PHPCrystal\PHPCrystalTest\Model\Entity']);
+
+		// Proxy configuration
+		$this->ormConfig->setProxyDir($this->config->get('proxyDir'));
+		$this->ormConfig->setProxyNamespace($this->config->get('proxyNamespace'));		
+		$this->entityManager = $this->createEntityManager($conn, $this->ormConfig, $this->eventManager);
 		
 		$this->isInitialized = true;
 		
@@ -89,5 +114,15 @@ class Doctrine extends AbstractService
 	public function getEntityManager()
 	{
 		return $this->entityManager;
-	}	
+	}
+	
+	/**
+	 * @return Doctrine\DBAL\Connection
+	 */
+	public function getConnection(array $params, $config = null)
+	{
+		$conn = DriverManager::getConnection($params, $config);
+		
+		return $conn;
+	}
 }

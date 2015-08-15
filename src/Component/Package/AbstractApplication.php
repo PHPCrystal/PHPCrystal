@@ -1,6 +1,7 @@
 <?php
 namespace PHPCrystal\PHPCrystal\Component\Package;
 
+use PHPCrystal\PHPCrystal\Component\Package\Option\Container;
 use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
 use PHPCrystal\PHPCrystal\Facade\Metadriver;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
@@ -351,23 +352,6 @@ abstract class AbstractApplication extends AbstractPackage
 	}
 	
 	/**
-	 * @return void
-	 */
-	private function initRouting()
-	{
-		$this->setRouter('\\PHPCrystal\\PHPCrystal\\Service\\Router\\_Default');
-
-		// router service must have lazy initialization. it's being initialized
-		// after application is built
-		foreach ($this->getExtensions(true) as $package) {
-			$router = $package->getRouter();
-			if ($router) {
-				$router->init();
-			}
-		}	
-	}
-
-	/**
 	 * @return $this
 	 */
 	public function bootstrap($externalEvent)
@@ -389,8 +373,19 @@ abstract class AbstractApplication extends AbstractPackage
 		$this->buildApp();
 		$this->addServices();
 		$this->assignActions();
-		$this->initRouting();
-		$this->assignEventListeners();		
+		$this->assignEventListeners();
+		
+		
+		$this->addRouter('PHPCrystal\\PHPCrystal\\Service\\Router\\_Default');
+		
+		parent::dispatch(
+			Event\Type\System\PkgNotification::create('load-config-file')
+		);
+
+		parent::dispatch(
+			Event\Type\System\PkgNotification::create('init-routing')
+		);		
+		
 		$this->bootstrapFlag = true;
 
 		return $this;
@@ -403,15 +398,14 @@ abstract class AbstractApplication extends AbstractPackage
 	{
 		$success = false;
 		
+		$routers = [];
 		foreach ($this->getExtensions(true) as $pkg) {
-			// not all packages require routing
-			if ( ! $pkg->getRouter()) {
-				continue;
-			}
-			
-			$router = $pkg->getRouter();
+			$routers = array_merge($routers, $pkg->getRouters());
+		}
+		
+		foreach ($routers as $router) {
 			$success = $router->handle($event);
-			
+	
 			// if discarded then event was designated to the current router but
 			// routing by some reason failed
 			if ($event->getStatus() == Event\STATUS_DISCARDED) {
@@ -468,17 +462,13 @@ abstract class AbstractApplication extends AbstractPackage
 
 		try {
 			// handle internal events
-			if ($event instanceof Event\Type\AbstractInternal ||
-				$reentered)
-			{
+			if ($event instanceof Event\Type\AbstractInternal || $reentered) {
 				return parent::dispatch($event);
 			}
-			
+
 			$event->setOriginalTarget($this);
-			
-			// bootstrap
 			$this->bootstrap($event);
-			
+
 			// dispatch given event to the application
 			if ($event instanceof Event\Type\Http\Request) {
 				$reentered = true;				

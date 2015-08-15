@@ -4,6 +4,7 @@ namespace PHPCrystal\PHPCrystal\Component\Package\Option;
 use PHPCrystal\PHPCrystal\Component\Container\AbstractContainer;
 use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
 use PHPCrystal\PHPCrystal\Component\Service\AbstractSubcontractor;
+use PHPCrystal\PHPCrystal\Component\Facade\AbstractFacade;
 
 const SECTION_TYPE_GLOBAL = 1;
 const SECTION_TYPE_UNDEFINED = 2;
@@ -15,7 +16,15 @@ class Container extends AbstractContainer
 	private $isServiceSection  = false;
 	private $currentSectionType;
 	protected static $itemClass = __NAMESPACE__ . '\\Option';
-	
+
+	/**
+	 * @return \PHPCrystal\PHPCrystal\Component\Package\AbstractApplication
+	 */
+	public function getApplication()
+	{
+		return AbstractFacade::getApplication();
+	}	
+
 	/**
 	 * @return string
 	 */

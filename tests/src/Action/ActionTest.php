@@ -25,7 +25,7 @@ class ActionTest extends TestCase
 	{
 		$this->makeRequest('@app/fixture/http_request/post_account_edit.txt');
 
-		$router = $this->appPkg->getRouter();
+		$router = $this->appPkg->getActiveRouter();
 		$action = $router->getAction();
 		$this->assertInstanceOf('PHPCrystal\PHPCrystalTest\Action\_Default\Account\Edit', $action);
 
@@ -60,4 +60,9 @@ class ActionTest extends TestCase
 		Exception\AbstractException::$nonMaskable = true;
 		$this->makeRequest('@app/fixture/http_request/edit_account_1_no_sid');		
 	}
+
+	public function testIndex()
+	{
+		$this->makeRequest('@app/fixture/http_request/get_index');
+	}	
 }

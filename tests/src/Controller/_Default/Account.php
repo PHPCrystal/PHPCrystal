@@ -1,12 +1,12 @@
 <?php
 namespace PHPCrystal\PHPCrystalTest\Controller\_Default;
 
-use PHPCrystal\PHPCrystal\Component\MVC\Controller\AbstractController;
+use PHPCrystal\PHPCrystal\Component\MVC\Controller\AbstractQuartzController;
 
 /**
  * @SecurityPolicy(authRequired=true)
  */
-class Account extends AbstractController
+class Account extends AbstractQuartzController
 {
 	public function editUserProfileAction()
 	{

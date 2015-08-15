@@ -1,6 +1,7 @@
 <?php
 namespace PHPCrystal\PHPCrystal\Component\Package;
 
+use PHPCrystal\PHPCrystal\Component\Package\Option\Container;
 use PHPCrystal\PHPCrystal\Component\Facade\AbstractFacade;
 use PHPCrystal\PHPCrystal\Component\Exception as Exception;
 use PHPCrystal\PHPCrystal\Component\Factory as Factory;
@@ -17,12 +18,44 @@ abstract class AbstractPackage extends Event\AbstractNode
 	private $composerName;
 	private $key;
 	private $pkgName;
+	private $config;
+	
+	private $routers = [];
 
 	/**
 	 * @var \Composer\Autoload\ClassLoader
 	 */
 	protected static $autoloader;
+
+	/**
+	 * Loads package configuration file
+	 * 
+	 * @return void
+	 */
+	final protected function loadConfigFile()
+	{
+		$configContainer = Container::create('PkgConfig', []);
+
+		if ($this->isApplication()) {
+			$this->config = FileHelper::create($this->getDirectory(), 'config.php')
+				->requireIfExists($configContainer);
+		} else {
+			$pkgConfigFile = FileHelper::create($this->getDirectory(), 'config.php');
+			
+			$appPkgConfig = FileHelper::create('@app', 'config', $this->getComposerName(true) . '.php')
+				->requireIfExists(clone $configContainer);
+			
+			$this->config = $appPkgConfig->merge($pkgConfigFile->requireIfExists($configContainer));
+		}
+	}
 	
+	protected function initRouting()
+	{
+		foreach ($this->getRouters() as $router) {
+			$router->init();
+		}
+	}
+
 	/**
 	 * 
 	 */
@@ -44,26 +77,78 @@ abstract class AbstractPackage extends Event\AbstractNode
 		$this->setApplication(AbstractFacade::getApplication());
 		// set default package services
 		$this->setBuilder('\\PHPCrystal\\PHPCrystal\\Service\\PackageBuilder\\PackageBuilder');
+		
 		// assign event listeners
 		$this->addEventListener(Event\Type\System\Build::toType(), function($event) {
 			$this->onBuildEvent($event);
 		});
-		//$this->addEventListener(Event\Type\System\InitService::toType(), function($event) {
-			//return $this->onServiceInit($event);
-		//});		
+
+		$this->addEventListener(Event\Type\System\PkgNotification::toType(), function($event) {
+			switch ($event->getNotifWord()) {
+				case 'load-config-file':
+					$this->loadConfigFile();
+					break;
+				
+				case 'init-routing':
+					$this->initRouting();
+					break;
+			}
+		});		
+	}
+
+	/**
+	 * @return \PHPCrystal\PHPCrystal\Component\Package\Option\Container
+	 */
+	final public function getConfig()
+	{
+		return $this->config;
+	}
+
+	public function addRouter($className)
+	{
+		$this->routers[] = $this->getFactory()
+			->create($className);
+	
+		return $this;		
+	}
+
+	public function getRouters()
+	{
+		return $this->routers;
 	}
 	
+	public function getActiveRouter()
+	{
+		foreach ($this->getRouters() as $router) {
+			if ($router->isActive()) {
+				return $router;
+			}
+		}
+
+		Exception\System\FrameworkRuntimeError::create('No active router')
+			->_throw();
+	}
+
 	/**
 	 * @return void
 	 */
-	public function init() { }
-	
+	public function init()
+	{
+
+	}
+
 	/**
 	 * @return string
 	 */
-	final public function getComposerName()
+	final public function getComposerName($dotNotation = false)
 	{
-		return $this->composerName;
+		if ($dotNotation) {
+			$parts = explode('/', $this->composerName);
+			
+			return $parts[1] . '.' . $parts[0];
+		} else {
+			return $this->composerName;
+		}
 	}
 
 	/**

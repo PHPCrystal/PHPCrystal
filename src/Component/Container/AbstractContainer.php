@@ -1,8 +1,8 @@
 <?php
 namespace PHPCrystal\PHPCrystal\Component\Container;
 
-use PHPCrystal\PHPCrystal\_Trait\CreateObject;
 use PHPCrystal\PHPCrystal\Component\Exception as Exception;
+use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
 
 const ITEM_OPERATION_ADD = 1;
 const ITEM_OPERATION_REMOVE = 2;
@@ -20,6 +20,9 @@ abstract class AbstractContainer
 	 */
 	protected $allowOverride = true;
 
+	/**
+	 * @api
+	 */
 	public function __construct($name = null, array $items)
 	{
 		$this->name = $name;
@@ -41,7 +44,26 @@ abstract class AbstractContainer
 	{
 		return $this->items;
 	}
-	
+
+	/**
+	 * @return mixed
+	 */
+	private function expandItemValue($value)
+	{
+		if ($value instanceof FileHelper) {
+			return $value->toString();
+		} else if (is_array($value)) {
+			foreach ($value as $arrKey => $arrValue) {
+				$value[$arrKey] = $this->expandItemValue($arrValue);
+			}
+			return $value;
+		} else if ($value instanceof AbstractItem) {
+			return $value->getValue();
+		} else {
+			return $value;
+		}
+	}
+
 	/**
 	 * @return mixed
 	 */
@@ -49,6 +71,7 @@ abstract class AbstractContainer
 	{
 		$parts = explode('.', $itemKey);
 		$arrRef = &$this->items;
+
 		while (count($parts) > 1) {
 			$segment = array_shift($parts);
 			if ( ! array_key_exists($segment, $arrRef) ||
@@ -64,23 +87,15 @@ abstract class AbstractContainer
 				$arrRef = &$arrRef[$segment];
 			}
 		}
-		
+
 		$lastKey = end($parts);		
 		if ( ! isset($arrRef[$lastKey])) {
 			return null;
 		}
-		
+
 		$item = $arrRef[$lastKey];
-		
-		if ( ! $autoExpand) {
-			return $item;
-		}
-		
-		if ($item instanceof AbstractItem) {
-			return $item->getValue();			
-		} else {
-			return $item;
-		}
+
+		return $autoExpand ? $this->expandItemValue($item) : $item;
 	}
 
 	/**
@@ -112,7 +127,7 @@ abstract class AbstractContainer
 		}
 
 		if (is_array($value)) {
-			$arrRef[$lastKey] = array();
+			$arrRef[$lastKey] = $value;
 		} else {
 			if ($value instanceof AbstractItem) {
 				$arrRef[$lastKey] = $value;				

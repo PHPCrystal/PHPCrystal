@@ -246,6 +246,18 @@ class FileHelper
 			return require $this->toString();
 		}
 	}
+	
+	/**
+	 * @return object
+	 */
+	public function requireIfExists($context)
+	{
+		if ($this->fileExists()) {
+			$this->_require($context);
+		}
+		
+		return $context;
+	}
 
 	/**
 	 * @return string

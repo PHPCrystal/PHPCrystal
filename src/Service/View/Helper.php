@@ -50,7 +50,7 @@ class Helper extends AbstractService
 		$resultUri = null;
 		
 		if ($tmpUri->isValidRelative()) {
-			$router = $action->getPackage()->getRouter();
+			$router = $action->getPackage()->getActiveRouter();
 			$resultUri = $tmpUri->merge($router->getBaseUri(), $tmpUri);
 		} else {
 			$resultUri = $tmpUri;

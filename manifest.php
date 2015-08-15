@@ -49,24 +49,24 @@ $this->openSection('phpcrystal.core.cache');
 $this->closeSection();
 
 // Database common settings.
-$this->openSection('phpcrystal.core.database');
+$this->openSection('phpcrystal.phpcrystal.database');
 
 	$this->set('driver', 'pdo_mysql');
 	$this->set('user', 'root');
 	$this->set('password', '');
-	$this->set('dbname', '');
+	$this->set('dbname', null);
 	$this->set('charset', 'UTF8');
 
 $this->closeSection();
 
 // Doctrine ORM default setup
-$this->openSection('phpcrystal.core.doctrine');
+$this->serviceSection('phpcrystal.phpcrystal.doctrine');
 
 	$this->set('proxyDir', FileHelper::create('@cache/doctrine/proxy')); // directory for proxy class files
 	$this->set('proxyNamespace', 'Model\\Doctrine\\Proxy\\');
 	$this->set('modelNamespace', 'Model\\Doctrine\\');
 	$this->set('modelPaths', [FileHelper::create('@app/Model/Physical')]);
-	$this->set('entityPaths', [FileHelper::create('@app/Model/Physical/Entity')]);
+	$this->set('entityPaths', [FileHelper::create('@app', 'src', 'Model', 'Entity2')]);
 	$this->set('dbal.autocommit', false);
 	
 $this->closeSection();

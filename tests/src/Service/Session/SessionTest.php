@@ -11,7 +11,7 @@ class SessionTest extends TestCase
 
 	public function testSetter()
 	{
-		$this->makeRequest(__DIR__ . '/../../../fixture/http_request/get_index.txt');		
+		$this->makeRequest(__DIR__ . '/../../../fixture/http_request/get_index');		
 		$session = Session::create();
 		$session->init();
 		$session->set('foo', 123);
@@ -20,7 +20,7 @@ class SessionTest extends TestCase
 	
 	public function testGetter()
 	{
-		$this->makeRequest(__DIR__ . '/../../../fixture/http_request/get_index.txt');
+		$this->makeRequest(__DIR__ . '/../../../fixture/http_request/get_index');
 		$session = Session::create();
 		$session->init();
 		$this->assertEquals(123, $session->get('foo'));

@@ -12,6 +12,7 @@ abstract class AbstractRouter extends AbstractService
 	protected $protocol;
 	protected $hostname;
 	protected $uriPathPrefix;
+	private $isActive;
 
 	protected $frontController;
 	protected $controller;
@@ -29,17 +30,24 @@ abstract class AbstractRouter extends AbstractService
 	 */
 	final protected function matchRequest(Request $request)
 	{
-		if (isset($this->hostname) && $this->hostname != $request->getHostname()) {
-			return false;
-		} else if (isset($this->uriPathPrefix) &&
-			strpos($request->getUri()->getPath(), $this->uriPathPrefix) !== 0)
-		{
-			return false;
-		} else {
-			return true;
+		$match = false;
+		
+		if ( ! empty($this->hostname) && $this->hostname == $request->getHostname()) {
+			$match = true;
 		}
+
+		if ( ! empty($this->uriPathPrefix)) {
+			$match = strpos($request->getUri()->getPath(), $this->uriPathPrefix) === 0 ?
+				true : false;
+		}
+		
+		if ($match) {
+			$this->isActive = true;
+		}
+		
+		return $match;
 	}
-	
+
 	/**
 	 * @return void
 	 */
@@ -144,6 +152,11 @@ abstract class AbstractRouter extends AbstractService
 			$this->getUriPathPrefix();
 		
 		return new Uri($baseUriStr);
+	}
+
+	public function isActive()
+	{
+		return $this->isActive;
 	}
 
 	/**

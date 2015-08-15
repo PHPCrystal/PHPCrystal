@@ -19,14 +19,14 @@ class RequestTest extends TestCase
 	public function testControllerOutput()
 	{
 		$requestEvent = null;
-		$this->makeRequest('@app/fixture/http_request/get_index.txt',
+		$this->makeRequest('@app/fixture/http_request/get_index',
 			$requestEvent);
 		$this->assertEquals('Unit tests rock!', $requestEvent->getResult());		
 	}
 	
 	public function testResponse200()
 	{
-		$internalEvent = $this->makeRequest('@app/fixture/http_request/get_index.txt');		
+		$internalEvent = $this->makeRequest('@app/fixture/http_request/get_index');		
 		$this->assertEquals(200, $internalEvent->getHttpResponse()->getStatusCode());
 	}
 	
