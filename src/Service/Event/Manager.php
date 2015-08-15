@@ -168,18 +168,16 @@ final class Manager extends AbstractService
 			$dispatchChain = $target->getReverseDispatchChain();
 		}
 		
-		foreach ($dispatchChain as $listener) {
-			foreach ($listener->getPriorEvents($parentPhase) as $priorEvent) {
-				
-				$this->walkNodes($priorEvent,
-					$target->sliceDispatchChain($listener));
+		foreach ($dispatchChain as $node) {
+			foreach ($node->getPriorEvents($parentPhase) as $priorEvent) {
+				$this->walkNodes($priorEvent, $target->sliceDispatchChain($node));
 				
 				if ($priorEvent->getStatus() == STATUS_DISCARDED) {
 					return $priorEvent;
 				}
 			}
 		}
-		
+
 		return null;
 	}
 	

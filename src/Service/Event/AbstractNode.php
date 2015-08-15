@@ -101,7 +101,7 @@ abstract class AbstractNode implements
 			$prev = $node;
 		}
 	}
-	
+
 	/**
 	 * @return array
 	 */
@@ -109,20 +109,20 @@ abstract class AbstractNode implements
 	{
 		$result = array();
 		$captureFlag  = false;
-		
-		$dispatchChain = $reverseChain ?
-			$this->getReverseDispatchChain() : $this->getDispatchChain();
-		
-		foreach ($dispatchChain as $listener) {
-			if ($offset === $listener) {
+
+		$dispatchChain = $reverseChain ? $this->getReverseDispatchChain()
+			: $this->getDispatchChain();
+
+		foreach ($dispatchChain as $chainNode) {
+			if ($offset === $chainNode) {
 				$captureFlag = true;
 			}
-			
+
 			if ($captureFlag) {
-				$result[] = $listener;
+				$result[] = $chainNode;
 			}
 		}
-		
+
 		return $result;
 	}
 
@@ -132,7 +132,7 @@ abstract class AbstractNode implements
 	final function dispatchChainAddElement($node)
 	{
 		$this->dispatchChain[] = $node;
-		
+
 		// add the given node to dispatch chains of nodes in the main chain
 		for ($i = 1; $i < count($this->dispatchChain) - 1; $i++) {
 			$this->dispatchChain[$i++]->dispatchChainAddElement($node);
@@ -140,7 +140,7 @@ abstract class AbstractNode implements
 
 		return $this;
 	}
-	
+
 	/**
 	 * @return void
 	 */
