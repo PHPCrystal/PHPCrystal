@@ -5,13 +5,16 @@ abstract class AbstractItem
 {
 	private $key;
 	private $value;
-	
+
+	/**
+	 * @api
+	 */
 	public function __construct($key, $value)
 	{
 		$this->key = $key;
 		$this->value = $value;
 	}
-	
+
 	/**
 	 * @return string
 	 */
@@ -19,7 +22,7 @@ abstract class AbstractItem
 	{
 		return $this->name;
 	}
-	
+
 	/**
 	 * @return mixed
 	 */
@@ -27,17 +30,28 @@ abstract class AbstractItem
 	{
 		return $this->value;
 	}
-	
+
+	/**
+	 * @return void
+	 */
 	public function setValue($value)
 	{
 		$this->value = $value;
 	}
-	
+
+	/**
+	 * @return mixed
+	 */
 	public function __toString()
 	{
 		return $this->getValue();
 	}
-	
+
+	/**
+	 * Wrapper for the ::__toString method
+	 * 
+	 * @return mixed
+	 */
 	public function toString()
 	{
 		return $this->__toString();

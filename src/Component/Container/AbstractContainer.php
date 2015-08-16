@@ -46,19 +46,19 @@ abstract class AbstractContainer
 	}
 
 	/**
+	 * Converts object to a string if it supports ::toString method
+	 * 
 	 * @return mixed
 	 */
 	private function expandItemValue($value)
 	{
-		if ($value instanceof FileHelper) {
+		if (is_object($value) && is_callable([$value, 'toString'])) {
 			return $value->toString();
 		} else if (is_array($value)) {
 			foreach ($value as $arrKey => $arrValue) {
 				$value[$arrKey] = $this->expandItemValue($arrValue);
 			}
 			return $value;
-		} else if ($value instanceof AbstractItem) {
-			return $value->getValue();
 		} else {
 			return $value;
 		}
