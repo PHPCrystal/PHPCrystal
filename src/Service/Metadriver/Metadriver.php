@@ -80,7 +80,16 @@ class Metadriver extends AbstractService
 			}
 		}
 	}
-	
+
+	public function getPackageByName($pkgName)
+	{
+		foreach ($this->getApplication()->getExtensions(true) as $pkg) {
+			if ($pkgName == $pkg->getComposerName()) {
+				return $pkg;
+			}
+		}
+	}
+
 	/**
 	 * @return \PHPCrystal\PHPCrystal\Service\Metadriver\ExtendableController
 	 */

@@ -11,7 +11,7 @@ class PkgNotification extends Event\Type\AbstractInternal
 	{
 		parent::__construct();
 		$this->notifWord = $word;
-		$this->type = Event\TYPE_BROADCAST_LEVEL_ORDER;
+		$this->type = Event\TYPE_BROADCAST_POST_ORDER;
 	}
 	
 	/**

@@ -3,6 +3,7 @@ namespace PHPCrystal\PHPCrystal\Component\Service;
 
 use PHPCrystal\PHPCrystal\Component\Factory\Aware as Aware;
 use PHPCrystal\PHPCrystal\_Trait\AFPAware;
+use PHPCrystal\PHPCrystal\_Trait\PkgConfigAware;
 
 abstract class AbstractService implements
 	Aware\ApplicationInterface,
@@ -10,7 +11,7 @@ abstract class AbstractService implements
 	Aware\PackageInterface,
 	Aware\DependencyInjectionInterface
 {
-	use AFPAware;
+	use AFPAware, PkgConfigAware;
 	
 	/**
 	 * @var boolean

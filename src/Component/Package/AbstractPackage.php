@@ -7,6 +7,7 @@ use PHPCrystal\PHPCrystal\Component\Exception as Exception;
 use PHPCrystal\PHPCrystal\Component\Factory as Factory;
 use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
+use PHPCrystal\PHPCrystal\Component\Package\Config;
 
 abstract class AbstractPackage extends Event\AbstractNode
 {	
@@ -34,21 +35,12 @@ abstract class AbstractPackage extends Event\AbstractNode
 	 */
 	final protected function loadConfigFile()
 	{
-		$configContainer = Container::create('PkgConfig', []);
+		$config = Config::create('PkgConfig', []);
 
-		if ($this->isApplication()) {
-			$this->config = FileHelper::create($this->getDirectory(), 'config.php')
-				->requireIfExists($configContainer);
-		} else {
-			$pkgConfigFile = FileHelper::create($this->getDirectory(), 'config.php');
-			
-			$appPkgConfig = FileHelper::create('@app', 'config', $this->getComposerName(true) . '.php')
-				->requireIfExists(clone $configContainer);
-			
-			$this->config = $appPkgConfig->merge($pkgConfigFile->requireIfExists($configContainer));
-		}
+		$this->config = FileHelper::create($this->getDirectory(), 'config.php')
+			->requireIfExists($config);
 	}
-	
+
 	protected function initRouting()
 	{
 		foreach ($this->getRouters() as $router) {

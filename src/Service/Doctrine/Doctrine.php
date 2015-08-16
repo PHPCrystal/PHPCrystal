@@ -51,14 +51,6 @@ class Doctrine extends AbstractService
 		
 		$context = $this->getApplication()->getContext();
 		$this->config = $context->pluck('phpcrystal.phpcrystal.doctrine');
-		
-		$this->proxyDir = $this->config->get('proxyDir');
-		$this->proxyNamespace = $this->config->get('proxyNamespace');
-		$this->modelNamespace  = $this->config->get('modelNamespace');
-		$this->modelPaths = $this->config->get('modelPaths');
-		$this->entitiesPaths = $this->config->get('entitiesPaths');
-		$this->autoCommit = $this->config->get('dbal.autocommit');
-		
 
 		$this->eventManager = new EventManager();
 		
@@ -115,7 +107,7 @@ class Doctrine extends AbstractService
 	{
 		return $this->entityManager;
 	}
-	
+
 	/**
 	 * @return Doctrine\DBAL\Connection
 	 */

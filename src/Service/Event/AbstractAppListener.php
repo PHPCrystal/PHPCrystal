@@ -4,6 +4,7 @@ namespace PHPCrystal\PHPCrystal\Service\Event;
 use PHPCrystal\PHPCrystal\Contract as Contract;
 use PHPCrystal\PHPCrystal\Component\Factory as Factory;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
+use PHPCrystal\PHPCrystal\Facade\Metadriver;
 
 abstract class AbstractAppListener extends AbstractNode  implements
 	Factory\Aware\DependencyInjectionInterface,

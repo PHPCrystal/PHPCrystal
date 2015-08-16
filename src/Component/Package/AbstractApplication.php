@@ -268,8 +268,10 @@ abstract class AbstractApplication extends AbstractPackage
 
 		foreach ($this->getExtensions(true) as $pkg) {
 			$newContext = $externalEvent->createContext();
+
 			FileHelper::create($pkg->getDirectory(), 'manifest.php')
-				->_require($newContext);
+				->requireIfExists($newContext);
+
 			if ($target) {
 				$target->merge($newContext);
 			} else {
