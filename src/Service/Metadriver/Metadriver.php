@@ -64,7 +64,42 @@ class Metadriver extends AbstractService
 		
 		$this->isInitialized = true;
 	}
-	
+
+	/**
+	 * @return object
+	 */
+	public function getOwnerInstance($mixed)
+	{
+		$pkgNS = $this->getOwnerNS($mixed);
+		
+		foreach ($this->getApplication()->getExtensions(true) as $pkg) {
+			if ($pkg->getNamespace() == $pkgNS) {
+				return $pkg;
+			}
+		}
+	}
+
+	/**
+	 * Returns package namespace from which the given object's parent class originates
+	 * 
+	 * @return string
+	 */
+	public function getOwnerNS($mixed)
+	{
+		$refClass = new \ReflectionClass($mixed);
+
+		while ($refClass) {
+			$parts = explode('\\', $refClass->getNamespaceName());
+			$ownerNS = $parts[0] . '\\' . $parts[1];
+			
+			if ($this->getApplication()->getNamespace() != $ownerNS) {
+				return $ownerNS;
+			}
+
+			$refClass = $refClass->getParentClass();
+		}
+	}
+
 	/**
 	 * Returns a package instance by the name of one of its classes
 	 * 
@@ -131,6 +166,7 @@ class Metadriver extends AbstractService
 	}
 
 	/**
+	 * @todo remove
 	 * @return string
 	 */
 	public function getPackageNamespaceByItsMemeber($mixed)

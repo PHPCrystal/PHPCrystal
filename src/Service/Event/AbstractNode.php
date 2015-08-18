@@ -3,13 +3,15 @@ namespace PHPCrystal\PHPCrystal\Service\Event;
 
 use PHPCrystal\PHPCrystal\Component\Factory as Factory;
 use PHPCrystal\PHPCrystal\_Trait\AFPAware;
+use PHPCrystal\PHPCrystal\_Trait\CreateObject;
+
 
 abstract class AbstractNode implements
 	Factory\Aware\FactoryInterface,
 	Factory\Aware\ApplicationInterface,
 	Factory\Aware\PackageInterface
 {
-	use AFPAware;
+	use AFPAware, CreateObject;
 	
 	/**
 	 * @var array

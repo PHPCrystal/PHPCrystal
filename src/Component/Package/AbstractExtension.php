@@ -1,61 +1,57 @@
 <?php
+
 namespace PHPCrystal\PHPCrystal\Component\Package;
 
 use Composer\Installer\PackageEvent;
 use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
 
-abstract class AbstractExtension extends AbstractPackage 
-{
+abstract class AbstractExtension extends AbstractPackage {
+
 	/**
 	 * @var bool
 	 */
 	private $disabledFlag;
 	private $disableAutoloadFlag;
-	
+
 	/**
 	 * @return bool
 	 */
-	public function getDisabledFlag()
-	{
+	public function getDisabledFlag() {
 		return $this->disabledFlag;
 	}
-	
+
 	/**
 	 * @return $this
 	 */
-	final public function setDisabledFlag($flagValue)
-	{
+	final public function setDisabledFlag($flagValue) {
 		$this->disabledFlag = $flagValue;
-		
+
 		return $this;
 	}
 
 	/**
 	 * @return bool
 	 */
-	final public function getDisableAutoloadFlag()
-	{
+	final public function getDisableAutoloadFlag() {
 		return $this->disableAutoloadFlag;
 	}
 
 	/**
 	 * @return $this
 	 */
-	final public function setDisableAutoloadFlag($value)
-	{
+	final public function setDisableAutoloadFlag($value) {
 		$this->disableAutoloadFlag = $value;
 
 		return $this;
 	}
-	
+
 	/**
 	 * @return void
 	 */
-	public static function install(PackageEvent $event)
-	{
+	public static function install(PackageEvent $event) {
 		global $app;
-		
+
 		$composer_json_filename = getenv('COMPOSER');
 		$app_root_dir = empty($composer_json_filename) ? getcwd() : dirname($composer_json_filename);
 
@@ -69,14 +65,13 @@ abstract class AbstractExtension extends AbstractPackage
 		$app->addExtension($composer_pkg_dir);
 
 		$ext_install_event = Event\Type\System\ExtensionInstall::create($composer_pkg);
-		$app->dispatch($ext_install_event);		
+		$app->dispatch($ext_install_event);
 	}
-	
+
 	/**
 	 * @return void
 	 */
-	public static function finishInstallation(Event\Type\System\ExtensionInstall $event)
-	{
+	public static function finishInstallation(Event\Type\System\ExtensionInstall $event) {
 		$app = $event->getCurrentNode()->getRootNode();
 
 		$composer_lock = FileHelper::create($app->getDirectory(), 'composer.lock');
@@ -84,12 +79,10 @@ abstract class AbstractExtension extends AbstractPackage
 
 		foreach ($composer_lock_json['packages'] as &$pkg_entry) {
 			if ($pkg_entry['name'] == $event->getComposerPackageName() &&
-				true === $event->getResult())
-			{
+				true === $event->getResult()) {
 				// Mark extension as installed
 				$pkg_entry['installed'] = 'yes';
-				$composer_lock->writeJson($composer_lock_json,
-					JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);				
+				$composer_lock->writeJson($composer_lock_json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
 			}
 		}
 	}
@@ -97,20 +90,20 @@ abstract class AbstractExtension extends AbstractPackage
 	/**
 	 * @return $this
 	 */
-	public function init()
-	{
+	public function init() {
 		parent::init();
 
 		// extension installation event listener
 		$this->addEventListener(Event\Type\System\ExtensionInstall::toType(), function($event) {
 			return $this->onInstall($event);
 		});
-		
+
 		return $this;
 	}
 
 	//
 	// Event hooks
+
 	//
 
 	/**
@@ -118,11 +111,10 @@ abstract class AbstractExtension extends AbstractPackage
 	 * 
 	 * @return void
 	 */
-	public static function onPostAutoloadDump()
-	{
+	public static function onPostAutoloadDump() {
 		global $app;
 
-		if ( ! $app || null === ($current_event = $app->getCurrentEvent())) {
+		if (!$app || null === ($current_event = $app->getCurrentEvent())) {
 			return;
 		}
 
@@ -136,8 +128,8 @@ abstract class AbstractExtension extends AbstractPackage
 	 * 
 	 * @return boolean
 	 */
-	protected function onInstall(Event\Type\System\ExtensionInstall $event)
-	{
+	protected function onInstall(Event\Type\System\ExtensionInstall $event) {
 		return true;
 	}
+
 }

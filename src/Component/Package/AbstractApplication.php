@@ -26,18 +26,19 @@ abstract class AbstractApplication extends AbstractPackage
 	/**
 	 * @var \SplMinHeap
 	 */
-	protected static $extMinHeap;	
+	protected static $extMinHeap;
 	
 	/**
-	 * 
+	 * @api
 	 */
-	public function __construct()
+	public function __construct(\Composer\Autoload\ClassLoader $autoloader)
 	{
+		self::$autoloader = $autoloader;
+		self::$extMinHeap = new Heap\MinHeap();
 		Facade\AbstractFacade::setApplication($this);
 		$this->setApplication($this);
-		self::$extMinHeap = new Heap\MinHeap();
-		$this->setPriority(999);		
-		parent::__construct();		
+		$this->setPriority(999);
+		parent::__construct();
 	}
 
 	/**
@@ -83,22 +84,6 @@ abstract class AbstractApplication extends AbstractPackage
 	}
 
 	/**
-	 * @return this
-	 */
-	final public static function create(\Composer\Autoload\ClassLoader $autoloader)
-	{
-		try {
-			static::$autoloader = $autoloader;
-			$appInstance = new static();
-			$appInstance->init();
-		} catch (\Exception $e) {
-			exit;
-		}
-		
-		return $appInstance;
-	}
-
-	/**
 	 * @return void
 	 */
 	public function init()
@@ -136,6 +121,12 @@ abstract class AbstractApplication extends AbstractPackage
 		}
 		
 		return iterator_to_array($minHeap);
+	}
+	
+
+	final public function getCoreExtension()
+	{
+		return self::$extMinHeap->top();
 	}
 
 	/**
@@ -195,6 +186,19 @@ abstract class AbstractApplication extends AbstractPackage
 	final public function getAllActions()
 	{
 		return $this->actions;
+	}
+
+	public function getPackageActions($pkgInstance)
+	{
+		$result = [];
+		
+		foreach ($this->actions as $action) {
+			if ($action->getPackage() === $pkgInstance) {
+				$result[] = $action;
+			}
+		}
+		
+		return $result;
 	}
 	
 	/**
@@ -392,34 +396,31 @@ abstract class AbstractApplication extends AbstractPackage
 
 		return $this;
 	}
-
+	
 	/**
 	 * @return void
 	 */
 	protected function getTargetPackage($event)
 	{
 		$success = false;
-		
-		$routers = [];
+
 		foreach ($this->getExtensions(true) as $pkg) {
-			$routers = array_merge($routers, $pkg->getRouters());
-		}
-		
-		foreach ($routers as $router) {
-			$success = $router->handle($event);
-	
-			// if discarded then event was designated to the current router but
-			// routing by some reason failed
-			if ($event->getStatus() == Event\STATUS_DISCARDED) {
-				return $this;
-			}
-			
-			if ($success) {
-				$package = $router->getPackage();
-				break;
+			foreach ($pkg->getRouters() as $router) {
+				$success = $router->process($event);
+				
+				if ($event->getStatus() == Event\STATUS_DISCARDED) {
+					return $this;
+				}
+
+				if ($success) {
+					$package = $router->getPackage();
+					break;
+				}
 			}
 		}
-		
+
+		// if discarded then event was designated to the current router but
+		// routing by some reason failed
 		if ( ! $success) {
 			return $this;
 		}

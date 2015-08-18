@@ -6,6 +6,7 @@ use PHPCrystal\PHPCrystal\Component\Factory as Factory;
 use PHPCrystal\PHPCrystal\Component\Http\Request;
 use PHPCrystal\PHPCrystal\Component\Http\Uri;
 use PHPCrystal\PHPCrystal\Component\Service\AbstractService;
+use PHPCrystal\PHPCrystal\Facade\Metadriver;
 
 abstract class AbstractRouter extends AbstractService
 {
@@ -160,7 +161,47 @@ abstract class AbstractRouter extends AbstractService
 	}
 
 	/**
-	 * @return boolean
+	 * @return bool
 	 */
-	abstract public function handle(Event\Type\Http\Request $event);	
+	protected function skipAction($action)
+	{
+		return $this->getApplication()->getCoreExtension() ===
+			Metadriver::getOwnerInstance($action) ? false : true;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function process(Event\Type\Http\Request $event)
+	{
+		if ( ! $this->matchRequest($event->getRequest())) {
+			return false;
+		}
+
+		$pkgActions = $this->getApplication()
+			->getPackageActions($this->getPackage());
+
+		foreach ($pkgActions as $action) {
+
+			if ($this->skipAction($action)) {
+				continue;
+			}
+
+			if ($action->matchRequest($event->getRequest())) {
+				$this->action = $action;
+
+				$this->controller = $this->getFactory()
+					->createControllerByAction($action);
+
+				$this->frontController = $this->getFactory()
+					->createFrontControllerByAction($action);
+
+				return true;
+			}
+		}
+
+		$this->triggerResponse404($event, Event\Type\Http\Response404::create());		
+
+		return false;
+	}
 }

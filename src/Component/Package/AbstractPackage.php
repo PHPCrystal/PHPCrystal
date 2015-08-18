@@ -8,6 +8,7 @@ use PHPCrystal\PHPCrystal\Component\Factory as Factory;
 use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
 use PHPCrystal\PHPCrystal\Component\Package\Config;
+use PHPCrystal\PHPCrystal\Facade\Metadriver;
 
 abstract class AbstractPackage extends Event\AbstractNode
 {	
@@ -304,6 +305,11 @@ abstract class AbstractPackage extends Event\AbstractNode
 		return parent::dispatch($initServiceEvent);
 	}
 	
+	public function getActions()
+	{
+		return Metadriver::getPackageActions($this);
+	}
+
 	//
 	// Event hooks
 	//
