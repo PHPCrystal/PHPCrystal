@@ -64,6 +64,16 @@ class Metadriver extends AbstractService
 		
 		$this->isInitialized = true;
 	}
+	
+	/**
+	 * @return string
+	 */
+	public function extractPackageNS($name)
+	{
+		$parts = explode('\\', $name);
+		
+		return $parts[0] . '\\' . $parts[1];
+	}
 
 	/**
 	 * @return object
@@ -89,10 +99,11 @@ class Metadriver extends AbstractService
 		$refClass = new \ReflectionClass($mixed);
 
 		while ($refClass) {
-			$parts = explode('\\', $refClass->getNamespaceName());
-			$ownerNS = $parts[0] . '\\' . $parts[1];
-			
-			if ($this->getApplication()->getNamespace() != $ownerNS) {
+			$ownerNS = $this->extractPackageNS($refClass->getNamespaceName());
+
+			if ($this->getApplication()->getNamespace() != $ownerNS ||
+				$refClass->isAbstract())
+			{
 				return $ownerNS;
 			}
 

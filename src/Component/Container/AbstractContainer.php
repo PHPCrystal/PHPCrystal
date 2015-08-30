@@ -3,6 +3,7 @@ namespace PHPCrystal\PHPCrystal\Component\Container;
 
 use PHPCrystal\PHPCrystal\Component\Exception as Exception;
 use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
+use PHPCrystal\PHPCrystal\Component\Exception\System as System;
 
 const ITEM_OPERATION_ADD = 1;
 const ITEM_OPERATION_REMOVE = 2;
@@ -378,17 +379,22 @@ abstract class AbstractContainer
 	/**
 	 * @return $this
 	 */
-	public function pluck($key, $newContainerName = null)
+	public function pluck($key, $throwExcepIfNull = false, $newContainerName = null)
 	{
 		$pluckedItem = $this->get($key);
-		
-		if ($pluckedItem instanceof $this) {
+
+		if (null === $pluckedItem) {
+			if ($throwExcepIfNull) {
+				System\MethodInvocation::create()
+					->addParam($key)
+					->_throw();
+			} else {
+				return static::create($newContainerName, []);			
+			}
+		} elseif ($pluckedItem instanceof $this) {
 			return $pluckedItem;
-		} else if (is_array($pluckedItem)) {
+		} elseif (is_array($pluckedItem)) {
 			return static::create($newContainerName, $pluckedItem);
-		} else {		
-			Exception\System\WrongType::create('array', $pluckedItem)
-				->_throw();
 		}
 	}
 }

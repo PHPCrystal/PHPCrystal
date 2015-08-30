@@ -8,32 +8,18 @@ trait PkgConfigAware
 	private $config;
 
 	/**
-	 * @return AbstractPackage
-	 */
-	private function getOwnerPackageInstance()
-	{
-		$ownerPkg = Metadriver::getPackageByItsMember($this);
-
-		return $ownerPkg;
-	}
-
-	/**
-	 * Merges the config file of the current package with the config file of the
-	 * given package.
-	 * 
 	 * @return \PHPCrystal\PHPCrystal\Component\Package\Config
 	 */
-	public function getMergedConfig($ownerPkgName = null)
+	public function getMergedConfig()
 	{
-		$pkgConfig = $this->getPackage()->getConfig();
+		$pkgOwnerInstance = Metadriver::getOwnerInstance($this);
+		$pkgOwnerConfig = clone $pkgOwnerInstance->getConfig();		
+		$pkgOwnerDotName = $pkgOwnerInstance->getComposerName(true);
 
-		$pkgOwnerInstance = empty($ownerPkgName) ?
-			$this->getOwnerPackageInstance() : Metadriver::getPackageByName($ownerPkgName);
-
-		$pkgOwnerConfig = clone $pkgOwnerInstance->getConfig();
-		$pkgOwnerConfig->merge($pkgConfig);
-
-		return $pkgOwnerConfig;
+		$appConfig = $this->getApplication()
+			->getConfig()->pluck($pkgOwnerDotName, true);
+		
+		return $pkgOwnerConfig->merge($appConfig);
 	}
 
 	/**

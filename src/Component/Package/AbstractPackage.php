@@ -138,7 +138,7 @@ abstract class AbstractPackage extends Event\AbstractNode
 		if ($dotNotation) {
 			$parts = explode('/', $this->composerName);
 			
-			return $parts[1] . '.' . $parts[0];
+			return $parts[0] . '.' . $parts[1];
 		} else {
 			return $this->composerName;
 		}

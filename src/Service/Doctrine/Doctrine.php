@@ -20,6 +20,7 @@ use Doctrine\Common\ClassLoader,
 class Doctrine extends AbstractService
 {
 	private $config;
+	private $pkgConfig;
 	private $eventManager;
 	private $entityManager;
 	private $ormConfig;
@@ -49,7 +50,12 @@ class Doctrine extends AbstractService
 			return;
 		}
 		
+		$this->shortName = 'doctrine';
+
 		$context = $this->getApplication()->getContext();
+		
+		$this->serviceConfig = $this->getServiceConfig();
+		
 		$this->config = $context->pluck('phpcrystal.phpcrystal.doctrine');
 
 		$this->eventManager = new EventManager();
@@ -69,7 +75,9 @@ class Doctrine extends AbstractService
 		$this->ormConfig->setQueryCacheImpl($cache);
 		$this->ormConfig->setQueryCacheImpl($cache);
 
-		$this->ormConfig->setEntityNamespaces(['MyRepo' => 'PHPCrystal\PHPCrystalTest\Model\Entity']);
+		if (null != ($entityNSArray = $this->serviceConfig->get('entityNamespaces'))) {
+			$this->ormConfig->setEntityNamespaces($entityNSArray);
+		}
 
 		// Proxy configuration
 		$this->ormConfig->setProxyDir($this->config->get('proxyDir'));
