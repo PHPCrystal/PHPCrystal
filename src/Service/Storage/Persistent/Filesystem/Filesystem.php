@@ -23,15 +23,13 @@ class Filesystem extends AbstractSubcontractor
 	 */
 	public function init()
 	{
-		if ($this->getContractorName() == 'session' &&
-			$this->getContractorVednor() == 'phpcrystal')
-		{
+		if ($this->getContractorName() == 'phpcrystal.phpcrystal.session') {
 			$config = $this->getContractorConfig();
 			$this->setStorageBasedir($config->get('save_path'));
 			$this->setFilenamePrefix($this->getContractorName() . '_');
 		}
 	}
-	
+
 	/**
 	 * @return string|null
 	 */

@@ -1,9 +1,10 @@
 <?php
 namespace PHPCrystal\PHPCrystal\Component\Service;
 
+use PHPCrystal\PHPCrystal\Component\Exception\System\FrameworkRuntimeError;
+
 abstract class AbstractSubcontractor extends AbstractService
 {
-	private $contractorVendor;
 	private $contractorName;
 	
 	/**
@@ -21,25 +22,9 @@ abstract class AbstractSubcontractor extends AbstractService
 	{
 		return false;
 	}
-	
+
 	/**
-	 * @return Contractor
-	 */
-	final public function getContractorVednor()
-	{
-		return $this->contractorVendor;
-	}
-	
-	/**
-	 * @return void
-	 */
-	final public function setContractorVendor($name)
-	{
-		$this->contractorVendor = $name;
-	}
-	
-	/**
-	 * @return Contractor
+	 * @return
 	 */
 	final public function getContractorName()
 	{
@@ -51,6 +36,11 @@ abstract class AbstractSubcontractor extends AbstractService
 	 */
 	final public function setContractorName($name)
 	{
+		if ( ! $this->validateServiceName($name)) {
+			FrameworkRuntimeError::create('Contractor name must be a fully qualified service name, "%s" is given"', null, $name)
+				->_throw();
+		}
+
 		$this->contractorName = $name;
 	}
 	
@@ -59,8 +49,8 @@ abstract class AbstractSubcontractor extends AbstractService
 	 */
 	final public function getContractorConfig()
 	{
-		$context = $this->getApplication()->getContext();
+		$context = $this->getMergedConfig();
 		
-		return $context->pluck($this->getContractorVednor() . '.' . $this->getContractorName());
+		return $context->pluck($this->getContractorName());
 	}
 }

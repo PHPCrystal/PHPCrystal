@@ -39,9 +39,10 @@ abstract class AbstractService implements
 	 */
 	public function __construct()
 	{
-		
+		// Default short name 
+		$this->shortName = strtolower((new \ReflectionClass($this))->getShortName());
 	}
-	
+
 	/**
 	 * By default all services do not fire DI event.
 	 * 
@@ -87,10 +88,10 @@ abstract class AbstractService implements
 	/**
 	 * @return string
 	 */
-	public function getServiceName()
+	public function getName()
 	{		
 		$ownerInstance = Metadriver::getOwnerInstance($this);
-		$fullName = $ownerInstance->getComposerName(true) . '.' . $this->getServiceShortName();
+		$fullName = $ownerInstance->getComposerName(true) . '.' . $this->getShortName();
 
 		return $fullName;
 	}
@@ -98,13 +99,8 @@ abstract class AbstractService implements
 	/**
 	 * @return string
 	 */
-	public function getServiceShortName()
+	public function getShortName()
 	{
-		if (empty($this->shortName)) {
-			FrameworkRuntimeError::create('Service short name was not specified, class %s', null,
-				static::class);
-		}
-		
 		return $this->shortName;
 	}
 
@@ -119,7 +115,7 @@ abstract class AbstractService implements
 	public function getServiceConfig()
 	{
 		return $this->getMergedConfig()
-			->pluck($this->getServiceShortName(), true);
+			->pluck($this->getName(), true);
 	}
 
 	/**
@@ -165,5 +161,15 @@ abstract class AbstractService implements
 		$refClass = new \ReflectionClass($this);
 		
 		return $refClass->getNamespaceName();
+	}
+	
+	/**
+	 * @return bool
+	 */
+	final protected function validateServiceName($serviceName)
+	{
+		$nameComponent = '[\w\d_-]+';
+
+		return preg_match("/^{$nameComponent}\.{$nameComponent}\.{$nameComponent}$/", $serviceName);		
 	}
 }

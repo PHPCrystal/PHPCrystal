@@ -12,14 +12,16 @@ trait PkgConfigAware
 	 */
 	public function getMergedConfig()
 	{
-		$pkgOwnerInstance = Metadriver::getOwnerInstance($this);
-		$pkgOwnerConfig = clone $pkgOwnerInstance->getConfig();		
-		$pkgOwnerDotName = $pkgOwnerInstance->getComposerName(true);
+		$originPkgInstance = Metadriver::getOwnerInstance($this);
+		$mergedConfig = clone $originPkgInstance->getConfig();		
+		$originPkgDotName = $originPkgInstance->getComposerName(true);
 
 		$appConfig = $this->getApplication()
-			->getConfig()->pluck($pkgOwnerDotName, true);
+			->getConfig();
 		
-		return $pkgOwnerConfig->merge($appConfig);
+		$mergedConfig->merge($appConfig);
+		
+		return $mergedConfig;
 	}
 
 	/**

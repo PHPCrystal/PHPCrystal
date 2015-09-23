@@ -12,9 +12,10 @@ const ITEM_OPERATION_NEW_VALUE = 3;
 abstract class AbstractContainer
 {
 	private $name;
+
+	protected $items = [];
 	protected $changesTracker = [];
 	protected static $itemClass;
-	protected $items = array();
 	protected $nestedContainers = array();
 	/**
 	 * @var boolean
@@ -108,6 +109,7 @@ abstract class AbstractContainer
 	{
 		$parts = explode('.', $itemKey);
 		$arrRef = &$this->items;
+
 		while (count($parts) > 1) {
 			$segment = array_shift($parts);
 			if ( ! array_key_exists($segment, $arrRef) ||
@@ -153,6 +155,7 @@ abstract class AbstractContainer
 	{
 		$parts = explode('.', $itemKey);
 		$arrRef = &$this->items;
+
 		while (count($parts) > 1) {
 			$segment = array_shift($parts);
 			if ( ! array_key_exists($segment, $arrRef)) {
@@ -222,34 +225,32 @@ abstract class AbstractContainer
 	/**
 	 * @return array
 	 */
-	private function convertArray($arr)
+	private function convertArray($arr, $prefix = '')
 	{
 		$result = array();		
 		$itemClass = static::$itemClass;
-		
+
 		foreach ($arr as $key => $value) {
 			if (is_array($value)) {
-				$result[$key] = $this->convertArray($value);
+				$result[$key] = $this->convertArray($value, $key);
 			} else if ($value instanceof AbstractItem) {
 				$result[$key] = $value;
 			} else {
 				$result[$key] = new $itemClass($key, $value);
 			}
 		}
-		
+
 		return $result;
 	}
 
 	/**
 	 * @return $this
 	 */
-	public static function create($name, array $items = null)
+	public static function create($name, array $items = [])
 	{
-		$items = (array)$items;
-
 		return new static($name, $items);
 	}
-	
+
 	/**
 	 * @return void
 	 */
@@ -355,20 +356,23 @@ abstract class AbstractContainer
 		
 		return $result;
 	}
-	
+
 	/**
 	 * @return $this
 	 */
-	public function merge($container)
+	public function merge($container, $prefix = null)
 	{
 		if (null == $container) {
 			return $this;
 		}
-		
+
 		foreach ($container->getAllKeys() as $itemKey) {
+			if ($prefix != null) {
+				$itemKey = $prefix . '.' . $itemKey;
+			}
 			$this->set($itemKey, $container->get($itemKey));
 		}
-		
+
 		foreach ($container->nestedContainers as $key => $container) {
 			$this->nestedContainers[$key]->merge($container);
 		}

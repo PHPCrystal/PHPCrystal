@@ -9,9 +9,12 @@ use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
 use PHPCrystal\PHPCrystal\Component\Package\Config;
 use PHPCrystal\PHPCrystal\Facade\Metadriver;
+use PHPCrystal\PHPCrystal\_Trait\PkgConfigAware;
 
 abstract class AbstractPackage extends Event\AbstractNode
-{	
+{
+	use PkgConfigAware;
+
 	private $builder;
 	private $router;
 	private $dirname;
@@ -20,7 +23,6 @@ abstract class AbstractPackage extends Event\AbstractNode
 	private $composerName;
 	private $key;
 	private $pkgName;
-	private $config;
 	
 	private $routers = [];
 
@@ -36,10 +38,12 @@ abstract class AbstractPackage extends Event\AbstractNode
 	 */
 	final protected function loadConfigFile()
 	{
-		$config = Config::create('PkgConfig', []);
+		$context = $this->getApplication()
+			->getCurrentEvent()
+			->createContext();
 
 		$this->config = FileHelper::create($this->getDirectory(), 'config.php')
-			->requireIfExists($config);
+			->requireIfExists($context);
 	}
 
 	protected function initRouting()

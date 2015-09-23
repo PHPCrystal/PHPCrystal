@@ -38,7 +38,7 @@ class Container extends AbstractContainer
 		
 		return rtrim($name, '.');
 	}
-	
+
 	/**
 	 * @return string
 	 */
@@ -125,11 +125,9 @@ class Container extends AbstractContainer
 		if ($value instanceof AbstractSubcontractor &&
 			$this->currentSectionType = SECTION_TYPE_SERVICE)
 		{
-			list($vendor, $contractor) = explode('.', $this->getCurrentSectionName());
-			$value->setContractorVendor($vendor);
-			$value->setContractorName($contractor);
-		}	
-		
+			$value->setContractorName($this->getCurrentSectionName());
+		}
+
 		return parent::set($itemKey, $value);
 	}
 }

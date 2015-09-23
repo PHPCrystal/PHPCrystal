@@ -127,7 +127,7 @@ class Session extends AbstractContractor implements
 		$context = $app->getContext();
 		$request = $app->getRequest();
 
-		$this->config = $context->pluck('phpcrystal.session');
+		$this->config = $this->getServiceConfig();
 		
 		$this->backendStorage = $this->config->get('storage');
 		$this->backendStorage->init();

@@ -50,13 +50,11 @@ class Doctrine extends AbstractService
 			return;
 		}
 		
-		$this->shortName = 'doctrine';
-
 		$context = $this->getApplication()->getContext();
 		
 		$this->serviceConfig = $this->getServiceConfig();
 		
-		$this->config = $context->pluck('phpcrystal.phpcrystal.doctrine');
+		$this->config = $this->getServiceConfig();
 
 		$this->eventManager = new EventManager();
 		
@@ -75,7 +73,7 @@ class Doctrine extends AbstractService
 		$this->ormConfig->setQueryCacheImpl($cache);
 		$this->ormConfig->setQueryCacheImpl($cache);
 
-		if (null != ($entityNSArray = $this->serviceConfig->get('entityNamespaces'))) {
+		if (null != ($entityNSArray = $this->config->get('entityNamespaces'))) {
 			$this->ormConfig->setEntityNamespaces($entityNSArray);
 		}
 
