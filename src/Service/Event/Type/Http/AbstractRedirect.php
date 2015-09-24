@@ -2,7 +2,9 @@
 namespace PHPCrystal\PHPCrystal\Service\Event\Type\Http;
 
 use PHPCrystal\PHPCrystal\Service\Event as Event;
-use PHPCrystal\PHPCrystal\Component\Http\Uri;
+use PHPCrystal\PHPCrystal\Component\Http\Uri,
+	PHPCrystal\PHPCrystal\Component\Http\Response\Header as ResponseHeader
+;
 
 abstract class AbstractRedirect extends AbstractResponse
 {
@@ -29,15 +31,14 @@ abstract class AbstractRedirect extends AbstractResponse
 		return $this;
 	}
 
+	/**
+	 * @return void
+	 */
 	public function output()
 	{
 		$uri = $this->getLocationUri();
-		if ( ! $uri->isAbsolute()) {
-			throw new \RuntimeException(sprintf('Redirect URI "%s" must be absolute',
-				$uri->toString()));
-		}
 		$this->httpResponse->setStatusCode($this->redirectCode);
-		$this->httpResponse->addHeader('Location', $uri->toString());		
+		ResponseHeader\Location::create($uri)->save();
 		$this->httpResponse->outputHeaders();
 	}
 }

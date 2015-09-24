@@ -8,12 +8,14 @@ class Response200 extends AbstractResponse
 		parent::__construct();
 		$this->httpResponse->setStatusCode(200);
 	}
-	
+
 	/**
 	 * @return string
 	 */
 	public function output()
 	{
+		parent::output();
+
 		echo $this->getResult();
 	}
 }

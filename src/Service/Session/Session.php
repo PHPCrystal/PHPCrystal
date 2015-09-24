@@ -5,6 +5,7 @@ use PHPCrystal\PHPCrystal\Component\Service\AbstractContractor;
 use PHPCrystal\PHPCrystal\Core\Service\Storage\Persistent\Filesystem\Filesystem;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
 use PHPCrystal\PHPCrystal\Contract as Contract;
+use PHPCrystal\PHPCrystal\Component\Http\Response\Header as HttpHeader;
 
 class Session extends AbstractContractor implements
 	Contract\Session
@@ -182,18 +183,19 @@ class Session extends AbstractContractor implements
 		}
 		
 		// set session cookie value
-		if ($this->newSessionFlag) {
-			if ( ! $this->useTransSid) {
-				setcookie(
-					$this->sessionName,
-					$this->sessionId,
-					$this->getCookieLifetime(),
-					$this->config->get('cookie_path'),
-					$this->config->get('cookie_domain'),
-					false,
-					$this->config->get('cookie_httponly')
-				);
-			}
+		if ($this->newSessionFlag && ! $this->useTransSid) {
+			$cookie = HttpHeader\Cookie::create(
+				$this->sessionName,
+				$this->sessionId,
+				$this->getCookieLifetime());
+			
+			$cookie
+				->setPath($this->config->get('cookie_path'))
+				->setDomain($this->config->get('cookie_domain'))
+				->setHttpOnly($this->config->get('cookie_httponly'))
+			;
+
+			$cookie->save();
 		}
 
 		// save session data if necessary
