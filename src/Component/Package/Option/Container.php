@@ -15,7 +15,6 @@ class Container extends AbstractContainer
 	private $sectionDef = array();
 	private $isServiceSection  = false;
 	private $currentSectionType;
-	protected static $itemClass = __NAMESPACE__ . '\\Option';
 
 	/**
 	 * @return \PHPCrystal\PHPCrystal\Component\Package\AbstractApplication
@@ -51,14 +50,6 @@ class Container extends AbstractContainer
 		}		
 		
 		return $key . $keySegment;
-	}
-
-	/**
-	 * 
-	 */
-	public function __construct($name = null, $itemsArray = array())
-	{
-		parent::__construct($name, $itemsArray);
 	}
 	
 	/**

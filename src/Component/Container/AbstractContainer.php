@@ -1,9 +1,10 @@
 <?php
 namespace PHPCrystal\PHPCrystal\Component\Container;
 
-use PHPCrystal\PHPCrystal\Component\Exception as Exception;
-use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
-use PHPCrystal\PHPCrystal\Component\Exception\System as System;
+
+use PHPCrystal\PHPCrystal\Component\Exception\System as System,
+	PHPCrystal\PHPCrystal\_Trait\CreateObject
+;
 
 const ITEM_OPERATION_ADD = 1;
 const ITEM_OPERATION_REMOVE = 2;
@@ -11,26 +12,88 @@ const ITEM_OPERATION_NEW_VALUE = 3;
 
 abstract class AbstractContainer
 {
+	use CreateObject;
+	
 	private $name;
 
 	protected $items = [];
 	protected $changesTracker = [];
-	protected static $itemClass;
 	protected $nestedContainers = array();
 	/**
 	 * @var boolean
 	 */
 	protected $allowOverride = true;
+	
+	/**
+	 * @return array
+	 */
+	private function convertArray($arr)
+	{
+		$result = array();		
+
+		foreach ($arr as $key => $value) {
+			if (is_array($value)) {
+				$result[$key] = $this->convertArray($value, $key);
+			} else {
+				$result[$key] = $value;
+			}
+		}
+
+		return $result;
+	}
+	
+	/**
+	 * Converts object to a string if it supports ::toString method
+	 * 
+	 * @return mixed
+	 */
+	private function expandItemValue($value)
+	{
+		if (is_object($value) && method_exists($value, 'toString')) {
+			return $value->toString();
+		} else if (is_array($value)) {
+			foreach ($value as $arrKey => $arrValue) {
+				$value[$arrKey] = $this->expandItemValue($arrValue);
+			}
+		} 
+		
+		return $value;
+	}
+	
+	/**
+	 * @return void
+	 */
+	private function getAllKeysHelper($keyPrefix, $arr, &$result)
+	{
+		foreach ($arr as $key => $value) {
+			$itemKey = empty($keyPrefix) ? $key : ($keyPrefix . '.' . $key);  
+			if (is_array($value)) {
+				$this->getAllKeysHelper($itemKey, $value, $result);
+			} else {
+				$result[] = $itemKey;
+			}
+		}
+	}
+
+	/**
+	 * @return $this
+	 */
+	public static function createFromArray(array $items)
+	{		
+		$container = new static();
+		$container->items = $container->convertArray($items);
+		
+		return $container;
+	}
 
 	/**
 	 * @api
 	 */
-	public function __construct($name = null, array $items)
+	public function __construct(...$items)
 	{
-		$this->name = $name;
 		$this->items = $this->convertArray($items);
 	}
-	
+
 	/**
 	 * @return string
 	 */
@@ -39,31 +102,17 @@ abstract class AbstractContainer
 		return $this->name;
 	}
 	
+	final public function setName($name)
+	{
+		$this->name = $name;
+	}
+	
 	/**
 	 * @return array
 	 */
 	final public function getItems()
 	{
 		return $this->items;
-	}
-
-	/**
-	 * Converts object to a string if it supports ::toString method
-	 * 
-	 * @return mixed
-	 */
-	private function expandItemValue($value)
-	{
-		if (is_object($value) && is_callable([$value, 'toString'])) {
-			return $value->toString();
-		} else if (is_array($value)) {
-			foreach ($value as $arrKey => $arrValue) {
-				$value[$arrKey] = $this->expandItemValue($arrValue);
-			}
-			return $value;
-		} else {
-			return $value;
-		}
 	}
 
 	/**
@@ -121,7 +170,6 @@ abstract class AbstractContainer
 		}
 		
 		$lastKey = end($parts);
-		$itemClass = static::$itemClass;
 		
 		if ( ! array_key_exists($lastKey, $arrRef)) {
 			$this->changesTracker[$itemKey] = ITEM_OPERATION_ADD;
@@ -129,23 +177,15 @@ abstract class AbstractContainer
 			$this->changesTracker[$itemKey] = ITEM_OPERATION_NEW_VALUE;
 		}
 
-		if (is_array($value)) {
-			$arrRef[$lastKey] = $value;
-		} else {
-			if ($value instanceof AbstractItem) {
-				$arrRef[$lastKey] = $value;				
-			} else {
-				$newItem = new $itemClass($lastKey, $value);
-				$arrRef[$lastKey] = $newItem;
-				// if value being set is an object return it so that its method
-				// chaining may be achieved
-				if (is_object($value)) {
-					return $value;
-				}
-			}
+		$arrRef[$lastKey] = $value;
+		
+		// if value being set is an object return it so that its method
+		// chaining may be achieved
+		if (is_object($value)) {
+			return $value;
 		}
 	}
-	
+
 	/**
 	 * Returns true if item with the given key exists
 	 * 
@@ -212,43 +252,11 @@ abstract class AbstractContainer
 	/**
 	 * @return boolean
 	 */
-	final public function isItemObject($itemKey)
+	final public function isObject($key)
 	{
-		$mixed = $this->get($itemKey, null, false);
-		if ($mixed instanceof AbstractItem) {
-			$itemValue = $mixed->getValue();
-		}
+		$value = $this->get($key, null, false);
 		
-		return is_object($itemValue) ? true : false;
-	}
-
-	/**
-	 * @return array
-	 */
-	private function convertArray($arr, $prefix = '')
-	{
-		$result = array();		
-		$itemClass = static::$itemClass;
-
-		foreach ($arr as $key => $value) {
-			if (is_array($value)) {
-				$result[$key] = $this->convertArray($value, $key);
-			} else if ($value instanceof AbstractItem) {
-				$result[$key] = $value;
-			} else {
-				$result[$key] = new $itemClass($key, $value);
-			}
-		}
-
-		return $result;
-	}
-
-	/**
-	 * @return $this
-	 */
-	public static function create($name, array $items = [])
-	{
-		return new static($name, $items);
+		return is_object($value) ? true : false;
 	}
 
 	/**
@@ -260,49 +268,20 @@ abstract class AbstractContainer
 	}
 
 	/**
-	 * @return $this
-	 */
-	public function setContainer($name, $itemsArr = array())
-	{		
-		if ( ! empty($itemsArr)) {
-			$nestedContainer = static::create($name, $itemsArr);
-		} else {
-			$nestedContainer = new static($name);
-		}
-		
-		$this->nestedContainers[$name] = $nestedContainer;
-				
-		return $nestedContainer;
-	}
-	
-	/**
-	 * @return $this
-	 */
-	public function getContainer($name)
-	{
-		if ( ! isset($this->nestedContainers[$name])) {
-			throw new \RuntimeException(sprintf('Could not found container "%s"',
-				$name));
-		}
-		
-		return $this->nestedContainers[$name];
-	}
-
-	/**
 	 * @return array
 	 */
 	private function toArrayHelper($itemsArray)
 	{
 		$result = array();
 		
-		foreach ($itemsArray as $itemName => $item) {
-			if (is_array($item)) {
-				$result[$itemName] = $this->toArrayHelper($item);
+		foreach ($itemsArray as $name => $value) {
+			if (is_array($value)) {
+				$result[$name] = $this->toArrayHelper($value);
 			} else {
-				$result[$itemName] = $item->getValue();
+				$result[$name] = $value;
 			}
 		}
-		
+
 		return $result;
 	}
 
@@ -331,24 +310,9 @@ abstract class AbstractContainer
 	}
 	
 	/**
-	 * @return void
-	 */
-	private function getAllKeysHelper($keyPrefix, $arr, &$result)
-	{
-		foreach ($arr as $key => $value) {
-			$itemKey = empty($keyPrefix) ? $key : ($keyPrefix . '.' . $key);  
-			if (is_array($value)) {
-				$this->getAllKeysHelper($itemKey, $value, $result);
-			} else {
-				$result[] = $itemKey;
-			}
-		}
-	}
-	
-	/**
 	 * @return array
 	 */
-	public function getAllKeys()
+	final public function getAllKeys()
 	{
 		$result = array();		
 		
@@ -372,10 +336,6 @@ abstract class AbstractContainer
 			}
 			$this->set($itemKey, $container->get($itemKey));
 		}
-
-		foreach ($container->nestedContainers as $key => $container) {
-			$this->nestedContainers[$key]->merge($container);
-		}
 		
 		return $this;
 	}
@@ -383,22 +343,22 @@ abstract class AbstractContainer
 	/**
 	 * @return $this
 	 */
-	public function pluck($key, $throwExcepIfNull = false, $newContainerName = null)
+	public function pluck($key, $throwExcepIfNull = false)
 	{
 		$pluckedItem = $this->get($key);
 
 		if (null === $pluckedItem) {
 			if ($throwExcepIfNull) {
-				System\MethodInvocation::create()
+				System\MethodInvocation::create('AbstractContainer::pluck invocation failed for key `%s`', null, $key)
 					->addParam($key)
 					->_throw();
 			} else {
-				return static::create($newContainerName, []);			
+				return static::create();			
 			}
-		} elseif ($pluckedItem instanceof $this) {
-			return $pluckedItem;
 		} elseif (is_array($pluckedItem)) {
-			return static::create($newContainerName, $pluckedItem);
+			return static::createFromArray($pluckedItem);
+		} else {
+			return $pluckedItem;
 		}
 	}
 }

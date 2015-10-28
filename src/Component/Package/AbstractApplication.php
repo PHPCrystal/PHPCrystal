@@ -495,7 +495,7 @@ abstract class AbstractApplication extends AbstractPackage
 				throw $e;
 			}
 		}
-		
+
 		if ($event->getStatus() == Event\STATUS_INTERRUPTED) {
 			$excepEvent = Event\Type\System\Exception::create()
 				->setException($event->getException());

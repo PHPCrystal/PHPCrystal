@@ -21,14 +21,7 @@ $this->openSection('phpcrystal.core');
 
 $this->closeSection();
 
-$this->openSection('phpcrystal.core.cache');
 
-	$this->set('driver', Facade\Memcached::create())
-		->addServer('localhost')
-		->setOption(\Memcached::OPT_LIBKETAMA_COMPATIBLE, true)
-	;
-
-$this->closeSection();
 
 // Database common settings.
 $this->openSection('phpcrystal.phpcrystal.database');

@@ -24,6 +24,13 @@ $this->serviceSection('session');
 	$this->set('gc_maxlifetime', 1800);
 $this->closeSection();
 
+$this->serviceSection('cache');
+	$this->set('driver', Facade\Memcached::create())
+		->addServer('localhost')
+		->setOption(\Memcached::OPT_LIBKETAMA_COMPATIBLE, true)
+	;
+$this->closeSection();
+
 // Doctrine ORM 
 $this->serviceSection('doctrine');
 	$this->set('proxyDir', FileHelper::create('@cache/doctrine/proxy')); // directory for proxy class files

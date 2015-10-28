@@ -42,6 +42,7 @@ class RequestTest extends TestCase
 		$internalEvent = $this->makeRequest('@app/fixture/http_request/post_1.txt', $requestEvent);
 		$request = $requestEvent->getRequest();
 		$postInput = $request->getPostInput();
+
 		$this->assertEquals('vasiliy.pupkin@gmail.com', $postInput->get('email'));
 	}
 }

@@ -20,12 +20,12 @@ class ContainerTest extends TestCase
 	{
 		$container = new Container();
 		$container->set('now', new \DateTime('now'));
-		$this->assertTrue($container->isItemObject('now'));		
+		$this->assertTrue($container->isObject('now'));		
 	}
-	
+
 	public function testHasChanges()
 	{
-		$container= Container::create(null, ['foo' => 'foo']);
+		$container= Container::createFromArray(['foo' => 'foo']);
 		$this->assertFalse($container->hasChanges());		
 		
 		$container->set('foo', 'bar');
@@ -37,7 +37,7 @@ class ContainerTest extends TestCase
 	
 	public function testAssertTrue()
 	{
-		$container= Container::create(null, []);
+		$container= Container::create();
 		
 		$container->set('foo', '1');
 		$this->assertFalse($container->assertTrue('foo'));
@@ -47,5 +47,35 @@ class ContainerTest extends TestCase
 		
 		$container->set('bar', true);
 		$this->assertTrue($container->assertTrue('bar'));
+	}
+	
+	public function testPluckMethod()
+	{
+		$c1 = Container::create();
+		$c2 = Container::create();		
+		$c1->set('c2', $c2);
+		$c22 = $c1->pluck('c2');
+		$this->assertTrue($c22 === $c2);
+	}
+	
+	/**
+	 * @expectedException \PHPCrystal\PHPCrystal\Component\Exception\System\MethodInvocation
+	 */
+	public function testPluckMethod1()
+	{
+		$c1 = Container::create();
+		$foo = $c1->pluck('foo', true);
+	}
+	
+	public function testGetAllKeysMethod()
+	{
+		$c1 = Container::createFromArray(['a' => ['b' => ['c' => 1, 'cc' => 2]]]);
+		$c1->set('a.d', 1);
+		$this->assertEquals(3, count($c1->getAllKeys()));
+		$this->assertEquals('a.b.c',$c1->getAllKeys()[0]);
+		$this->assertEquals('a.b.cc',$c1->getAllKeys()[1]);		
+		$this->assertEquals('a.d', $c1->getAllKeys()[2]);
+		$c1->set('a.b', 1);
+		$this->assertEquals(2, count($c1->getAllKeys()));		
 	}
 }

@@ -7,8 +7,6 @@ use const PHPCrystal\PHPCrystal\Component\Container\ITEM_OPERATION_NEW_VALUE;
 
 class FlashContainer extends AbstractContainer
 {
-	protected static $itemClass = 'PHPCrystal\PHPCrystal\Service\Session\Item';
-	
 	/**
 	 * @return array
 	 */

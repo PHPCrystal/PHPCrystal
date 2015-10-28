@@ -54,39 +54,7 @@ class Request extends \Zend\Http\Request
 	 */
 	public function __construct()
 	{
-		$this->uriInput = self::createURIInputFromArray([]);
-	}
-
-	/**
-	 * @return Inut
-	 */
-	private static function createGetInputFromArray(array $items)
-	{
-		return Input::create('GetInput', $items);
-	}
-
-	/**
-	 * @return Input
-	 */
-	private static function createPostInputFromArray(array $items)
-	{
-		return Input::create('PostInput', $items);
-	}
-
-	/**
-	 * @return Input
-	 */
-	private static function createCookieInputFromArray(array $items)
-	{
-		return Input::create('CookieInput', $items);
-	}
-
-	/**
-	 * @return Input
-	 */
-	private static function createURIInputFromArray(array $items)
-	{
-		return Input::create('UriInput', $items);
+		$this->uriInput = Input::create();
 	}
 
 	/**
@@ -171,9 +139,9 @@ class Request extends \Zend\Http\Request
 			->setMethod($_SERVER['REQUEST_METHOD'])
 			->setUri(Uri::create($uriString))
 			->setHttpReferer(@$_SERVER['HTTP_REFERER'])
-			->setGetInput(self::createGetInputFromArray($_GET))
-			->setCookieInput(self::createCookieInputFromArray($_COOKIE))
-			->setPostInput(self::createPostInputFromArray($_POST))
+			->setGetInput(Input::createFromArray($_GET))
+			->setCookieInput(Input::createFromArray($_COOKIE))
+			->setPostInput(Input::createFromArray($_POST))
 		;
 
 		return $request;
@@ -194,13 +162,14 @@ class Request extends \Zend\Http\Request
 				$keyValue = explode('=', $dataItem);
 				$postRawData[$keyValue[0]] = $keyValue[1];
 			}
-			$request->setPostInput(Input::create('postData', $postRawData));
+			$request->setPostInput(Input::createFromArray($postRawData));
 		}
 
 		$cookieHeader = $request->getHeaders()->get('Cookie');
 		$cookies = $cookieHeader instanceof \Zend\Http\Header\Cookie ?
 			$cookieHeader->getArrayCopy() : [];
-		$request->setCookieInput(self::createCookieInputFromArray($cookies));
+		
+		$request->setCookieInput(Input::createFromArray($cookies));
 		
 		return $request;
 	}

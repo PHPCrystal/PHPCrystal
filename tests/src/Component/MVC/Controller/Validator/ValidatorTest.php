@@ -11,7 +11,7 @@ class ValidatorTest extends TestCase
 {
 	public function testInput()
 	{
-		$input = Input::create(null, ['arr1' => [0 => 'zero', 'arr2' => ['test' => 1]]]);
+		$input = Input::createFromArray(['arr1' => [0 => 'zero', 'arr2' => ['test' => 1]]]);
 		$this->assertEquals('zero', $input->get('arr1.0'));
 		$this->assertEquals(1, $input->get('arr1.arr2.test'));
 		$this->assertNull($input->get('arr1.undefined'));
@@ -19,7 +19,7 @@ class ValidatorTest extends TestCase
 	
 	public function testInputSetter()
 	{
-		$input = Input::create(null, []);
+		$input = Input::create();
 		$input->set('foo.bar', 'baz');
 		$this->assertEquals('baz', $input->toArray()['foo']['bar']);
 		$input->set('config.db.adapter', 'PDO');

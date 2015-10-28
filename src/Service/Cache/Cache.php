@@ -11,28 +11,28 @@ class Cache extends AbstractContractor implements
 	 * @var object
 	 */
 	private $driver;
+	private $config;
 	
 	public static function hasLazyInit()
 	{
 		return true;
-	} 
+	}
 
 	/**
-	 * @return
+	 * @return void
 	 */
 	public function init()
 	{
-		// call of this method must be idemponent
 		if ($this->isInitialized()) {
 			return;
 		}
-		$context = $this->getApplication()->getContext();
-		$cacheOpts = $context->pluck('phpcrystal.core.cache');
-		$this->driver = $cacheOpts->get('driver');
+		
+		$this->config = $this->getServiceConfig();		
+		$this->driver = $this->config->get('driver');
 		$this->driver->init();
 		$this->isInitialized = true;
 	}
-	
+
 	/**
 	 * @return \PHPCrystal\PHPCrystal\Contract\Cache
 	 */

@@ -7,4 +7,12 @@ trait CreateObject
 	{
 		return new static(...$args);
 	}
+	
+	/**
+	 * @return void
+	 */
+	public static function createArgsInArray(array $argsBlob = array())
+	{
+		return new static(...$argsBlob);
+	}
 }

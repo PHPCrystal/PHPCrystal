@@ -125,11 +125,10 @@ class Session extends AbstractContractor implements
 		}
 
 		$app = $this->getApplication();
-		$context = $app->getContext();
 		$request = $app->getRequest();
 
 		$this->config = $this->getServiceConfig();
-		
+
 		$this->backendStorage = $this->config->get('storage');
 		$this->backendStorage->init();
 		
