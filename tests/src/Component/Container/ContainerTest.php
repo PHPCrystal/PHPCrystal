@@ -1,11 +1,20 @@
 <?php
 namespace PHPCrystal\PHPCrystalTest\Component\Container;
 
-use PHPCrystal\PHPCrystal\Component\Package\Option\Container;
-use PHPCrystal\PHPCrystalTest\TestCase;
+use PHPCrystal\PHPCrystal\Component\Package\Option\Container,
+	PHPCrystal\PHPCrystal\Component\Container\Input,
+	PHPCrystal\PHPCrystalTest\TestCase;
 
 class ContainerTest extends TestCase
 {
+	public function testEmpty()
+	{
+		$c = Input::create('ctrlInput');
+		$this->assertTrue($c->isEmpty());
+		$c1 = Input::create(null, ['item1']);
+		$this->assertFalse($c1->isEmpty());
+	}
+
 	public function testHasMehtod()
 	{
 		$container = new Container();

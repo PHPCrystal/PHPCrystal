@@ -15,39 +15,23 @@ abstract class AbstractContainer
 	use CreateObject;
 	
 	private $name;
+	private $sealedItems = [];
 
 	protected $items = [];
 	protected $changesTracker = [];
 	protected $nestedContainers = array();
+	
 	/**
 	 * @var boolean
 	 */
 	protected $allowOverride = true;
 	
 	/**
-	 * @return array
-	 */
-	private function convertArray($arr)
-	{
-		$result = array();		
-
-		foreach ($arr as $key => $value) {
-			if (is_array($value)) {
-				$result[$key] = $this->convertArray($value, $key);
-			} else {
-				$result[$key] = $value;
-			}
-		}
-
-		return $result;
-	}
-	
-	/**
 	 * Converts object to a string if it supports ::toString method
 	 * 
 	 * @return mixed
 	 */
-	private function expandItemValue($value)
+	protected function expandItemValue($value)
 	{
 		if (is_object($value) && method_exists($value, 'toString')) {
 			return $value->toString();
@@ -56,7 +40,7 @@ abstract class AbstractContainer
 				$value[$arrKey] = $this->expandItemValue($arrValue);
 			}
 		} 
-		
+
 		return $value;
 	}
 	
@@ -76,12 +60,13 @@ abstract class AbstractContainer
 	}
 
 	/**
+	 * Wrapper for the object constructor
+	 * 
 	 * @return $this
 	 */
-	public static function createFromArray(array $items)
+	public static function createFromArray(array $items, $name = null)
 	{		
-		$container = new static();
-		$container->items = $container->convertArray($items);
+		$container = new static($name, $items);
 		
 		return $container;
 	}
@@ -89,9 +74,14 @@ abstract class AbstractContainer
 	/**
 	 * @api
 	 */
-	public function __construct(...$items)
+	public function __construct($name = null, array $items = [], $seal = false)
 	{
-		$this->items = $this->convertArray($items);
+		$this->name = $name;
+		$this->items = $items;
+
+		if ($seal) {
+			$this->sealedItems = array_keys($items);
+		}
 	}
 
 	/**
@@ -102,9 +92,14 @@ abstract class AbstractContainer
 		return $this->name;
 	}
 	
+	/**
+	 * @return $this
+	 */
 	final public function setName($name)
 	{
 		$this->name = $name;
+		
+		return $this;
 	}
 	
 	/**
@@ -113,6 +108,17 @@ abstract class AbstractContainer
 	final public function getItems()
 	{
 		return $this->items;
+	}
+
+	/**
+	 * @return $this
+	 */
+	final public function setItems(array $items)
+	{
+		$this->flush();
+		$this->items = $items;
+		
+		return $this;
 	}
 
 	/**
@@ -243,9 +249,6 @@ abstract class AbstractContainer
 	final public function flush()
 	{
 		$this->changesTracker = [];
-		foreach ($this->items as $key) {
-			$this->changesTracker[$key] = ITEM_OPERATION_REMOVE;
-		}
 		$this->items = [];
 	}
 
