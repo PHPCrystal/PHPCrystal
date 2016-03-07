@@ -12,13 +12,16 @@ class PackageBuilder extends AbstractBuilder
 	{
 		// application package do not export any service
 		if ($this->getApplication() === $this->getPackage()) {
-			return;
+		//	return;
 		}
 
-		$matadriver = Facade\Metadriver::create();
-		foreach ($this->getContractors() as $metaservice) {
-			$matadriver->addService($metaservice);
-		}		
+		$matadriver = $this->getFactory()->getMetadriver();
+		//var_dump(123); exit;
+		foreach ($this->getContractors() as $metaService) {
+			//var_dump($metaService); exit;
+			//echo $metaService->getClassName();
+			$matadriver->addMetaService($metaService);
+		}
 	}
 
 	/**

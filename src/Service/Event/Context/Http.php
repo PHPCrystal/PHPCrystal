@@ -1,8 +1,7 @@
 <?php
 namespace PHPCrystal\PHPCrystal\Service\Event\Context;
 
-use PHPCrystal\PHPCrystal\Component\Container\Container;
-use PHPCrystal\PHPCrystal\Component\Http\Request;
+use PHPCrystal\PHPCrystal\Service\Event\AbstractContext;
 
 class Http extends AbstractContext
 {

@@ -18,7 +18,7 @@ class DoctrineTest extends TestCaseDummy
 	public function testConnection()
 	{
 		$params = $this->appPkg->getContext()
-			->pluck('phpcrystal.phpcrystal.database')->toArray();
+			->pluck('phpcrystal.phpcrystal.doctrine.dbal')->toArray();
 		$conn = $this->doctrine->getConnection($params);
 		$conn->connect();
 		$this->assertTrue($conn->isConnected());

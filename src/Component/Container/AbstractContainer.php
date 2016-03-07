@@ -13,8 +13,7 @@ const ITEM_OPERATION_NEW_VALUE = 3;
 abstract class AbstractContainer
 {
 	use CreateObject;
-	
-	private $name;
+
 	private $sealedItems = [];
 
 	protected $items = [];
@@ -25,6 +24,26 @@ abstract class AbstractContainer
 	 * @var boolean
 	 */
 	protected $allowOverride = true;
+	
+	/**
+	 * Wrapper for the object constructor
+	 * 
+	 * @return $this
+	 */
+	public static function createFromArray(array $items)
+	{		
+		$container = new static($items);
+
+		return $container;
+	}
+
+	/**
+	 * @api
+	 */
+	public function __construct(array $items = [])
+	{
+		$this->items = $items;
+	}	
 	
 	/**
 	 * Converts object to a string if it supports ::toString method
@@ -57,49 +76,6 @@ abstract class AbstractContainer
 				$result[] = $itemKey;
 			}
 		}
-	}
-
-	/**
-	 * Wrapper for the object constructor
-	 * 
-	 * @return $this
-	 */
-	public static function createFromArray(array $items, $name = null)
-	{		
-		$container = new static($name, $items);
-		
-		return $container;
-	}
-
-	/**
-	 * @api
-	 */
-	public function __construct($name = null, array $items = [], $seal = false)
-	{
-		$this->name = $name;
-		$this->items = $items;
-
-		if ($seal) {
-			$this->sealedItems = array_keys($items);
-		}
-	}
-
-	/**
-	 * @return string
-	 */
-	final public function getName()
-	{
-		return $this->name;
-	}
-	
-	/**
-	 * @return $this
-	 */
-	final public function setName($name)
-	{
-		$this->name = $name;
-		
-		return $this;
 	}
 	
 	/**

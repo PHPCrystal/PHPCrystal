@@ -39,6 +39,7 @@ $this->serviceSection('doctrine');
 	$this->set('modelPaths', [FileHelper::create('@app/Model/Physical')]);
 	$this->set('entityPaths', [FileHelper::create('@app', 'src', 'Model', 'Entity2')]);
 	$this->set('dbal.autocommit', false);
+	$this->set('dbal.driver', 'pdo_mysql');
 $this->closeSection();
 
 // End of the main config section

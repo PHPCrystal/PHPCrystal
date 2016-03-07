@@ -1,4 +1,5 @@
 <?php
+
 namespace PHPCrystal\PHPCrystal\Component\Factory;
 
 use PHPCrystal\PHPCrystal\Component\Service\MetaService;
@@ -8,38 +9,44 @@ use PHPCrystal\PHPCrystal\Service\Event as Event;
 use PHPCrystal\PHPCrystal\Facade\Metadriver as FacadeMetadriver;
 use PHPCrystal\PHPCrystal\Component\Facade as Facade;
 use PHPCrystal\PHPCrystal\Component\Exception\System\FrameworkRuntimeError;
+use PHPCrystal\PHPCrystal\Component\Container as Container;
+use PHPCrystal\PHPCrystal\Component\Php as Php,
+	PHPCrystal\PHPCrystal\Service\DependencyManager\DI_Interface,
+	PHPCrystal\PHPCrystal\Component\Factory\FactoryInterface;
 
-const DI_INTERFACE = 'PHPCrystal\\PHPCrystal\\Component\\Factory\\Aware\\DependencyInjectionInterface';
+const EXTENDABLE_INTERFACE = 'PHPCrystal\\PHPCrystal\\Component\\Factory\\ExtendableInterface';
+const DI_INTERFACE = 'PHPCrystal\\PHPCrystal\\Service\DependencyManager\\DI_Interface';
 
 final class Factory
 {
+
 	/**
 	 * @var PHPCrystal\PHPCrystal\Component\Package\AbstractPackage
 	 */
 	private $package;
+	private $metadriver;
+
+	/** @var \\PHPCrystal\\PHPCrystal\\Service\\DependencyManager\\DependencyManager */
+	private $DI_Manager;
 	private static $singletonStorage = array();
-	private static $metaservice = array();
 
 	/**
 	 * @var array
 	 */
 	private $dependenciesTracker;
-	
+
+	/**
+	 * @api
+	 */
 	public function __construct($package)
 	{
 		$this->package = $package;
+		$this->metadriver = $this->singletonNewInstance('\\PHPCrystal\\PHPCrystal\\Service\\Metadriver\\Metadriver')
+			->setFactory($this);
+		$this->DI_Manager = $this->singletonNewInstance('\\PHPCrystal\\PHPCrystal\\Service\\DependencyManager\\DependencyManager', [$this->metadriver])
+			->setFactory($this);
 	}
-	
-	/**
-	 * @return boolean
-	 */
-	public static function hasInterface($className, $interface)
-	{
-		$refClass = new \ReflectionClass($className);
-		
-		return $refClass->implementsInterface($interface);
-	}
-	
+
 	/**
 	 * @return \PHPCrystal\PHPCrystal\Component\Package\AbstractPackage
 	 */
@@ -47,38 +54,35 @@ final class Factory
 	{
 		return Facade\AbstractFacade::getApplication();
 	}
-	
+
+	public function getMetaDriver()
+	{
+		return $this->metadriver;
+	}
+
 	/**
 	 * @return PHPCrystal\PHPCrystal\Component\Service\AbstractContract[]
 	 */
 	public function getContractServices()
 	{
 		$result = [];
-		
+
 		foreach (static::$singletonStorage as $instance) {
 			if ($instance instanceof AbstractContractor) {
 				$result[] = $instance;
 			}
 		}
-		
+
 		return $result;
 	}
-	
+
 	/**
 	 * @return void
 	 */
-	private function bind($newInstance)
+	private function bind($newObject)
 	{
-		if ($newInstance instanceof Aware\PackageInterface) {
-			$newInstance->setPackage($this->package);
-		}
-		
-		if ($newInstance instanceof Aware\FactoryInterface) {
-			$newInstance->setFactory($this);
-		}
-		
-		if ($newInstance instanceof Aware\ApplicationInterface) {
-			$newInstance->setApplication(self::getApplication());
+		if ($newObject instanceof FactoryInterface) {
+			$newObject->setFactory($this);
 		}
 	}
 
@@ -89,7 +93,7 @@ final class Factory
 	{
 		return in_array($className, array_keys(self::$singletonStorage));
 	}
-	
+
 	/**
 	 * @return object
 	 */
@@ -97,64 +101,67 @@ final class Factory
 	{
 		return self::$singletonStorage[$className];
 	}
-	
+
 	/**
 	 * @return object
 	 */
-	private function singletonNewInstance($className, ...$constArgs)
+	public function singletonNewInstance($className, array $args = [])
 	{
-		$newInstance = new $className(...$constArgs);
-		self::$singletonStorage[$className] =  $newInstance;
-		
-		return $newInstance;
+		if ($this->singletonHasInstance($className)) {
+			return $this->singletonGetInstance($className);
+		} else {
+			$newInstance = new $className(...$args);
+			self::$singletonStorage[$className] = $newInstance;
+			return $newInstance;
+		}
 	}
-	
+
 	/**
 	 * @return \PHPCrystal\PHPCrystal\Component\Package\AbstractPackage
 	 */
-	final public function getPackage()
+	public function getPackage()
 	{
 		return $this->package;
 	}
-	
+
 	/**
 	 * @return object
 	 */
-	private function newInstance($className, $constArgs = array())
+	public function createObject($className, $factoryArgs = [])
 	{
-		$instance = new $className(...$constArgs);		
-		$this->bind($instance);		
+		if ($this->singletonHasInstance($className)) {
+			return $this->singletonGetInstance($className);
+		}
 
-		return $instance;
+		if (Php\Aux::implementsInterface($className, DI_INTERFACE)) {
+			$injector = $this->DI_Manager->getInjectorReflection($className);
+			$constructorArgs = $this->DI_Manager->getDependencies($injector);
+		} else {
+			$constructorArgs = $factoryArgs;
+		}
+				
+		$newObject = $className::isSingleton() ?
+			$this->singletonNewInstance($className, $constructorArgs) :
+			new $className(...$constructorArgs);
+
+		$this->bind($newObject);
+		$newObject->setFactoryArgs(Container\FactoryArgs::createFromArray($factoryArgs));
+
+		return $newObject;
 	}
 
 	/**
+	 * @param string $className
+	 * 
 	 * @return AbstractService
 	 */
-	public function newServiceInstance($className, $args = array())
+	private function createService($className, $factoryArgs = [])
 	{
-		if ($className::isSingleton() && $this->singletonHasInstance($className)) {
-			return $this->singletonGetInstance($className);
-		}
-		
-		// create service instance
-		$service = $className::isSingleton() ?
-			$this->singletonNewInstance($className, ...$args) :
-			new $className(...$args);
-		
-		// bind required objects
-		$this->bind($service);
-		
-		// dispatch init service event
-		$initServiceEvent = self::getApplication()
-			->dispatchInitServiceEvent($service);		
+		$service = $this->createObject($className, $factoryArgs);
 
-		if ($initServiceEvent->hasCustomInitRoutine()) {
-			$service->setCustomInitClosure($initServiceEvent->getResult());
-		}
-		
 		// initialize service if necessary.
-		if ( ! ($service->isInitialized() || $className::hasLazyInit())) {
+		if ( ! $className::hasLazyInit()) {
+			//$service->getConfig()->merge($args);
 			$service->init();
 		}
 
@@ -162,88 +169,40 @@ final class Factory
 	}
 
 	/**
-	 * @return boolean
+	 * @return object
 	 */
-	private function circularReferenceCheck($input, $className)
+	public function create($className, $factoryArgs = [])
 	{
-		if (count(array_unique($input)) != count($input)) {
-			FrameworkRuntimeError::create('A circular dependency for the class "%s" has been detected',
-				null, $className)
-				->_throw();
-		}
-	}
-	
-	/**
-	 * @return AbstractService
-	 */
-	public function create($className, $recursionDepth = 0)
-	{
-		static $origin_class_name = null;
-
-		if (AbstractService::isService($className) && $className::isSingleton() &&
-			$this->singletonHasInstance($className))
-		{
-			return $this->singletonGetInstance($className);
-		}
-
-		if ($recursionDepth == 0) {
-			$origin_class_name = $className;
-			$this->dependenciesTracker = array();
-		}
-
-		$this->circularReferenceCheck($this->dependenciesTracker, $origin_class_name);
-		$deps = array();
-
-		// interate over class dependecies
-		foreach ($this->getClassDeps($className) as $meta_service) {
-			// dependencies might be optional, i.e. they are being activated
-			// only upon some event
-			if ($meta_service->isIdle()) {
-				$deps[] = null;
-				continue;
-			}
-
-			$dep_class_name = $meta_service->getClassName();
-			$new_service_instance = $this->create($dep_class_name, $recursionDepth + 1);
-			$deps[] = $new_service_instance;
-			$this->dependenciesTracker[] = $dep_class_name;
-		}
-
-		// fire `DependencyInjection` event if necessary
-		if (self::hasInterface($className, DI_INTERFACE) &&
-			$className::fireEventUponInstantiation())
-		{
-			$dIEvent = Event\Type\System\DependencyInjection::create($className, $deps);
-			$this->getApplication()->dispatch($dIEvent);
-			$deps = $dIEvent->getDependencies();
-		}
-
-		$new_instance = AbstractService::isService($className) ?
-			$this->newServiceInstance($className, $deps) :
-			$this->newInstance($className, $deps);
+		$fqcn = $this->metadriver->resolveClassName($className, $this->getPackage());
 		
-		return $new_instance;
+		if (AbstractService::isService($fqcn)) {
+			return $this->createService($fqcn, $factoryArgs);
+		} else {
+			return $this->createObject($fqcn, $factoryArgs);
+		}
 	}
 
 	/**
-	 * Creates a service by its interface
+	 * Creates a service for the given interface
+	 * 
+	 * @param string $interface Interface implemented by service
 	 * 
 	 * @return \PHPCrystal\PHPCrystal\Component\Service\AbstractService
 	 */
 	public function createServiceByInterface($interface)
 	{
-		$meta_service = $this->getMetaServiceByInterface($interface);
-		
-		return $this->create($meta_service->getClassName());
+		$metaService = $this->metadriver->getMetaServiceByInterface($interface);
+
+		return $this->create($metaService->getClassName());
 	}
-	
+
 	/**
 	 * @return object
 	 */
 	public function createFromMetaClass($metaClass)
 	{
-		$targetClass = $metaClass->getTargetClass();		
-		$newInstance = $this->create($targetClass);
+		$targetClass = $metaClass->getTargetClass();
+		$newInstance = $this->create('\\' . $targetClass);
 
 		foreach ($metaClass->getEventCatalystAnnotations() as $annot) {
 			$newInstance->addPriorEvent($annot->getEvent());
@@ -264,7 +223,7 @@ final class Factory
 	public function createControllerByAction($action)
 	{
 		$metaClass = FacadeMetadriver::getControllerMetaClassByAction($action);
-		
+
 		return $this->createFromMetaClass($metaClass);
 	}
 
@@ -274,125 +233,21 @@ final class Factory
 	public function createFrontControllerByAction($action)
 	{
 		$metaClass = FacadeMetadriver::getFrontControllerMetaClassByAction($action);
-		
-		return $this->createFromMetaClass($metaClass);	
+
+		return $this->createFromMetaClass($metaClass);
 	}
 
-	/**
-	 * @return boolean
-	 */
-	private function hasDeps($className)
-	{
-		$refClass = new \ReflectionClass($className);
-
-		return
-			$refClass->getConstructor() &&
-			$refClass->getConstructor()->getParameters() > 0 &&
-			(self::hasInterface($className, DI_INTERFACE) ||
-				AbstractService::isService($className))
-		;
-	}
-	
-	/**
-	 * @return $this
-	 */
-	public function addMetaService(MetaService $meta)
-	{
-		$interface = $meta->getInterface();
-
-		if (!isset(self::$metaservice[$interface])) {
-			self::$metaservice[$interface] = new \SplPriorityQueue();
-			self::$metaservice[$interface]->setExtractFlags(\SplPriorityQueue::EXTR_DATA);
-		}
-		
-		self::$metaservice[$interface]->insert($meta, $meta->getPriority());
-		
-		return $this;
-	}
-
-	/**
-	 * @return Metaservice
-	 */
-	public function getMetaServiceByInterface($interface)
-	{
-		foreach (self::$metaservice as $interfaceKey => $splQueue) {
-			if ($interface == $interfaceKey) {
-				return $splQueue->top();
-			}
-		}
-
-		throw new \RuntimeException(sprintf('Required service "%s" has not been found',
-			$interface));
-	}
-	
 	private function getMetaServiceByTypeHint(\ReflectionParameter $param)
 	{
 		$typeHinted = $param->getClass();
-		
+
 		if ($typeHinted->isInterface()) {
 			$metaService = $this->getMetaServiceByInterface($typeHinted->name);
 		} else if ($typeHinted->isInstantiable()) {
 			$metaService = new MetaService($typeHinted->name, null, 999);
 		}
-		
+
 		return $metaService;
-	}
-
-	/**
-	 * @return void
-	 */
-	private function checkWakeupEvents($metaClass, $depName, $isOptional)
-	{
-		$serviceClass = $metaClass->getClassName();		
-		if ( ! $serviceClass::getWakeupEvents()) {
-			return;
-		}
-
-		$currentEvent = $this->getApplication()->getCurrentEvent();
-		$wakeupFlag = false;
-
-		foreach ($serviceClass::getWakeupEvents() as $wakeupEvent) {
-			if ($currentEvent instanceof $wakeupEvent) {
-				$wakeupFlag = true;
-				break;
-			}
-		}
-
-		if ( ! ($wakeupFlag && $isOptional)) {
-			FrameworkRuntimeError::create('Dependency "%s" must be optional, class "%s"', null, $depName, $serviceClass)
-				->_throw();
-		}
-
-		if ( ! $wakeupFlag) {
-			$metaClass->setIdle(true);			
-		}
-	}
-
-	/**
-	 * @return array
-	 */
-	private function getClassDeps($className)
-	{
-		if ( ! $this->hasDeps($className)) {
-			return array();
-		}
-		
-		$result = array();	
-		$refClass = new \ReflectionClass($className);
-		foreach ($refClass->getConstructor()->getParameters() as $param) {
-			$typeHinted = $param->getClass();
-			if ($typeHinted->isInterface()) {
-				$metaClass = $this->getMetaServiceByInterface($typeHinted->name);
-				
-			} else if ($typeHinted->isInstantiable()) {
-				$metaClass = new MetaService($typeHinted->name, null, 999);
-			}
-			
-			$this->checkWakeupEvents($metaClass, $typeHinted->name, $param->isOptional());
-			$result[] = $metaClass;
-		}
-
-		return $result;		
 	}
 
 	/**
@@ -407,29 +262,29 @@ final class Factory
 			$metaService = $this->getMetaServiceByTypeHint($param);
 			$result[] = $this->create($metaService->getClassName());
 		}
-		
+
 		return $result;
 	}
-	
+
 	/**
 	 * @return object
 	 */
 	private function createExtendable($classGroup, $unqualifiedName, $pkgNamespace = null)
 	{
-		$pkgNamespace = $pkgNamespace ?: $this->getPackage()->getNamespace();
+		$pkgNamespace = $pkgNamespace ? : $this->getPackage()->getNamespace();
 		$baseClass = $pkgNamespace . '\\' . $classGroup . '\\' . $unqualifiedName;
-		
+
 		$metaClass = FacadeMetadriver::findMetaClassByBaseClass($baseClass);
-		
+
 		$extendableInstance = $this->createFromMetaClass($metaClass);
-		
+
 		if ($pkgNamespace) {
 			$extendableInstance->setPackage($this->getPackageByItsMember($baseClass));
 		}
-		
+
 		return $extendableInstance;
 	}
-	
+
 	/**
 	 * Returns a package instance by the name of one of its classes
 	 * 
@@ -448,31 +303,6 @@ final class Factory
 	}
 
 	/**
-	 * @return boolean
-	 */
-	private function isFullyQualifiedName($extendableName)
-	{
-		return 0 === strpos($extendableName, '\\\\') ? true : false;
-	}
-	
-	/**
-	 * @return boolean
-	 */
-	private function isQualifiedName($extendableName)
-	{
-		return 0 === strpos($extendableName, '\\') ? true : false;
-	}
-	
-	/**
-	 * @return boolean
-	 */
-	private function isUnqualifiedName($extendableName)
-	{
-		return $this->isFullyQualifiedName($extendableName) ||
-			$this->isQualifiedName($extendableName) ? false : true;
-	}
-	
-	/**
 	 * @return object
 	 */
 	public function createAction($actionName)
@@ -481,4 +311,5 @@ final class Factory
 			return $this->createExtendable('Action', $actionName);
 		}
 	}
+
 }

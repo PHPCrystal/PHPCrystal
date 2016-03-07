@@ -1,6 +1,8 @@
 <?php
 namespace PHPCrystal\PHPCrystal\Service\Event\Context;
 
+use PHPCrystal\PHPCrystal\Service\Event\AbstractContext;
+
 class Cli extends AbstractContext
 {
 	/**

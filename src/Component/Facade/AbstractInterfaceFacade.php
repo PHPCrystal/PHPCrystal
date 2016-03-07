@@ -10,9 +10,10 @@ abstract class AbstractInterfaceFacade extends AbstractFacade
 	 */
 	final static public function create()
 	{
-		$object = self::$appPkg->getFactory()
-			->createByInterface(static::$interface);
-		
+		$object = self::getApplication()
+			->getFactory()
+			->createServiceByInterface(static::$interface);
+
 		return $object;
 	}
 }

@@ -1,19 +1,18 @@
 <?php
 namespace PHPCrystal\PHPCrystal\Component\Service;
 
-use PHPCrystal\PHPCrystal\Component\Factory\Aware as Aware;
+use PHPCrystal\PHPCrystal\Component\Factory\Factory;
 use PHPCrystal\PHPCrystal\Facade\Metadriver;
-use PHPCrystal\PHPCrystal\_Trait\AFPAware;
-use PHPCrystal\PHPCrystal\_Trait\PkgConfigAware;
-use PHPCrystal\PHPCrystal\Component\Exception\System\FrameworkRuntimeError;
+
+use PHPCrystal\PHPCrystal\Service\DependencyManager\DI_Interface,
+	PHPCrystal\PHPCrystal\Component\Factory\FactoryInterface,
+	PHPCrystal\PHPCrystal\_Trait\FactoryAware;
 
 abstract class AbstractService implements
-	Aware\ApplicationInterface,
-	Aware\FactoryInterface,
-	Aware\PackageInterface,
-	Aware\DependencyInjectionInterface
+	DI_Interface,
+	FactoryInterface
 {
-	use AFPAware, PkgConfigAware;
+	use FactoryAware;
 	
 	/**
 	 * @var boolean
@@ -68,15 +67,15 @@ abstract class AbstractService implements
 	{
 		return false;
 	}
-	
+
 	/**
-	 * @return boolean
+	 * @return bool
 	 */
 	public static function isSingleton()
 	{
-		return false;
+		return true;
 	}
-	
+
 	/**
 	 * @return boolean
 	 */

@@ -6,7 +6,7 @@ use PHPCrystal\PHPCrystal\Component\Service\AbstractService;
 use PHPCrystal\PHPCrystal\Component\Service\AbstractContractor;
 use PHPCrystal\PHPCrystal\Component\Filesystem\Finder;
 use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
-use PHPCrystal\PHPCrystal\Component\PhpParser\PhpParser;
+use PHPCrystal\PHPCrystal\Component\Php\Parser;
 use Doctrine\Common\Annotations\AnnotationReader;
 use PHPCrystal\PHPCrystal\Service\Metadriver as Metadriver;
 use PHPCrystal\PHPCrystal\Component\Exception as Exception;
@@ -22,18 +22,18 @@ abstract class AbstractBuilder extends AbstractService
 	 * 
 	 * @return array
 	 */
-	protected function getContractDefinitions()
+	protected function getContractSpecs()
 	{
 		$result = array();
 
-		$scan_dir = FileHelper::create($this->getPackage()->getDirectory(), 'src', 'Contract');
-		if ( ! $scan_dir->dirExists()) {
+		$targetDir = FileHelper::create($this->getPackage()->getDirectory(), 'src', 'Contract');
+		if ( ! $targetDir->dirExists()) {
 			return $result;
 		}
-
-		$php_files = Finder::create()->findPhpFiles($scan_dir->toString());
-		foreach ($php_files as $file) {
-			$interface = PhpParser::loadFromFile($file->getRealpath())
+		
+		$phpFiles = Finder::create()->findPhpFiles($targetDir->toString());
+		foreach ($phpFiles as $file) {
+			$interface = Parser::loadFromFile($file->getRealpath())
 				->parseInterface();
 			$result[] = $interface;
 		}
@@ -49,29 +49,29 @@ abstract class AbstractBuilder extends AbstractService
 	public function getContractors()
 	{
 		$result = array();
-		$contract_defs = $this->getContractDefinitions();
+		$contractSpecs = $this->getContractSpecs();
 
-		$scan_dir = FileHelper::create($this->getPackage()->getDirectory(), 'src', 'Service');		
-		if ( ! $scan_dir->dirExists()) {
+		$targetDir = FileHelper::create($this->getPackage()->getDirectory(), 'src', 'Service');		
+		if ( ! $targetDir->dirExists()) {
 			return $result;
 		}
 
-		$php_files = Finder::create()->findPhpFiles($scan_dir->toString());		
-		foreach ($php_files as $file) {
-			$class_name = PhpParser::loadFromFile($file->getRealpath())
+		$phpFiles = Finder::create()->findPhpFiles($targetDir->toString());		
+		foreach ($phpFiles as $file) {
+			$className = Parser::loadFromFile($file->getRealpath())
 				->parseClass();
 
-			if ( ! empty($class_name) && ! class_exists($class_name)) {
+			if ( ! empty($className) && ! class_exists($className)) {
 				continue;
 			}
 
-			if (null === ($interface = AbstractContractor::getContract($class_name, $contract_defs)) ||
-				! AbstractContractor::isContractor($class_name))
+			if (null === ($interface = AbstractContractor::getContract($className, $contractSpecs)) ||
+				! AbstractContractor::isContractor($className))
 			{
 				continue;
 			}
 
-			$result[] = new MetaService($class_name, $interface,
+			$result[] = new MetaService($className, $interface,
 				$this->getPackage()->getPriority());
 		}
 
@@ -99,7 +99,7 @@ abstract class AbstractBuilder extends AbstractService
 
 		$php_files = Finder::create()->findPhpFiles($scan_dir->toString());
 		foreach ($php_files as $file) {
-			$base_class = PhpParser::loadFromFile($file->getRealpath())
+			$base_class = Parser::loadFromFile($file->getRealpath())
 				->parseClass();
 
 			// all package extendable classes are derived from the AbstractNode

@@ -20,7 +20,7 @@ timeoutForSmallTests="1"
 timeoutForMediumTests="10"
 timeoutForLargeTests="60"
 strict="false"
-verbose="false">
+verbose="true">
 
 <php>
 	<ini name="display_errors" value="on" />	

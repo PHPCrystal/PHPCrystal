@@ -1,9 +1,9 @@
 <?php
-namespace PHPCrystal\PHPCrystal\Component\PhpParser;
+namespace PHPCrystal\PHPCrystal\Component\Php;
 
 use Doctrine\Common\Annotations\TokenParser;
 
-class PhpParser extends TokenParser
+class Parser extends TokenParser
 {
 	/**
 	 * @return $this
@@ -51,9 +51,9 @@ class PhpParser extends TokenParser
 	 */
 	public function parseClass()
 	{
-		$name = $this->parseNamespace();
+		$name = '\\' . $this->parseNamespace();
 		$startClassDecl = false;
-		
+
 		while (($token = $this->next())) {
 			if ($token[0] === T_FINAL || $token[0] === T_ABSTRACT || $token[0] === T_CLASS) {
 				$startClassDecl = true;

@@ -2,16 +2,14 @@
 namespace PHPCrystal\PHPCrystal\Service\Event;
 
 use PHPCrystal\PHPCrystal\Component\Factory as Factory;
-use PHPCrystal\PHPCrystal\_Trait\AFPAware;
+use PHPCrystal\PHPCrystal\_Trait\FactoryAware;
 use PHPCrystal\PHPCrystal\_Trait\CreateObject;
 
 
 abstract class AbstractNode implements
-	Factory\Aware\FactoryInterface,
-	Factory\Aware\ApplicationInterface,
-	Factory\Aware\PackageInterface
+	Factory\Aware\FactoryInterface
 {
-	use AFPAware, CreateObject;
+	use FactoryAware, CreateObject;
 	
 	/**
 	 * @var array
@@ -26,6 +24,11 @@ abstract class AbstractNode implements
 
 	protected $parentNode;
 	protected $childNodes = array();
+	
+	public static function isSingleton()
+	{
+		return false;
+	}
 
 	/**
 	 * @api
@@ -38,7 +41,7 @@ abstract class AbstractNode implements
 	protected function getEventManager()
 	{
 		return $this->getFactory()
-			->create('PHPCrystal\\PHPCrystal\\Service\\Event\\Manager');
+			->create('\\PHPCrystal\\PHPCrystal\\Service\\Event\\Manager');
 	}
 	
 	/**

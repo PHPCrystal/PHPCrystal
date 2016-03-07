@@ -36,7 +36,7 @@ abstract class AbstractApplication extends AbstractPackage
 		self::$autoloader = $autoloader;
 		self::$extMinHeap = new Heap\MinHeap();
 		Facade\AbstractFacade::setApplication($this);
-		$this->setApplication($this);
+		//$this->setApplication($this);
 		$this->setPriority(999);
 		parent::__construct();
 	}
@@ -352,9 +352,10 @@ abstract class AbstractApplication extends AbstractPackage
 	 */
 	private function addServices()
 	{
-		foreach (Metadriver::getContractors() as $metaservice) {
-			$this->getFactory()->addMetaService($metaservice);
-		}		
+//		foreach (Metadriver::getContractors() as $metaservice) {
+//			//var_dump($metaservice->getTargetClass());exit;
+//			$this->getFactory()->addMetaService($metaservice);
+//		}		
 	}
 	
 	/**
@@ -382,7 +383,7 @@ abstract class AbstractApplication extends AbstractPackage
 		$this->assignEventListeners();
 		
 		
-		$this->addRouter('PHPCrystal\\PHPCrystal\\Service\\Router\\_Default');
+		$this->addRouter('\\PHPCrystal\\PHPCrystal\\Service\\Router\\_Default');
 		
 		parent::dispatch(
 			Event\Type\System\PkgNotification::create('load-config-file')

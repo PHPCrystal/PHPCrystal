@@ -5,10 +5,10 @@ use PHPCrystal\PHPCrystal\Contract as Contract;
 use PHPCrystal\PHPCrystal\Component\Factory as Factory;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
 use PHPCrystal\PHPCrystal\Facade\Metadriver;
+use PHPCrystal\PHPCrystal\Service\DependencyManager\DI_Interface;
 
 abstract class AbstractAppListener extends AbstractNode  implements
-	Factory\Aware\DependencyInjectionInterface,
-	Factory\InitiableInterface
+	DI_Interface
 {
 	/**
 	 * @var \PHPCrystal\PHPCrystal\Contract\Session
@@ -34,6 +34,14 @@ abstract class AbstractAppListener extends AbstractNode  implements
 	public static function fireEventUponInstantiation()
 	{
 		return false;
+	}
+	
+	/**
+	 * @return array
+	 */
+	public static function getWakeupEvents()
+	{
+		return [];
 	}
 
 	/**

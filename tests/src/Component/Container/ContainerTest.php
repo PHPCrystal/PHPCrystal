@@ -9,9 +9,9 @@ class ContainerTest extends TestCase
 {
 	public function testEmpty()
 	{
-		$c = Input::create('ctrlInput');
+		$c = Input::create();
 		$this->assertTrue($c->isEmpty());
-		$c1 = Input::create(null, ['item1']);
+		$c1 = Input::create(['item1']);
 		$this->assertFalse($c1->isEmpty());
 	}
 

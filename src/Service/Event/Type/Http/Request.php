@@ -2,7 +2,7 @@
 namespace PHPCrystal\PHPCrystal\Service\Event\Type\Http;
 
 use PHPCrystal\PHPCrystal\Service\Event\Type\AbstractExternal;
-use PHPCrystal\PHPCrystal\Service\Event\Context\Http;
+use PHPCrystal\PHPCrystal\Service\Event\Context\Http as HttpContext;
 use PHPCrystal\PHPCrystal\Component\Http\Request as HttpRequest;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
 
@@ -49,7 +49,7 @@ class Request extends AbstractExternal
 	 */
 	public function createContext()
 	{
-		return Http::create('httpContext')
+		return HttpContext::create()
 			->setRequest($this->httpRequest);
 	}
 }

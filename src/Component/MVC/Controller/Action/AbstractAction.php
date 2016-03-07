@@ -1,7 +1,7 @@
 <?php
 namespace PHPCrystal\PHPCrystal\Component\MVC\Controller\Action;
 
-use PHPCrystal\PHPCrystal\Component\MVC\Controller\Input\Input;
+use PHPCrystal\PHPCrystal\Component\MVC\Controller\Input;
 
 use PHPCrystal\PHPCrystal\Component\Http\Request;
 use PHPCrystal\PHPCrystal\Component\Http\Uri;
@@ -162,7 +162,7 @@ abstract class AbstractAction extends Event\AbstractAppListener
 			}
 			
 			$uriInput = $this->getApplication()->getRequest()->getURIInput();
-			$uriInput->merge(Input::create(null, $tmpArray));
+			$uriInput->merge(Input::create($tmpArray));
 
 			// set default placeholder value
 			$routeAnnot = $this->getExtendableInstance()->getRouteAnnotation();
@@ -214,7 +214,7 @@ abstract class AbstractAction extends Event\AbstractAppListener
 	
 	private function createControllerInput()
 	{
-		$ctrlInput = Input::create('ControllerInput');
+		$ctrlInput = Input::create();
 		$request = $this->getApplication()->getRequest();
 		if (null === ($extandable = $this->getExtendableInstance()) ||
 			null === ($inputAnnot = $extandable->getInputAnnot()))

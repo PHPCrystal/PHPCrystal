@@ -3,11 +3,18 @@ namespace PHPCrystal\PHPCrystal\Component\Service;
 
 class MetaService
 {
+	/** @var string */
 	private $className;
+	/** @var string */
 	private $interface;
+	/** @var integer */
 	private $priority;
-	private $idle;
-	
+	/** @var bool */
+	private $isActive = true;
+
+	/**
+	 * Constructor
+	 */
 	public function __construct($className, $interface, $priority)
 	{
 		$this->className = $className;
@@ -40,18 +47,18 @@ class MetaService
 	}
 	
 	/**
-	 * @return boolean
+	 * @return bool
 	 */
-	public function isIdle()
+	public function getActiveFlag()
 	{
-		return $this->idle;
+		return $this->isActive;
 	}
 
 	/**
 	 * @return void
 	 */
-	public function setIdle($value)
+	public function setActiveFlag($flag)
 	{
-		$this->idle = (boolean)$value;
+		$this->isActive = $flag;
 	}
 }

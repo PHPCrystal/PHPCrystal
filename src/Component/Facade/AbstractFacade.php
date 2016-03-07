@@ -28,18 +28,18 @@ abstract class AbstractFacade
 	}
 	
 	/**
-	 * @return null
-	 */
-	final public static function setApplication($appPkg)
-	{
-		self::$appPkg = $appPkg;
-	}
-	
-	/**
-	 * @return
+	 * @return PHPCrystal\PHPCrystal\Component\Package\AbstractApplication
 	 */
 	final public static function getApplication()
 	{
 		return self::$appPkg;
+	}
+
+	/**
+	 * @return void
+	 */
+	final public static function setApplication($appPkg)
+	{
+		self::$appPkg = $appPkg;
 	}
 }

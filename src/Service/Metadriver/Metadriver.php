@@ -5,21 +5,19 @@ use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
 use PHPCrystal\PHPCrystal\Component\Service\AbstractService;
 use PHPCrystal\PHPCrystal\Component\Package\AbstractExtension;
 use Doctrine\Common\Annotations\SimpleAnnotationReader;
+use PHPCrystal\PHPCrystal\Component\Php as Php;
 
-class Metadriver extends AbstractService
+const EXTENDABLE_INTERFACE = 'PHPCrystal\\PHPCrystal\\Component\\Factory\\ExtendableInterface';
+
+final class Metadriver extends AbstractService
 {
+
+	/** @var array */
+	private $metaServiceMap = [];
 	private $isVoid = true;
 	private $data;
 	private $filename;
 	private $annotReader;
-
-	/**
-	 * @return boolean
-	 */
-	public static function isSingleton()
-	{
-		return true;
-	}
 
 	/**
 	 * @return string
@@ -28,25 +26,62 @@ class Metadriver extends AbstractService
 	{
 		$extended_class_name = '\\' . $this->getApplication()->getNamespace() .
 			'\\Extension\\' . $baseClass;
-		
+
 		return $extended_class_name;
 	}
 
 	/**
-	 * @return bool
+	 * @return string
 	 */
-	public function isFullyQualifiedName($name)
+	public function resolveClassName($className, $package)
 	{
-		return strpos($name, '\\') === 0;
+		$resolved = $className;
+		if (Php\Aux::isQualifiedName($className)) {
+			$resolved = '\\' . $package->getNamespace() . '\\' . $className;
+		}
+
+		return $resolved;
 	}
-	
+
+	/**
+	 * @return $this
+	 */
+	public function addMetaService($meta)
+	{
+		//var_dump($meta); exit;		
+		$interface = $meta->getInterface();
+
+		if (!isset($this->metaServiceMap[$interface])) {
+			$this->metaServiceMap[$interface] = new \SplPriorityQueue();
+			$this->metaServiceMap[$interface]->setExtractFlags(\SplPriorityQueue::EXTR_DATA);
+		}
+
+		$this->metaServiceMap[$interface]->insert($meta, $meta->getPriority());
+
+		return $this;
+	}
+
+	/**
+	 * @return Metaservice
+	 */
+	public function getMetaServiceByInterface($interface)
+	{
+		foreach ($this->metaServiceMap as $interfaceKey => $splQueue) {
+			if ($interface == $interfaceKey) {
+				return $splQueue->top();
+			}
+		}
+
+		throw new \RuntimeException(sprintf('Required service "%s" has not been found', $interface));
+	}
+
 	/**
 	 * @return null
 	 */
 	public function init()
 	{
 		parent::init();
-		
+
 		$this->annotReader = new SimpleAnnotationReader();
 		$this->annotReader->addNamespace('PHPCrystal\PHPCrystal\Annotation\Action');
 		$this->annotReader->addNamespace('PHPCrystal\PHPCrystal\Annotation\Common');
@@ -61,17 +96,17 @@ class Metadriver extends AbstractService
 			$this->flush();
 			$this->isVoid = true;
 		}
-		
+
 		$this->isInitialized = true;
 	}
-	
+
 	/**
 	 * @return string
 	 */
 	public function extractPackageNS($name)
 	{
 		$parts = explode('\\', $name);
-		
+
 		return $parts[0] . '\\' . $parts[1];
 	}
 
@@ -81,7 +116,7 @@ class Metadriver extends AbstractService
 	public function getOwnerInstance($mixed)
 	{
 		$pkgNS = $this->getOwnerNS($mixed);
-		
+
 		foreach ($this->getApplication()->getExtensions(true) as $pkg) {
 			if ($pkg->getNamespace() == $pkgNS) {
 				return $pkg;
@@ -102,8 +137,7 @@ class Metadriver extends AbstractService
 			$ownerNS = $this->extractPackageNS($refClass->getNamespaceName());
 
 			if ($this->getApplication()->getNamespace() != $ownerNS ||
-				$refClass->isAbstract())
-			{
+				$refClass->isAbstract()) {
 				return $ownerNS;
 			}
 
@@ -143,19 +177,19 @@ class Metadriver extends AbstractService
 	{
 		$parts = explode('\\', get_class($action));
 		$pkgInstance = $this->getPackageByItsMember($action);
-		
+
 		$baseClass = $pkgInstance->getNamespace() . '\\Controller\\' .
 			$parts[3] . '\\' . $parts[4];
-		
+
 		$pkgControllers = $this->data['controllers'][$pkgInstance->getKey()];
-		
+
 		foreach ($pkgControllers as $metaClass) {
 			if ($metaClass->getBaseClass() == $baseClass) {
 				return $metaClass;
 			}
 		}
 	}
-	
+
 	/**
 	 * @return \PHPCrystal\PHPCrystal\Service\Metadriver\ExtendableFrontController
 	 */
@@ -163,12 +197,12 @@ class Metadriver extends AbstractService
 	{
 		$parts = explode('\\', get_class($action));
 		$pkgInstance = $this->getPackageByItsMember($action);
-		
+
 		$baseClass = $pkgInstance->getNamespace() . '\\FrontController\\' .
 			$parts[3];
-		
+
 		$pkgControllers = $this->data['frontcontrollers'][$pkgInstance->getKey()];
-		
+
 		foreach ($pkgControllers as $metaClass) {
 			if ($metaClass->getBaseClass() == $baseClass) {
 				return $metaClass;
@@ -183,10 +217,10 @@ class Metadriver extends AbstractService
 	public function getPackageNamespaceByItsMemeber($mixed)
 	{
 		$className = is_object($mixed) ? get_class($mixed) : $mixed;
-		
+
 		$parts = explode('\\', $className);
 		$pkgNamespace = $parts[0] . '\\' . $parts[1];
-		
+
 		return $pkgNamespace;
 	}
 
@@ -196,12 +230,12 @@ class Metadriver extends AbstractService
 	public function getClassAnnotations($className)
 	{
 		$refClass = new \ReflectionClass($className);
-		
+
 		$annots = $this->annotReader->getClassAnnotations($refClass);
-		
+
 		return $annots;
 	}
-	
+
 	/**
 	 * @return mixed
 	 */
@@ -209,7 +243,7 @@ class Metadriver extends AbstractService
 	{
 		return $this->data[$key];
 	}
-	
+
 	/**
 	 * @return void
 	 */
@@ -224,30 +258,29 @@ class Metadriver extends AbstractService
 	public function addExtensionsToAutoload()
 	{
 		$composer_lock = FileHelper::create('@app/composer.lock');
-		
-		if ( ! $composer_lock->fileExists()) {
+
+		if (!$composer_lock->fileExists()) {
 			return;
 		}
-		
+
 		$composer_json = $composer_lock->readJson();
 		foreach ($composer_json['packages'] as $pkgInfo) {
 			$pkgName = $pkgInfo['name'];
 			$pkgBootstrap = FileHelper::create('@app/vendor/', $pkgName, 'bootstrap.php');
-			if ( ! $pkgBootstrap->fileExists()) {
+			if (!$pkgBootstrap->fileExists()) {
 				continue;
 			}
-			
+
 			$pkg_instance = $pkgBootstrap->_require();
-			if ( ! $pkg_instance instanceof AbstractExtension ||
-				$pkg_instance->getDisableAutoloadFlag())
-			{
+			if (!$pkg_instance instanceof AbstractExtension ||
+				$pkg_instance->getDisableAutoloadFlag()) {
 				continue;
 			}
-			
+
 			$this->data['extensions'][] = new MetaExtension($pkgBootstrap->getDirname());
 		}
 	}
-	
+
 	/**
 	 * @return MetaExtension[]
 	 */
@@ -263,20 +296,20 @@ class Metadriver extends AbstractService
 	{
 		return $this->data['export'];
 	}
-	
+
 	protected function addPackageMetaClasses($package, array $metaClassColl, $category)
 	{
 		$key = $package->getKey();
-		
-		if ( ! isset($this->data[$category][$key])) {
+
+		if (!isset($this->data[$category][$key])) {
 			$this->data[$category][$key] = array();
 		}
-		
+
 		$this->data[$category][$key] = array_merge($this->data[$category][$key], $metaClassColl);
-		
+
 		return $this;
 	}
-	
+
 	/**
 	 * @return $this 
 	 */
@@ -284,15 +317,15 @@ class Metadriver extends AbstractService
 	{
 		return $this->addPackageMetaClasses($package, $metaClassColl, 'actions');
 	}
-	
+
 	/**
 	 * 
 	 */
 	public function addPackageControllers($package, array $metaClassColl)
 	{
-		return $this->addPackageMetaClasses($package, $metaClassColl, 'controllers');		
+		return $this->addPackageMetaClasses($package, $metaClassColl, 'controllers');
 	}
-	
+
 	/**
 	 * 
 	 */
@@ -300,18 +333,18 @@ class Metadriver extends AbstractService
 	{
 		return $this->addPackageMetaClasses($package, $metaClassColl, 'frontcontrollers');
 	}
-	
+
 	/**
 	 * @return array
 	 */
 	public function getPackageActions($package)
 	{
 		$key = $package->getKey();
-		
+
 		return isset($this->data['actions'][$key]) ?
 			$this->data['actions'][$key] : array();
 	}
-	
+
 	/**
 	 * @return array
 	 */
@@ -328,26 +361,26 @@ class Metadriver extends AbstractService
 		$arVal1 = array_values($this->data['actions']);
 		$actionMetaClasses = empty($arVal1) ?
 			[] : array_merge(...$arVal1);
-		
+
 		$arVal2 = array_values($this->data['controllers']);
 		$ctrlMetaClasses = empty($arVal2) ?
 			[] : array_merge(...$arVal2);
-		
+
 		$arVal3 = array_values($this->data['frontcontrollers']);
 		$fcMetaClasses = empty($arVal3) ?
 			[] : array_merge(...$arVal3);
-		
+
 		$haystack = array_merge($actionMetaClasses, $ctrlMetaClasses, $fcMetaClasses);
-		
+
 		foreach ($haystack as $item) {
 			if ($item->getBaseClass() == $baseClass) {
 				return $item;
 			}
 		}
-		
+
 		return null;
 	}
-	
+
 	public function flush()
 	{
 		$this->data = array(
@@ -358,7 +391,7 @@ class Metadriver extends AbstractService
 			'extensions' => []
 		);
 	}
-	
+
 	/**
 	 * @return null
 	 */
@@ -366,7 +399,7 @@ class Metadriver extends AbstractService
 	{
 		$this->filename->serialize($this->data);
 	}
-	
+
 	/**
 	 * @return boolean
 	 */
@@ -374,4 +407,5 @@ class Metadriver extends AbstractService
 	{
 		return $this->isVoid;
 	}
+
 }
