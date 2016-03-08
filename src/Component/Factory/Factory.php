@@ -244,7 +244,7 @@ final class Factory
 		if ($typeHinted->isInterface()) {
 			$metaService = $this->getMetaServiceByInterface($typeHinted->name);
 		} else if ($typeHinted->isInstantiable()) {
-			$metaService = new MetaService($typeHinted->name, null, 999);
+			$metaService = new MetaService($typeHinted->name, 999);
 		}
 
 		return $metaService;

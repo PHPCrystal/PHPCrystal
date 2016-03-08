@@ -2,7 +2,7 @@
 namespace PHPCrystal\PHPCrystalTest;
 
 use PHPCrystal\PHPCrystal\Component\Facade\AbstractClassFacade;
-use PHPCrystal\PHPCrystal\Service\Event as Event;
+
 
 /**
  * @backupGlobals disabled

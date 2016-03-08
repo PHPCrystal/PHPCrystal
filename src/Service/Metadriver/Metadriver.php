@@ -46,17 +46,16 @@ final class Metadriver extends AbstractService
 	/**
 	 * @return $this
 	 */
-	public function addMetaService($meta)
+	public function addMetaService($metaService)
 	{
-		//var_dump($meta); exit;		
-		$interface = $meta->getInterface();
+		$key = $metaService->getKey();
 
-		if (!isset($this->metaServiceMap[$interface])) {
-			$this->metaServiceMap[$interface] = new \SplPriorityQueue();
-			$this->metaServiceMap[$interface]->setExtractFlags(\SplPriorityQueue::EXTR_DATA);
+		if ( ! isset($this->metaServiceMap[$key])) {
+			$this->metaServiceMap[$key] = new \SplPriorityQueue();
+			$this->metaServiceMap[$key]->setExtractFlags(\SplPriorityQueue::EXTR_DATA);
 		}
 
-		$this->metaServiceMap[$interface]->insert($meta, $meta->getPriority());
+		$this->metaServiceMap[$key]->insert($metaService, $metaService->getPriority());
 
 		return $this;
 	}
@@ -64,15 +63,16 @@ final class Metadriver extends AbstractService
 	/**
 	 * @return Metaservice
 	 */
-	public function getMetaServiceByInterface($interface)
+	public function getMetaServiceByInterface($name)
 	{
-		foreach ($this->metaServiceMap as $interfaceKey => $splQueue) {
-			if ($interface == $interfaceKey) {
-				return $splQueue->top();
+		foreach ($this->metaServiceMap as $splQueue) {
+			$metaService = $splQueue->top();
+			if ($metaService->check($name)) {
+				return $metaService;
 			}
 		}
 
-		throw new \RuntimeException(sprintf('Required service "%s" has not been found', $interface));
+		throw new \RuntimeException(sprintf('Required service "%s" has not been found', $name));
 	}
 
 	/**

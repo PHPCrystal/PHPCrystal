@@ -11,8 +11,6 @@ require_once __DIR__ . '/src/Annotation/Common/SecurityPolicy.php';
 return PHPCrystal::create()
 	->setDirectory(__DIR__)
 	->setPriority(1)
-	->setBuilder('\\PHPCrystal\\PHPCrystal\\Service\\PackageBuilder\\PackageBuilder')
 	->setComposerName('phpcrystal/phpcrystal')
 	->setDisableAutoloadFlag(true)
-	->init()
 ;

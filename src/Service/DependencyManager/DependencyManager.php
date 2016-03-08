@@ -78,7 +78,7 @@ class DependencyManager extends AbstractService
 			if ($typeHinted->isInterface()) {
 				$metaService = $this->metadriver->getMetaServiceByInterface($typeName);
 			} else if ($typeHinted->isInstantiable() && $typeName instanceof AbstractService) {
-				$metaService = new MetaService($typeName, null, $this->getPackage()->getPriority());
+				$metaService = new MetaService($typeName, $this->getPackage()->getPriority());
 			} else {
 				$result[] = null;
 				continue;

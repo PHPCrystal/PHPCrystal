@@ -17,6 +17,6 @@ class ServiceTest extends TestCaseDummy
 	
 	public function testConfig()
 	{
-		var_dump(get_class($this->cache));
+		//var_dump(get_class($this->cache));
 	}
 }

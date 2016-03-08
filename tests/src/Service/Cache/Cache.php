@@ -1,8 +1,8 @@
 <?php
 namespace PHPCrystal\PHPCrystalTest\Service\Cache;
 
-use PHPCrystal\PHPCrystal\Component\Service\AbstractContractor;
-use PHPCrystal\PHPCrystal\Contract as Contract;
+use PHPCrystal\PHPCrystal\Component\Service\AbstractContractor,
+	PHPCrystal\PHPCrystal\Contract as Contract;
 
 class Cache extends AbstractContractor implements
 	Contract\Cache

@@ -72,7 +72,9 @@ abstract class AbstractPackage extends Event\AbstractNode
 		// not all packages are being created by the facade so we have to assign
 		// application instance explicitly
 		//$this->setApplication(AbstractFacade::getApplication());
-
+		
+		$this->init();
+		
 		
 		// assign event listeners
 		$this->addEventListener(Event\Type\System\Build::toType(), function($event) {
@@ -131,7 +133,7 @@ abstract class AbstractPackage extends Event\AbstractNode
 	 */
 	public function init()
 	{
-
+		$this->setBuilder('\\PHPCrystal\\PHPCrystal\\Service\\PackageBuilder\\PackageBuilder');
 	}
 
 	/**
@@ -331,7 +333,7 @@ abstract class AbstractPackage extends Event\AbstractNode
 	protected function onBuildEvent($event)
 	{
 		$builder = $this->getBuilder();
-//var_dump($builder->getPackage()->getDirectory()); exit;
+
 		if ( ! $builder) {
 			return;
 		}
