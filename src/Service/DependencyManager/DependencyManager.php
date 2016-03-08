@@ -2,15 +2,13 @@
 
 namespace PHPCrystal\PHPCrystal\Service\DependencyManager;
 
-use PHPCrystal\PHPCrystal\Component\Service\AbstractService;
-use PHPCrystal\PHPCrystal\Component\Service\MetaService;
-use PHPCrystal\PHPCrystal\Service\Metadriver\Metadriver;
-
-const DEPENDENCY_INJECTOR_MAGIC_METHOD = '__DI_injector';
+use PHPCrystal\PHPCrystal\Component\Service\AbstractService,
+	PHPCrystal\PHPCrystal\Component\Service\MetaService,
+	PHPCrystal\PHPCrystal\Service\Metadriver\Metadriver,
+	PHPCrystal\PHPCrystal\Component\Exception\System\FrameworkRuntimeError;
 
 class DependencyManager extends AbstractService
 {
-
 	/** @var Metadriver */
 	private $metadriver;
 
@@ -21,7 +19,7 @@ class DependencyManager extends AbstractService
 	private $circularReferenceTracker = [];
 
 	/**
-	 * @api
+	 * @param Metadriver $metadriver
 	 */
 	public function __construct(Metadriver $metadriver)
 	{
@@ -67,30 +65,36 @@ class DependencyManager extends AbstractService
 	/**
 	 * @return array
 	 */
-	private function getInjectorMetaServices(\ReflectionMethod $injector)
+	public function getInjectorDeps(\ReflectionMethod $injector)
 	{
 		$result = [];
-		
+
 		foreach ($injector->getParameters() as $param) {
 			$typeHinted = $param->getClass();
-			$typeName = $typeHinted->name;
-
-			if ($typeHinted->isInterface()) {
-				$metaService = $this->metadriver->getMetaServiceByInterface($typeName);
-			} else if ($typeHinted->isInstantiable() && $typeName instanceof AbstractService) {
-				$metaService = new MetaService($typeName, $this->getPackage()->getPriority());
-			} else {
+			
+			if ( ! $typeHinted) {
 				$result[] = null;
 				continue;
 			}
 
-			// some services can be optional. deactivate service if current event
-			// is not in the list of its wake-up events
-			if ($param->isOptional()) {
-				$this->deactivateService($metaService);
+			$typeName = $typeHinted->name;
+			$depClassName = null;
+
+			if ($typeHinted->isInterface()) {
+				$metaService = $this->metadriver->getMetaServiceByInterface($typeName);
+				
+				// some services can be optional. deactivate service if current event
+				// is not in the list of its wake-up events
+				if ($param->isOptional()) {
+					$this->deactivateService($metaService);
+				}
+				
+				$depClassName = $metaService->getActiveFlag() ? $metaService->getClassName() : null;
+			} else if (AbstractService::isService($typeName)) {
+				$depClassName =  $typeName;
 			}
 			
-			$result[] = $metaService->getActiveFlag() ? $metaService : null;
+			$result[] = $depClassName;
 		}
 		
 		return $result;
@@ -112,7 +116,7 @@ class DependencyManager extends AbstractService
 
 		return false;
 	}
-	
+
 	/**
 	 * @return \ReflectionMethod
 	 */
@@ -133,13 +137,12 @@ class DependencyManager extends AbstractService
 			$this->rootClient = $injector->class;
 		}		
 		
-		foreach ($this->getInjectorMetaServices($injector) as $metaService) {
-			if ( ! $metaService) {
+		foreach ($this->getInjectorDeps($injector) as $depClassName) {
+			if ( ! $depClassName) {
 				$result[] = null;
 				continue;
 			}
 
-			$depClassName = $metaService->getClassName();
 			$this->circularReferenceTracker[] = $depClassName;
 			$this->circularReferenceCheck();
 			

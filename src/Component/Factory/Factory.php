@@ -136,6 +136,9 @@ final class Factory
 		if (Php\Aux::implementsInterface($className, DI_INTERFACE)) {
 			$injector = $this->DI_Manager->getInjectorReflection($className);
 			$constructorArgs = $this->DI_Manager->getDependencies($injector);
+		if (strpos($className, 'Builder')) {
+		//	var_dump($this->DI_Manager->getInjectorDeps($injector)); exit;
+		}			
 		} else {
 			$constructorArgs = $factoryArgs;
 		}

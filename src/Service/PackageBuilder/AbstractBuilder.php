@@ -3,6 +3,7 @@
 namespace PHPCrystal\PHPCrystal\Service\PackageBuilder;
 
 use PHPCrystal\PHPCrystal\Component\Service\AbstractService,
+	PHPCrystal\PHPCrystal\Service\Metadriver\Metadriver,
 	PHPCrystal\PHPCrystal\Component\Filesystem\Finder,
 	PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper,
 	PHPCrystal\PHPCrystal\Component\Php\Parser,
@@ -12,6 +13,18 @@ use PHPCrystal\PHPCrystal\Component\Service\AbstractService,
 abstract class AbstractBuilder extends AbstractService
 {
 	protected $annotReader;
+	
+	/** @var Metadriver */
+	protected $metadriver;
+	
+	/**
+	 * 
+	 */
+	public function __construct(Metadriver $metadriver)
+	{
+		parent::__construct();
+		$this->metadriver = $metadriver;
+	}
 
 	/**
 	 * {@inherited}
@@ -32,7 +45,7 @@ abstract class AbstractBuilder extends AbstractService
 	/**
 	 * @return array
 	 */
-	protected function scan($targetDir, \Closure $callback)
+	protected function scanPhpDefinitions($targetDir, \Closure $callback)
 	{
 		$result = array();
 		$loc = FileHelper::create($this->getPackage()->getDirectory(), $targetDir);
@@ -46,7 +59,9 @@ abstract class AbstractBuilder extends AbstractService
 		foreach ($phpFiles as $file) {
 			$className = Parser::loadFromFile($file->getRealpath())
 				->parseClass();
-			$callbackResult = $callback($className);
+			$interface = Parser::loadFromFile($file->getRealpath())
+				->parseInterface();			
+			$callbackResult = $callback($className, $interface);
 			
 			if ($callbackResult !== null) {
 				$result[] = $callbackResult;

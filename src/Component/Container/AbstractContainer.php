@@ -16,6 +16,7 @@ abstract class AbstractContainer
 
 	private $sealedItems = [];
 
+	protected $keyPrefix = '';
 	protected $items = [];
 	protected $changesTracker = [];
 	protected $nestedContainers = array();
@@ -43,7 +44,15 @@ abstract class AbstractContainer
 	public function __construct(array $items = [])
 	{
 		$this->items = $items;
-	}	
+	}
+	
+	/**
+	 * @return string
+	 */
+	private function normalizeKey($key)
+	{
+		return empty($this->keyPrefix) ? $key : ( $this->keyPrefix . '.' . $key );
+	}
 	
 	/**
 	 * Converts object to a string if it supports ::toString method
@@ -102,7 +111,7 @@ abstract class AbstractContainer
 	 */
 	public function get($itemKey, $defaultValue = null, $autoExpand = true)
 	{
-		$parts = explode('.', $itemKey);
+		$parts = explode('.', $this->normalizeKey($itemKey));
 		$arrRef = &$this->items;
 
 		while (count($parts) > 1) {
@@ -138,7 +147,7 @@ abstract class AbstractContainer
 	 */
 	public function set($itemKey, $value)
 	{
-		$parts = explode('.', $itemKey);
+		$parts = explode('.', $this->normalizeKey($itemKey));
 		$arrRef = &$this->items;
 
 		while (count($parts) > 1) {
@@ -175,7 +184,7 @@ abstract class AbstractContainer
 	 */
 	final public function has($itemKey)
 	{
-		$parts = explode('.', $itemKey);
+		$parts = explode('.', $this->normalizeKey($itemKey));
 		$arrRef = &$this->items;
 
 		while (count($parts) > 1) {

@@ -7,7 +7,7 @@ use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
 $this->openSection('phpcrystal.phpcrystal');
 
 // Default session settings
-$this->serviceSection('session');
+$this->service('::session');
 	$this->set('storage', Facade\Filesystem::create());
 	// if set to true does not accept uninitialized session ID
 	$this->set('use_strict_mode', true);
@@ -26,7 +26,7 @@ $this->closeSection();
 
 $this->serviceSection('cache');
 	$this->set('driver', Facade\Memcached::create())
-		->addServer('localhost')
+		->_->addServer('localhost')
 		->setOption(\Memcached::OPT_LIBKETAMA_COMPATIBLE, true)
 	;
 $this->closeSection();

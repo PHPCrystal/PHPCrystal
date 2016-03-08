@@ -7,6 +7,7 @@ use PHPCrystal\PHPCrystal\Component\Container\FactoryArgs,
 trait FactoryAware
 {
 	private $factory;
+
 	/** @var array */
 	private $factoryArgs;
 

@@ -59,6 +59,11 @@ final class Metadriver extends AbstractService
 
 		return $this;
 	}
+	
+	public function getMetaServiceByName($dotName)
+	{
+		// vendor.package.service.<name>
+	}
 
 	/**
 	 * @return Metaservice

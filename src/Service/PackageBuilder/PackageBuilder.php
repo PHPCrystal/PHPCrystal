@@ -23,7 +23,7 @@ class PackageBuilder extends AbstractBuilder
 	 */
 	public function getContractors()
 	{
-		$scanResult = $this->scan('src/Service', function($className) {
+		$scanResult = $this->scanPhpDefinitions('src/Service', function($className) {
 			if (AbstractContractor::isContractor($className)) {
 				return new MetaService($className, $this->getPackage()->getPriority());
 			}

@@ -25,7 +25,15 @@ abstract class AbstractRouter extends AbstractService
 	{
 		parent::__construct();
 	}
-	
+
+	/**
+	 * {@inherited}
+	 */
+	final public static function isSingleton()
+	{
+		return false;
+	}
+
 	/**
 	 * @return boolean
 	 */
