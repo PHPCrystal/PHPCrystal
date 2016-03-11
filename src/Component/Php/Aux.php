@@ -40,4 +40,28 @@ class Aux
 		return self::isFullyQualifiedName($extendableName) ||
 			self::isQualifiedName($extendableName) ? false : true;
 	}
+	
+	/**
+	 * @return string
+	 */
+	public static function getShortName($className)
+	{
+		return (new \ReflectionClass($className))->getShortName();
+	}
+	
+	/**
+	 * @return string
+	 */
+	public static function getNamespace($className)
+	{
+		return (new \ReflectionClass($className))->getNamespaceName();
+	}
+	
+	/**
+	 * @return bool
+	 */
+	public static function isInstantiable($className)
+	{
+		return (new \ReflectionClass($className))->isInstantiable();
+	}
 }

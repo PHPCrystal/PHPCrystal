@@ -1,5 +1,5 @@
 <?php
-namespace PHPCrystal\PHPCrystal\Service\Metadriver;
+namespace PHPCrystal\PHPCrystal\Service\MetaDriver;
 
 use PHPCrystal\PHPCrystal\Annotation\Action as Action;
 use PHPCrystal\PHPCrystal\Component\Exception\System\FrameworkRuntimeError;

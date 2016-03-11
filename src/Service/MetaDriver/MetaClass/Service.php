@@ -1,12 +1,12 @@
 <?php
-namespace PHPCrystal\PHPCrystal\Component\Service;
+namespace PHPCrystal\PHPCrystal\Service\MetaDriver\MetaClass;
 
-final class MetaService
+use PHPCrystal\PHPCrystal\Service\MetaDriver\AbstractMetaClass;
+
+final class Service extends AbstractMetaClass
 {
 	/** @var string $key */
 	private $key;	
-	/** @var string */
-	private $className;
 	/** @var array Array of interfaces implemented by service */
 	private $implements = [];
 	/** @var integer */
@@ -20,7 +20,7 @@ final class MetaService
 	 */
 	public function __construct($className, $priority)
 	{
-		$this->className = $className;
+		parent::__construct($className, []);
 		$this->implements = class_implements($className);
 		sort($this->implements);
 		$this->key = sha1(join(',', $this->implements));
@@ -35,14 +35,6 @@ final class MetaService
 		return $this->key;
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getClassName()
-	{
-		return $this->className;
-	}
-	
 	/**
 	 * @return integer
 	 */

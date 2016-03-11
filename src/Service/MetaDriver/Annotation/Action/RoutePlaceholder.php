@@ -1,8 +1,7 @@
 <?php
-namespace PHPCrystal\PHPCrystal\Annotation\Action;
+namespace PHPCrystal\PHPCrystal\Service\MetaDriver\Annotation\Action;
 
-use PHPCrystal\PHPCrystal\Component\Exception\System\FrameworkRuntimeError;
-
+use PHPCrystal\PHPCrystal\Service\MetaDriver\Annotation\AbstractAnnotation;
 /**
  * @Annotation
  * @Target({"CLASS"})
@@ -14,7 +13,7 @@ use PHPCrystal\PHPCrystal\Component\Exception\System\FrameworkRuntimeError;
  *  @Attribute("regExp", type="string")
  * })
  */
-class RoutePlaceholder
+class RoutePlaceholder extends AbstractAnnotation
 {
 	private $name;
 	private $defaultValue;

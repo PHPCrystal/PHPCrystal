@@ -14,6 +14,9 @@ use PHPCrystal\PHPCrystal\_Trait\PkgConfigAware;
 abstract class AbstractPackage extends Event\AbstractNode
 {
 	use PkgConfigAware;
+	
+	/** @var string */
+	private $fullName;
 
 	private $builder;
 	private $router;
@@ -134,6 +137,8 @@ abstract class AbstractPackage extends Event\AbstractNode
 	public function init()
 	{
 		$this->setBuilder('\\PHPCrystal\\PHPCrystal\\Service\\PackageBuilder\\PackageBuilder');
+		$parts = explode('\\', $this->getNamespace());
+		$this->fullName = strtolower($parts[0] . '.' . $parts[1]);
 	}
 
 	/**
@@ -339,5 +344,13 @@ abstract class AbstractPackage extends Event\AbstractNode
 		}
 		
 		$builder->run();
+	}
+	
+	/**
+	 * @return string
+	 */
+	final public function getFullName()
+	{
+		return $this->fullName;
 	}
 }

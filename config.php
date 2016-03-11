@@ -7,7 +7,7 @@ use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
 $this->openSection('phpcrystal.phpcrystal');
 
 // Default session settings
-$this->service('::session');
+$this->service('<session>');
 	$this->set('storage', Facade\Filesystem::create());
 	// if set to true does not accept uninitialized session ID
 	$this->set('use_strict_mode', true);

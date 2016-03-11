@@ -1,5 +1,7 @@
 <?php
-namespace PHPCrystal\PHPCrystal\Annotation\Common;
+namespace PHPCrystal\PHPCrystal\Service\MetaDriver\Annotation\Common;
+
+use PHPCrystal\PHPCrystal\Service\MetaDriver\Annotation\AbstractAnnotation;
 
 use PHPCrystal\PHPCrystal\Contract\EventCatalyst;
 use PHPCrystal\PHPCrystal\Service\Event as  Event;
@@ -11,7 +13,7 @@ use PHPCrystal\PHPCrystal\Service\Event as  Event;
  *  @Attribute("authRequired", type="boolean")
  * })
  */
-class SecurityPolicy implements EventCatalyst
+class SecurityPolicy extends AbstractAnnotation implements EventCatalyst
 {
 	private $authRequired;
 

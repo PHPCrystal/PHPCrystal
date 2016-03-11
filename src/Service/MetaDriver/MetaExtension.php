@@ -1,5 +1,5 @@
 <?php
-namespace PHPCrystal\PHPCrystal\Service\Metadriver;
+namespace PHPCrystal\PHPCrystal\Service\MetaDriver;
 
 class MetaExtension extends AbstractMetaContainer
 {

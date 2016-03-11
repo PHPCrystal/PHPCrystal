@@ -51,7 +51,7 @@ class Parser extends TokenParser
 	 */
 	public function parseClass()
 	{
-		$name = '\\' . $this->parseNamespace();
+		$name = $this->parseNamespace();
 		$startClassDecl = false;
 
 		while (($token = $this->next())) {

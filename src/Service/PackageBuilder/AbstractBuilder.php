@@ -45,7 +45,7 @@ abstract class AbstractBuilder extends AbstractService
 	/**
 	 * @return array
 	 */
-	protected function scanPhpDefinitions($targetDir, \Closure $callback)
+	protected function scanPhpDefinitions($targetDir, \Closure $callback, $exclude = [])
 	{
 		$result = array();
 		$loc = FileHelper::create($this->getPackage()->getDirectory(), $targetDir);
@@ -54,7 +54,9 @@ abstract class AbstractBuilder extends AbstractService
 			return $result;
 		}
 
-		$phpFiles = Finder::create()->findPhpFiles($loc->toString());
+		$phpFiles = Finder::create()
+			->findPhpFiles($loc->toString())
+			->exclude($exclude);
 
 		foreach ($phpFiles as $file) {
 			$className = Parser::loadFromFile($file->getRealpath())

@@ -3,7 +3,7 @@ namespace PHPCrystal\PHPCrystal\Component\Package;
 
 use PHPCrystal\PHPCrystal\Component\Package\Option\Container;
 use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
-use PHPCrystal\PHPCrystal\Facade\Metadriver;
+use PHPCrystal\PHPCrystal\Facade\MetaDriver;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
 use PHPCrystal\PHPCrystal\Component\Facade as Facade;
 use PHPCrystal\PHPCrystal\Component\Exception as Exception;
@@ -302,9 +302,9 @@ abstract class AbstractApplication extends AbstractPackage
 		foreach (Metadriver::getActionsAll() as $pkgKey => $metaClassArray) {
 			$package = $this->getPackageByKey($pkgKey);
 			foreach ($metaClassArray as $metaClass) {
-				$action = $package->getFactory()
-					->createFromMetaClass($metaClass);
-				$this->addAction($action);
+				//$action = $package->getFactory()
+				//	->createFromMetaClass($metaClass);
+				//$this->addAction($action);
 			}
 		}		
 	}
@@ -328,11 +328,11 @@ abstract class AbstractApplication extends AbstractPackage
 	private function autoloadExtensions()
 	{
 		if ($this->getContext()->getEnv() != 'prod') {
-			Metadriver::flush();
-			Metadriver::addExtensionsToAutoload();
+			MetaDriver::flush();
+			MetaDriver::addExtensionsToAutoload();
 		}
 
-		foreach (Metadriver::getExtensionsAll() as $metaExt) {
+		foreach (MetaDriver::getExtensionsAll() as $metaExt) {
 			$this->addExtension($metaExt->getDirectoryName());
 		}
 	}

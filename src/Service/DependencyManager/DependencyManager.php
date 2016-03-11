@@ -109,7 +109,10 @@ class DependencyManager extends AbstractService
 
 		foreach ($refMethod->getParameters() as $param) {
 			$typeHinted = $param->getClass();
-			if ($typeHinted && ($typeHinted->isInterface() || $typeHinted->isInstantiable())) {
+
+			if ($typeHinted && ($typeHinted->isInterface()
+				|| $typeHinted->isInstantiable())) {
+
 				return true;
 			}
 		}

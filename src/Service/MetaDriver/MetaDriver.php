@@ -1,68 +1,180 @@
 <?php
-namespace PHPCrystal\PHPCrystal\Service\Metadriver;
+namespace PHPCrystal\PHPCrystal\Service\MetaDriver;
 
 use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
-use PHPCrystal\PHPCrystal\Component\Service\AbstractService;
+use PHPCrystal\PHPCrystal\Component\Service\AbstractService,
+	PHPCrystal\PHPCrystal\Component\Service\AbstractContractor;
 use PHPCrystal\PHPCrystal\Component\Package\AbstractExtension;
 use Doctrine\Common\Annotations\SimpleAnnotationReader;
 use PHPCrystal\PHPCrystal\Component\Php as Php;
 
 const EXTENDABLE_INTERFACE = 'PHPCrystal\\PHPCrystal\\Component\\Factory\\ExtendableInterface';
 
-final class Metadriver extends AbstractService
+final class MetaDriver extends AbstractService
 {
-
 	/** @var array */
-	private $metaServiceMap = [];
+	private $classNames_URI_Mapping = [];
+	
+	/** @var array */
+	private $metaServices = [];	
+	
+	/** @var array */
+	private $metaActions = [];
+	
+	/** @var array */
+	private $metaControllers = [];
+	
+	/** @var array */
+	private $metaFrontControllerMap = [];
+
+	/** @var array Maps class names in dot notation to fully qualified PHP class names */
+	private $classNamesMap = [];
 	private $isVoid = true;
 	private $data;
 	private $filename;
-	private $annotReader;
-
+	protected $annotReader;
+	
+	
 	/**
-	 * @return string
+	 * @return void
 	 */
-	public static function geExtendedClassNameByBase($baseClass)
+	public function addClassName_URI_MappingEntry($className, $URI_Str)
 	{
-		$extended_class_name = '\\' . $this->getApplication()->getNamespace() .
-			'\\Extension\\' . $baseClass;
-
-		return $extended_class_name;
-	}
-
-	/**
-	 * @return string
-	 */
-	public function resolveClassName($className, $package)
-	{
-		$resolved = $className;
-		if (Php\Aux::isQualifiedName($className)) {
-			$resolved = '\\' . $package->getNamespace() . '\\' . $className;
-		}
-
-		return $resolved;
-	}
-
-	/**
-	 * @return $this
-	 */
-	public function addMetaService($metaService)
-	{
-		$key = $metaService->getKey();
-
-		if ( ! isset($this->metaServiceMap[$key])) {
-			$this->metaServiceMap[$key] = new \SplPriorityQueue();
-			$this->metaServiceMap[$key]->setExtractFlags(\SplPriorityQueue::EXTR_DATA);
-		}
-
-		$this->metaServiceMap[$key]->insert($metaService, $metaService->getPriority());
-
-		return $this;
+		$this->classNames_URI_Mapping[$className] = $URI_Str;
 	}
 	
-	public function getMetaServiceByName($dotName)
+	/**
+	 * @return string
+	 */
+	public function findClassNameBy_URI($searchBy)
 	{
-		// vendor.package.service.<name>
+		foreach ($this->classNames_URI_Mapping as $className => $URI) {
+			if ($URI == $searchBy) {
+				return $className;
+			}
+		}
+	}
+	
+	/**
+	 * @return void
+	 */
+	public function addMetaService($className, $package)
+	{
+		$metaService = new MetaClass\Service($className, $package->getPriority());
+		$key = $metaService->getKey();
+
+		if ( ! isset($this->metaServices[$key])) {
+			$this->metaServices[$key] = new \SplPriorityQueue();
+			$this->metaServices[$key]->setExtractFlags(\SplPriorityQueue::EXTR_DATA);
+		}
+
+		$this->metaServices[$key]->insert($metaService, $metaService->getPriority());
+	}
+	
+	/**
+	 * @return void
+	 */
+	public function addMetaAction($className)
+	{
+		$metaAction = new MetaClass\Action($this->extendableResolveClassName($className),
+			$this->getAnnotations($className));
+		$this->metaActions[] = $metaAction;
+	}
+	
+	/**
+	 * @return string
+	 */
+	private function extendableResolveClassName($base)
+	{
+		$appNS = $this->getApplication()->getNamespace();
+		$extended = "\\$appNS\\Ext";
+		$extended .= Php\Aux::isFullyQualifiedName($base) ? "$base" : "\\$base";
+		
+		return class_exists($extended) ? $extended : $base;
+	}
+	
+	/**
+	 * @return array
+	 */
+	private function mergeAnnots(...$annotArrays)
+	{
+		$result = array();
+		$merged = array_merge(...$annotArrays);
+		
+		foreach ($merged as $annot) {
+			$key = get_class($annot);
+			
+			if (isset($result[$key])) {
+				$result[$key]->merge($annot);
+			} else {
+				$result[$key] = $annot;
+			}
+		}
+		
+		return array_values($result);
+	}
+	
+	/**
+	 * @return array
+	 */
+	private function getAnnotations($base)
+	{
+		$baseAnnots = $this->annotReader->getClassAnnotations(new \ReflectionClass($base));
+		$extended  = $this->extendableResolveClassName($base);
+
+		if ($base == $extended) {
+			return $this->mergeAnnots($baseAnnots);
+		}
+		
+		// fetch annotations of the extended class and merge them with the annotions
+		// of the base one
+		$extendedAnnots = $this->annotReader->getClassAnnotations(new \ReflectionClass($extended));
+		
+		return $this->mergeAnnots($baseAnnots, $extendedAnnots);
+	}
+
+	/**
+	 * @return void
+	 */
+	public function addController($className, $package)
+	{
+		$this->metaControllers = new MetaClass\Controller($className, $package);
+	}
+	
+	/**
+	 * @return string
+	 */
+	public function classNametoDotname($name)
+	{
+		return ltrim(strtolower(str_replace('\\', '.', $name)), '.');
+	}
+
+	/**
+	 * @return string
+	 */
+	public function convertToDotName($className)
+	{
+		$regexpVendor = '[^\\]+';
+		
+		if (preg_match("~$regexpVendor\\$regexpPackage\\Service\\~"))
+		
+		$namespace = Php\Aux::getNamespace($className);
+		$shortName = Php\Aux::getShortName($className);
+		
+		if (AbstractService::isService($className)) {
+			$dotName = $namespace . '.' . $shortName;
+		}
+	}
+	
+	/**
+	 * @return void
+	 */
+	public function classMapAddEntry($className)
+	{
+		//if (AbstractService::isService($className)) {
+		//	$dotName = $this->extractVendor() . '.' . $this->
+			//$this->classNamesMap[]
+		//}
 	}
 
 	/**
@@ -70,7 +182,7 @@ final class Metadriver extends AbstractService
 	 */
 	public function getMetaServiceByInterface($name)
 	{
-		foreach ($this->metaServiceMap as $splQueue) {
+		foreach ($this->metaServices as $splQueue) {
 			$metaService = $splQueue->top();
 			if ($metaService->check($name)) {
 				return $metaService;
@@ -86,23 +198,9 @@ final class Metadriver extends AbstractService
 	public function init()
 	{
 		parent::init();
-
 		$this->annotReader = new SimpleAnnotationReader();
-		$this->annotReader->addNamespace('PHPCrystal\PHPCrystal\Annotation\Action');
-		$this->annotReader->addNamespace('PHPCrystal\PHPCrystal\Annotation\Common');
-
-		$this->filename = FileHelper::create('@cache', 'furball.ser');
-		$data = $this->filename->unserialize();
-
-		if ($data !== null) {
-			$this->isVoid = false;
-			$this->data = $data;
-		} else {
-			$this->flush();
-			$this->isVoid = true;
-		}
-
-		$this->isInitialized = true;
+		$this->annotReader->addNamespace(__NAMESPACE__ . '\\Annotation\\Action');
+		$this->annotReader->addNamespace(__NAMESPACE__ . '\\Annotation\\Common');
 	}
 
 	/**
@@ -227,18 +325,6 @@ final class Metadriver extends AbstractService
 		$pkgNamespace = $parts[0] . '\\' . $parts[1];
 
 		return $pkgNamespace;
-	}
-
-	/**
-	 * @return array
-	 */
-	public function getClassAnnotations($className)
-	{
-		$refClass = new \ReflectionClass($className);
-
-		$annots = $this->annotReader->getClassAnnotations($refClass);
-
-		return $annots;
 	}
 
 	/**

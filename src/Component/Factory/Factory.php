@@ -6,7 +6,7 @@ use PHPCrystal\PHPCrystal\Component\Service\MetaService;
 use PHPCrystal\PHPCrystal\Component\Service\AbstractService;
 use PHPCrystal\PHPCrystal\Component\Service\AbstractContractor;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
-use PHPCrystal\PHPCrystal\Facade\Metadriver as FacadeMetadriver;
+use PHPCrystal\PHPCrystal\Facade\MetaDriver as FacadeMetaDriver;
 use PHPCrystal\PHPCrystal\Component\Facade as Facade;
 use PHPCrystal\PHPCrystal\Component\Exception\System\FrameworkRuntimeError;
 use PHPCrystal\PHPCrystal\Component\Container as Container;
@@ -34,6 +34,7 @@ final class Factory
 	 * @var array
 	 */
 	private $dependenciesTracker;
+	private $nameResolver;
 
 	/**
 	 * @api
@@ -41,10 +42,17 @@ final class Factory
 	public function __construct($package)
 	{
 		$this->package = $package;
-		$this->metadriver = $this->singletonNewInstance('\\PHPCrystal\\PHPCrystal\\Service\\Metadriver\\Metadriver')
+		$this->metadriver = $this->singletonNewInstance('PHPCrystal\\PHPCrystal\\Service\\MetaDriver\\MetaDriver')
 			->setFactory($this);
-		$this->DI_Manager = $this->singletonNewInstance('\\PHPCrystal\\PHPCrystal\\Service\\DependencyManager\\DependencyManager', [$this->metadriver])
+		$this->metadriver->init();
+		$this->DI_Manager = $this->singletonNewInstance('PHPCrystal\\PHPCrystal\\Service\\DependencyManager\\DependencyManager', [$this->metadriver])
 			->setFactory($this);
+		$this->nameResolver = new NameResolver($this);
+	}
+	
+	public function getNameResolver()
+	{
+		return $this->nameResolver;
 	}
 
 	/**
@@ -135,10 +143,7 @@ final class Factory
 
 		if (Php\Aux::implementsInterface($className, DI_INTERFACE)) {
 			$injector = $this->DI_Manager->getInjectorReflection($className);
-			$constructorArgs = $this->DI_Manager->getDependencies($injector);
-		if (strpos($className, 'Builder')) {
-		//	var_dump($this->DI_Manager->getInjectorDeps($injector)); exit;
-		}			
+			$constructorArgs = $this->DI_Manager->getDependencies($injector);		
 		} else {
 			$constructorArgs = $factoryArgs;
 		}
@@ -176,7 +181,7 @@ final class Factory
 	 */
 	public function create($className, $factoryArgs = [])
 	{
-		$fqcn = $this->metadriver->resolveClassName($className, $this->getPackage());
+		$fqcn = $this->nameResolver->resolve($className);
 		
 		if (AbstractService::isService($fqcn)) {
 			return $this->createService($fqcn, $factoryArgs);
@@ -314,5 +319,12 @@ final class Factory
 			return $this->createExtendable('Action', $actionName);
 		}
 	}
-
+	
+	/**
+	 * @return strings
+	 */
+	public function createFromURI($URI_Str)
+	{
+		echo $this->nameResolver->getName($URI_Str);
+	}
 }

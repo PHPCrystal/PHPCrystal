@@ -1,14 +1,13 @@
 <?php
-namespace PHPCrystal\PHPCrystal\Annotation\Action;
+namespace PHPCrystal\PHPCrystal\Service\MetaDriver\Annotation\Action;
 
-use PHPCrystal\PHPCrystal\Component\MVC\Controller\Action\AbstractAction;
-use PHPCrystal\PHPCrystal\Component\Exception as Exception;
+use PHPCrystal\PHPCrystal\Service\MetaDriver\Annotation\AbstractAnnotation;
 
 /**
  * @Annotation
  * @Target({"CLASS"})
  */
-class ControllerMethod
+class ControllerMethod extends AbstractAnnotation
 {
 	/**
 	 * @var string

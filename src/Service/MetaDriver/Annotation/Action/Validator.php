@@ -1,8 +1,7 @@
 <?php
-namespace PHPCrystal\PHPCrystal\Annotation\Action;
+namespace PHPCrystal\PHPCrystal\Service\MetaDriver\Annotation\Action;
 
-use PHPCrystal\PHPCrystal\Component\Http\Request;
-use PHPCrystal\PHPCrystal\Component\Exception\System\FrameworkRuntimeError;
+use PHPCrystal\PHPCrystal\Service\MetaDriver\Annotation\AbstractAnnotation;
 
 /**
  * @Annotation
@@ -12,7 +11,7 @@ use PHPCrystal\PHPCrystal\Component\Exception\System\FrameworkRuntimeError;
  *  @Attribute("targetMethod", type="string")
  * })
  */
-class Validator
+class Validator extends AbstractAnnotation
 {
 	private $className;
 	private $defaultName;

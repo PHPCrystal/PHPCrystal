@@ -22,18 +22,9 @@ class FactoryTest extends TestCaseDummy
 		$this->assertTrue($instance1 === $instance2);
 	}
 
-	public function _testCreateExtendable()
+	public function testServiceCreation()
 	{
-		$action = $this->appPkg->getFactory()
-			->create("Action\_Default\_Default\Index");
-		$this->assertInstanceOf("PHPCrystal\\PHPCrystal\\Component\\MVC\\Controller\\Action\\AbstractAction", $action);
+		$cacheObject = $this->appFactory->create('service://phpcrystal.phpcrystal/cache');
+		$this->assertInstanceOf('PHPCrystal\PHPCrystal\Service\Cache\Cache', $cacheObject);
 	}
-	
-//	public function testGetPackageByItsMemeber()
-//	{
-////		$pkgInstance = $this->appPkg->getFactory()
-////			->getPackageByItsMember($this->createDefaultController());
-////		$this->assertInstanceOf('PHPCrystal\\PHPCrystal\\Component\\Package\\AbstractPackage', $pkgInstance);
-////		$this->assertEquals('phpcrystal/phpcrystaltest', $pkgInstance->getComposerName());
-//	}
 }

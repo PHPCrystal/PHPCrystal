@@ -1,14 +1,15 @@
 <?php
 namespace PHPCrystal\PHPCrystal\Component\Service;
 
-use PHPCrystal\PHPCrystal\Component\Factory\Factory;
+use PHPCrystal\PHPCrystal\Component\Factory\Factory,
+	PHPCrystal\PHPCrystal\Component\Object\Object;
 use PHPCrystal\PHPCrystal\Facade\Metadriver;
 
 use PHPCrystal\PHPCrystal\Service\DependencyManager\DI_Interface,
 	PHPCrystal\PHPCrystal\Component\Factory\FactoryInterface,
 	PHPCrystal\PHPCrystal\_Trait\FactoryAware;
 
-abstract class AbstractService implements
+abstract class AbstractService extends Object implements
 	DI_Interface,
 	FactoryInterface
 {

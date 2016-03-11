@@ -2,16 +2,28 @@
 // Application config container
 namespace PHPCrystal\PHPCrystal\Component\Service;
 
-use PHPCrystal\PHPCrystal\Component\Container\AbstractConfig;
+use PHPCrystal\PHPCrystal\Component\Container\AbstractConfig,
+	PHPCrystal\PHPCrystal\Service\Metadriver\Metadriver;
 
 class Config extends AbstractConfig
 {
+	protected $metadriver;
+	
+	/**
+	 * 
+	 */
+	public function __construct(array $items = [], Metadriver $metadriver)
+	{
+		parent::__construct($items);
+		$this->metadriver = $metadriver;
+	}
+	
 	/**
 	 * @return
 	 */
 	public function service($name)
 	{
-		$this->set()
+		$dotName = $this->getPackage()->getDotName() . '.service.' . $name;
 	}
 	
 	/**

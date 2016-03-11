@@ -1,5 +1,8 @@
 <?php
-namespace PHPCrystal\PHPCrystal\Annotation\Action;
+namespace PHPCrystal\PHPCrystal\Service\MetaDriver\Annotation\Action;
+
+use PHPCrystal\PHPCrystal\Service\MetaDriver\Annotation\AbstractAnnotation;
+
 
 use PHPCrystal\PHPCrystal\Component\Http\Request;
 use PHPCrystal\PHPCrystal\Component\Exception\System\FrameworkRuntimeError;
@@ -12,7 +15,7 @@ use PHPCrystal\PHPCrystal\Component\Exception\System\FrameworkRuntimeError;
  *  @Attribute("matchPattern", type="string", required=true),
  * })
  */
-class Route
+class Route extends AbstractAnnotation
 {
 	private $allowedHttpMethods = array();
 	private $matchPattern;
