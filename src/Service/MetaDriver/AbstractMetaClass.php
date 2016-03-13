@@ -1,26 +1,50 @@
 <?php
 namespace PHPCrystal\PHPCrystal\Service\MetaDriver;
 
-class AbstractMetaClass
+abstract class AbstractMetaClass
 {
+	/** @var AbstractPackage */
+	private $owner;
+
 	/** @var string */
-	private $className;
+	protected $targetClass;
+	
+	/** @var string */
+	protected $baseClass;
 	
 	/** @var array */
 	private $annots;
 	
-	public function __construct($className, array $annots)
+	/** @var string */
+	private $URI_Str;
+
+	public function __construct($owner, $targetClass, $baseClass, array $annots)
 	{
-		$this->className = $className;
+		$this->owner = $owner;
+		$this->targetClass = $targetClass;
+		$this->baseClass = $baseClass;
 		$this->annots = $annots;
+	}
+	
+	public function __sleep()
+	{
+		return ['targetClass', 'baseClass'];
 	}
 	
 	/**
 	 * @return string
 	 */
-	public function getClassName()
+	public function getTargetClass()
 	{
-		return $this->className;
+		return $this->targetClass;
+	}
+	
+	/**
+	 * @return string
+	 */
+	public function getBaseClass()
+	{
+		return $this->baseClass;
 	}
 	
 	/**
@@ -29,5 +53,5 @@ class AbstractMetaClass
 	public function getAnnotations()
 	{
 		return $this->annots;
-	}	
+	}
 }

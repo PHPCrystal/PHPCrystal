@@ -18,10 +18,10 @@ final class Service extends AbstractMetaClass
 	 * @param string	$className
 	 * @param integer	$priority
 	 */
-	public function __construct($className, $priority)
+	public function __construct($targetClass, $priority)
 	{
-		parent::__construct($className, []);
-		$this->implements = class_implements($className);
+		parent::__construct($targetClass, [], null);
+		$this->implements = class_implements($targetClass);
 		sort($this->implements);
 		$this->key = sha1(join(',', $this->implements));
 		$this->priority = $priority;

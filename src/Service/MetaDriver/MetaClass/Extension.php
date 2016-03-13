@@ -1,7 +1,10 @@
 <?php
-namespace PHPCrystal\PHPCrystal\Service\MetaDriver;
+namespace PHPCrystal\PHPCrystal\Service\MetaDriver\MetaClass;
 
-class MetaExtension extends AbstractMetaContainer
+use PHPCrystal\PHPCrystal\Service\MetaDriver\AbstractMetaClass,
+	PHPCrystal\PHPCrystal\Service\MetaDriver\Annotation as Annotation;
+
+class Extension extends AbstractMetaClass
 {
 	private $dirname;
 	
@@ -10,7 +13,7 @@ class MetaExtension extends AbstractMetaContainer
 	 */
 	public function __construct($dirname)
 	{
-		$this->dirname = $dirname;
+		parent::__construct($className, $annots);
 	}
 
 	/**

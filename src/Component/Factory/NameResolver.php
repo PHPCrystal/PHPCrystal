@@ -3,45 +3,39 @@
 namespace PHPCrystal\PHPCrystal\Component\Factory;
 
 use Zend\Uri\Uri,
-	PHPCrystal\PHPCrystal\_Trait\FactoryAware,
-	PHPCrystal\PHPCrystal\Service\Metadriver\Metadriver;
-	
+	PHPCrystal\PHPCrystal\Component\Service\AbstractService,
+	PHPCrystal\PHPCrystal\Component\MVC as MVC,
+	PHPCrystal\PHPCrystal\_Trait\FactoryAware;
 
 class NameResolver
 {
+
 	use FactoryAware;
-	
+
 	const ACTION_SCHEME = 'action',
 		CONTROLLER_SCHEME = 'ctrl',
 		FRONT_CONTROLLER_SCHEME = 'fc',
 		SERVICE_SCHEME = 'service';
-	
-	/** @var Zend\Uri\Uri */
-	private $zend_URI;
-	
-	/** @var string */
-	private $appPkgNS;
-	
+
 	private $factory;
-	
+
 	/** @var array */
 	public static $knownSchemes = [self::ACTION_SCHEME, self::CONTROLLER_SCHEME,
 		self::FRONT_CONTROLLER_SCHEME, self::SERVICE_SCHEME];
-	
-	
+
 	public function __construct($factory)
 	{
 		$this->factory = $factory;
 		$this->appPkgNS = $this->factory
 			->getApplication()
 			->getNamespace();
- 	}
-	
+	}
+
 	public function init()
 	{
 		// ...
 	}
-	
+
 	/**
 	 * @return string
 	 */
@@ -50,41 +44,50 @@ class NameResolver
 		$resolved = null;
 
 		if (strpos($name, ':/') != false) {
-			$uri = new Uri($name);
-			if ( ! $uri->getHost()) {
-				$uri->setHost($this->getPackage()->getFullName());
-			}
+			$URI = new Uri($name);
+			$this->normalize_URI($URI);
 			$resolved = $this->getFactory()
 				->getMetaDriver()
-				->findClassNameBy_URI($uri->toString());
+				->getClassNameBy_URI($URI->toString());
 		} else {
 			return $resolved = $name;
 		}
-		
+
 		return $resolved;
 	}
 	
 	/**
 	 * @return string
 	 */
+	public function classNameTo_URI($className)
+	{
+		if (AbstractService::isSubclass($className)) {
+			return $this->toService_URI($className);			
+		} else if (MVC\Controller\Action\AbstractAction::isSubclass($className)) {
+			return $this->toAction_URI($className);	
+		} else if (MVC\Controller\AbstractController::isSubclass($className)) {
+			return $this->toController_URI($className);				
+		} else if (MVC\Controller\AbstractFrontController::isSubclass($className)) {
+			return $this->toFrontController_URI($className);			
+		} else {
+			return null; 
+		}
+	}
+
+	/**
+	 * @return string
+	 */
 	public function toAction_URI($className)
 	{
-		$parsed = $this->parseClassName(ltrim($className, '\\'));
-		
-		return self::ACTION_SCHEME . '://' . $parsed['package'] . '.' .
-			$parsed['vendor'] . '/' . $parsed['fc'] . '/' .
-			$parsed['controller'] . '/' . $parsed['action'];
+		return $this->composeAction_URI($this->parseClassName($className));
 	}
-	
+
 	/**
 	 * @return string
 	 */
 	public function toController_URI($className)
 	{
-		$parsed = $this->parseClassName($className);
-		
-		return self::CONTROLLER_SCHEME . '://' . $parsed['package'] . '.' . $parsed['vendor'] .
-			'/' . $parsed['fc'] . '/' . $parsed['controller'];
+		return $this->composeController_URI($this->parseClassName($className));
 	}
 
 	/**
@@ -92,104 +95,33 @@ class NameResolver
 	 */
 	public function toFrontController_URI($className)
 	{
-		$parsed = $this->parseClassName($className);
-		
-		return self::FRONT_CONTROLLER_SCHEME . '://' . $parsed['package'] . '.'
-			. $parsed['vendor'] . '/' . $parsed['fc'];
-	}
-	
-	/**
-	 * @return string
-	 */
-	public function toService_URI($className)
-	{
-		$parsed = $this->parseClassName($className);
-		
-		return self::SERVICE_SCHEME . '://' . $parsed['package'] . '.' .
-			$parsed['vendor'] . '/' . $parsed['service'];
-	}
-	
-	/**
-	 * @return string
-	 */
-	public function getName($URI_Str)
-	{
-		$this->zend_URI = new Uri($URI_Str);
-		
-		switch ($this->zend_URI->getScheme()) {
-			case 'action':
-				$names = $this->getActionName();
-				break;
-			
-			case 'ctrl':
-				$names = $this->getControllerName();
-				break;
-			
-			case 'fc':
-				$names = $this->getFrontControllerName();
-				break;
-		}
-		
-		if ($this->getPackage()->isApplication()
-			&& ! class_exists($names[1])) {
-			return $names[0]; // base class name
-		} else {
-			return $names[1]; // extended
-		}
+		return $this->composeController_URI($this->parseClassName($className));
 	}
 
 	/**
 	 * @return string
 	 */
-	private function getPkgNS()
+	public function toService_URI($className)
 	{
-		$host = $this->zend_URI->getHost();
-		
-		if (empty($host)) {
-			return $this->getPackage()->getNamespace();
-		} else {
-			//return $this->metadriver->getPackageByDotname($host);
-		}
+		return $this->composeService_URI($this->parseClassName($className));
 	}
-	
+
 	/**
-	 * @return string
+	 * @return array
 	 */
-	private function pathSegmentToNS()
+	public function getActionRelatedResourceNames($action_URI)
 	{
-		return str_replace('/', '\\',
-			ltrim(rtrim($this->zend_URI->getPath(), '/'), '/'));
+		$metaAction = $this->factory
+			->getMetaDriver()
+			->findMetaClassBy_URI($action_URI);
+		$parsed = $this->parseClassName($metaAction->getBaseClass());
+
+		return [
+			self::FRONT_CONTROLLER_SCHEME => $this->composeFrontController_URI($parsed),
+			self::CONTROLLER_SCHEME => $this->composeController_URI($parsed)
+		];
 	}
-	
-	/**
-	 * @return string
-	 */
-	private function getActionName()
-	{
-		$pkgNS = $this->getPkgNS();
-		$pathSegmentNS = $this->pathSegmentToNS();
-		$base = "\\$pkgNS\\Action\\$pathSegmentNS";		
-		$extended = "\\{$this->appPkgNS}\\Ext\\$pkgNS\\Action\\$pathSegmentNS";
-		
-		return [$base, $extended];
-	}
-	
-	/**
-	 * @return string
-	 */
-	private function getControllerName($URI)
-	{
-		
-	}
-	
-	/**
-	 * @return string
-	 */
-	private function getFrontControllerName($URI)
-	{
-		
-	}
-	
+
 	/**
 	 * @return array
 	 */
@@ -197,12 +129,12 @@ class NameResolver
 	{
 		$parts = array_map(function($item) {
 			return strtolower($item);
-		}, explode('\\', $className));
-		
+		}, explode('\\', ltrim($className, '\\')));
+
 		$data = [];
 		$data['vendor'] = $parts[0];
 		$data['package'] = $parts[1];
-		
+
 		if (preg_match('/^[^\\\\]+\\\\[^\\\\]+\\\\Service/', $className)) {
 			// <Vendor>\<Package>\Service\<ServiceName>
 			$data['service'] = join('/', array_slice($parts, 3, -1));
@@ -215,11 +147,58 @@ class NameResolver
 			// <Vendor>\<Package>\Controller\<FrontControllerName>\<ControllerName>
 			$data['fc'] = $parts[3];
 			$data['controller'] = $parts[4];
-		} else if (preg_match('^/[^\\\\]+\\\\[^\\\\]+\\\\FrontController/', $className)) {
+		} else if (preg_match('/^[^\\\\]+\\\\[^\\\\]+\\\\FrontController/', $className)) {
 			// <Vendor>\<Package>\FrontController\<FrontControllerName>
 			$data['fc'] = $parts[3];
 		}
-		
+
 		return $data;
+	}
+
+	/**
+	 * @return string
+	 */
+	private function composeAction_URI(array $parsed)
+	{
+		return self::ACTION_SCHEME . '://' . $parsed['package'] . '.' .
+			$parsed['vendor'] . '/' . $parsed['fc'] . '/' .
+			$parsed['controller'] . '/' . $parsed['action'];
+	}
+
+	/**
+	 * @return string
+	 */
+	private function composeController_URI(array $parsed)
+	{
+		return self::CONTROLLER_SCHEME . '://' . $parsed['package'] . '.' . $parsed['vendor'] .
+			'/' . $parsed['fc'] . '/' . $parsed['controller'];
+	}
+
+	/**
+	 * @return string
+	 */
+	private function composeFrontController_URI(array $parsed)
+	{
+		return self::FRONT_CONTROLLER_SCHEME . '://' . $parsed['package'] . '.'
+			. $parsed['vendor'] . '/' . $parsed['fc'];
+	}
+
+	/**
+	 * @return string
+	 */
+	private function composeService_URI(array $parsed)
+	{
+		return self::SERVICE_SCHEME . '://' . $parsed['package'] . '.' .
+			$parsed['vendor'] . '/' . $parsed['service'];
+	}
+
+	/**
+	 * @return void
+	 */
+	private function normalize_URI($URI)
+	{
+		if (!$URI->getHost()) {
+			$URI->setHost($this->getPackage()->getFullName());
+		}
 	}
 }

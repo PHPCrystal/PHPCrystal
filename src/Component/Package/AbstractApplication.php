@@ -23,6 +23,8 @@ abstract class AbstractApplication extends AbstractPackage
 	private $context;
 	private $requestEvent;
 	
+	private $vendorDir;
+	
 	/**
 	 * @var \SplMinHeap
 	 */
@@ -40,6 +42,18 @@ abstract class AbstractApplication extends AbstractPackage
 		$this->setPriority(999);
 		parent::__construct();
 	}
+	
+	/**
+	 * @return string
+	 */
+	final public function getVendorDir()
+	{
+		return $this->vendorDir;
+	}
+	
+	/**
+	 * @return  
+	 */
 
 	/**
 	 * @return bool
@@ -299,14 +313,14 @@ abstract class AbstractApplication extends AbstractPackage
 	 */
 	private function assignActions()
 	{
-		foreach (Metadriver::getActionsAll() as $pkgKey => $metaClassArray) {
-			$package = $this->getPackageByKey($pkgKey);
-			foreach ($metaClassArray as $metaClass) {
-				//$action = $package->getFactory()
-				//	->createFromMetaClass($metaClass);
-				//$this->addAction($action);
-			}
-		}		
+//		foreach (Metadriver::getActionsAll() as $pkgKey => $metaClassArray) {
+//			$package = $this->getPackageByKey($pkgKey);
+//			foreach ($metaClassArray as $metaClass) {
+//				//$action = $package->getFactory()
+//				//	->createFromMetaClass($metaClass);
+//				//$this->addAction($action);
+//			}
+//		}		
 	}
 
 	/**

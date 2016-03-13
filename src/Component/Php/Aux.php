@@ -64,4 +64,14 @@ class Aux
 	{
 		return (new \ReflectionClass($className))->isInstantiable();
 	}
+	
+	/**
+	 * @return string|null
+	 */
+	public static function getInstantiableParentClass($childClass)
+	{
+		$parentClass = get_parent_class($childClass);
+
+		return self::isInstantiable($parentClass) ? $parentClass : null;
+	}
 }

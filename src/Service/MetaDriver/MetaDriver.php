@@ -3,6 +3,7 @@ namespace PHPCrystal\PHPCrystal\Service\MetaDriver;
 
 use PHPCrystal\PHPCrystal\Component\Filesystem\FileHelper;
 use PHPCrystal\PHPCrystal\Component\Service\AbstractService,
+	PHPCrystal\PHPCrystal\Component\Exception\System\CompileTimeError,
 	PHPCrystal\PHPCrystal\Component\Service\AbstractContractor;
 use PHPCrystal\PHPCrystal\Component\Package\AbstractExtension;
 use Doctrine\Common\Annotations\SimpleAnnotationReader;
@@ -13,7 +14,7 @@ const EXTENDABLE_INTERFACE = 'PHPCrystal\\PHPCrystal\\Component\\Factory\\Extend
 final class MetaDriver extends AbstractService
 {
 	/** @var array */
-	private $classNames_URI_Mapping = [];
+	private $URI_classNameMapping = [];
 	
 	/** @var array */
 	private $metaServices = [];	
@@ -25,34 +26,58 @@ final class MetaDriver extends AbstractService
 	private $metaControllers = [];
 	
 	/** @var array */
-	private $metaFrontControllerMap = [];
+	private $metaFrontControllers = [];
 
-	/** @var array Maps class names in dot notation to fully qualified PHP class names */
-	private $classNamesMap = [];
 	private $isVoid = true;
 	private $data;
 	private $filename;
-	protected $annotReader;
 	
+	/** @var SimpleAnnotationReader */
+	private $annotReader;
 	
+	/**
+	 * @return bool
+	 */
+	public function isExtendable($className)
+	{
+		return Php\Aux::implementsInterface($className,
+			'PHPCrystal\\PHPCrystal\\Service\\MetaDriver\\ExtendableInterface');
+	}
+
 	/**
 	 * @return void
 	 */
-	public function addClassName_URI_MappingEntry($className, $URI_Str)
+	public function addURI_classNameMappingEntry($URI_str, $className)
 	{
-		$this->classNames_URI_Mapping[$className] = $URI_Str;
+		if (empty($URI_str)) {
+			return;
+		}
+		
+		if ( ! isset($this->URI_classNameMapping[$URI_str])) {
+			$this->URI_classNameMapping[$URI_str] = [];
+		}
+		
+		$this->URI_classNameMapping[$URI_str][] = $className;
+	}
+	
+	/**
+	 * @return array
+	 */
+	public function getClassNameMappingEntriesBy_URI($search_URI)
+	{
+		foreach ($this->URI_classNameMapping as $class_URI => $classNamesArray) {
+			if ($class_URI == $search_URI) {
+				return $classNamesArray;
+			}
+		}		
 	}
 	
 	/**
 	 * @return string
 	 */
-	public function findClassNameBy_URI($searchBy)
+	public function getClassNameBy_URI($search_URI)
 	{
-		foreach ($this->classNames_URI_Mapping as $className => $URI) {
-			if ($URI == $searchBy) {
-				return $className;
-			}
-		}
+		return $this->getClassNameMappingEntriesBy_URI($search_URI)[0];
 	}
 	
 	/**
@@ -74,13 +99,64 @@ final class MetaDriver extends AbstractService
 	/**
 	 * @return void
 	 */
-	public function addMetaAction($className)
+	public function addMetaAction($className, $package)
 	{
 		$metaAction = new MetaClass\Action($this->extendableResolveClassName($className),
-			$this->getAnnotations($className));
-		$this->metaActions[] = $metaAction;
+			$this->getAnnotations($className), $className);		
+		$key = $package->getFullName();
+		
+		if ( ! isset($this->metaActions[$key])) {
+			$this->metaActions[$key] = [];
+		} 
+		
+		$this->metaActions[$key][] = $metaAction;
 	}
 	
+	/**
+	 * @return void
+	 */
+	public function addMetaController($className, $package)
+	{
+		$metaController = new MetaClass\Controller($this->extendableResolveClassName($className),
+			$this->getAnnotations($className), $className);
+		$key = $package->getFullName();
+		
+		if ( ! isset($this->metaControllers[$key])) {
+			$this->metaControllers[$key] = [];
+		} 
+		
+		$this->metaControllers[$key][] = $metaController;	
+	}
+	
+	/**
+	 * @return void
+	 */
+	public function addMetaFrontController($className, $package)
+	{
+		$meta_FC = new MetaClass\FrontController($this->extendableResolveClassName($className),
+			$this->getAnnotations($className), $className);
+		$key = $package->getFullName();
+		
+		if ( ! isset($this->metaFrontControllers[$key])) {
+			$this->metaFrontControllers[$key] = [];
+		} 
+		
+		$this->metaFrontControllers[$key][] = $meta_FC;		
+	}
+	
+	/**
+	 * @return AbstarctMetaClass
+	 */
+	public function findMetaClassBy_URI($find_URI)
+	{
+		foreach (array_merge($this->metaActions, $this->metaControllers,
+			$this->metaFrontControllers, $this->metaServices) as $key_URI => $metaClass) {
+			if ($key_URI == $find_URI) {
+				return $metaClass;
+			}
+		}
+	}
+
 	/**
 	 * @return string
 	 */
@@ -134,47 +210,11 @@ final class MetaDriver extends AbstractService
 	}
 
 	/**
-	 * @return void
-	 */
-	public function addController($className, $package)
-	{
-		$this->metaControllers = new MetaClass\Controller($className, $package);
-	}
-	
-	/**
 	 * @return string
 	 */
 	public function classNametoDotname($name)
 	{
 		return ltrim(strtolower(str_replace('\\', '.', $name)), '.');
-	}
-
-	/**
-	 * @return string
-	 */
-	public function convertToDotName($className)
-	{
-		$regexpVendor = '[^\\]+';
-		
-		if (preg_match("~$regexpVendor\\$regexpPackage\\Service\\~"))
-		
-		$namespace = Php\Aux::getNamespace($className);
-		$shortName = Php\Aux::getShortName($className);
-		
-		if (AbstractService::isService($className)) {
-			$dotName = $namespace . '.' . $shortName;
-		}
-	}
-	
-	/**
-	 * @return void
-	 */
-	public function classMapAddEntry($className)
-	{
-		//if (AbstractService::isService($className)) {
-		//	$dotName = $this->extractVendor() . '.' . $this->
-			//$this->classNamesMap[]
-		//}
 	}
 
 	/**
@@ -184,6 +224,7 @@ final class MetaDriver extends AbstractService
 	{
 		foreach ($this->metaServices as $splQueue) {
 			$metaService = $splQueue->top();
+
 			if ($metaService->check($name)) {
 				return $metaService;
 			}

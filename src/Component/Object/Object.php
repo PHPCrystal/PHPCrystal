@@ -8,7 +8,7 @@ class Object
 	 * 
 	 * @return bool
 	 */
-	public static function is_subclass($className)
+	public static function isSubclass($className)
 	{
 		return is_subclass_of($className, get_called_class());
 	}

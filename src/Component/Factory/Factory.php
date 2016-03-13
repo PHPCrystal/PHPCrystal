@@ -182,7 +182,7 @@ final class Factory
 	public function create($className, $factoryArgs = [])
 	{
 		$fqcn = $this->nameResolver->resolve($className);
-		
+
 		if (AbstractService::isService($fqcn)) {
 			return $this->createService($fqcn, $factoryArgs);
 		} else {
@@ -201,7 +201,7 @@ final class Factory
 	{
 		$metaService = $this->metadriver->getMetaServiceByInterface($interface);
 
-		return $this->create($metaService->getClassName());
+		return $this->create($metaService->getTargetClass());
 	}
 
 	/**

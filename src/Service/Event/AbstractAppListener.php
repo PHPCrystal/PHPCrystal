@@ -5,10 +5,12 @@ use PHPCrystal\PHPCrystal\Contract as Contract;
 use PHPCrystal\PHPCrystal\Component\Factory as Factory;
 use PHPCrystal\PHPCrystal\Service\Event as Event;
 use PHPCrystal\PHPCrystal\Facade\Metadriver;
-use PHPCrystal\PHPCrystal\Service\DependencyManager\DI_Interface;
+use PHPCrystal\PHPCrystal\Service\DependencyManager\DI_Interface,
+	PHPCrystal\PHPCrystal\Service\MetaDriver\ExtendableInterface;
 
 abstract class AbstractAppListener extends AbstractNode  implements
-	DI_Interface
+	DI_Interface,
+	ExtendableInterface
 {
 	/**
 	 * @var \PHPCrystal\PHPCrystal\Contract\Session

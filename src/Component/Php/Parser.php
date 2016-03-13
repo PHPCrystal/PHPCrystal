@@ -51,19 +51,15 @@ class Parser extends TokenParser
 	 */
 	public function parseClass()
 	{
-		$name = $this->parseNamespace();
-		$startClassDecl = false;
+		$class_NS = $this->parseNamespace();
 
 		while (($token = $this->next())) {
-			if ($token[0] === T_FINAL || $token[0] === T_ABSTRACT || $token[0] === T_CLASS) {
-				$startClassDecl = true;
-			} else if ($startClassDecl && $token[0] === T_STRING) {
-				$name .= '\\' . $token[1];
-				break;
+			if ($token[0] === T_CLASS) {
+				return $class_NS . '\\' . $this->next()[1];
 			}
 		}
 		
-		return $name;
+		return null;
 	}
 	
 	/**
@@ -71,15 +67,14 @@ class Parser extends TokenParser
 	 */
 	public function parseInterface()
 	{
-		$name = $this->parseNamespace();
+		$interafce_NS = $this->parseNamespace();
 		
 		while (($token = $this->next())) {
 			if ($token[0] === T_INTERFACE)  {
-				$name .= '\\' . $this->next()[1];
-				break;
+				return $interafce_NS . '\\' . $this->next()[1];
 			}
 		}
-		
-		return $name;
+
+		return null;
 	}
 }
